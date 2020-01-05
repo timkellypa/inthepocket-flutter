@@ -39,6 +39,15 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
     } else if (item.track != null) {
       final int trackId = await dbProvider.saveTrack(item.track);
       item.trackId = trackId;
+
+      // Grab any tempos that are currently -1 for track ID (placeholder)
+      final List<TempoProxy> tempos = await dbProvider.getTempoProxiesAll();
+      for (TempoProxy tempo in tempos) {
+        if (tempo.trackId == -1) {
+          tempo.trackId = trackId;
+          await dbProvider.updateTempo(tempo);
+        }
+      }
     }
 
     return await dbProvider.updateSetListTrack(item);

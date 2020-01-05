@@ -28,4 +28,13 @@ class TempoRepository extends RepositoryBase<TempoProxy> {
 
   @override
   Future<int> delete(int id) => dbProvider.deleteTempo(id);
+
+  Future<void> clearPlaceholderTempos() async {
+    final List<TempoProxy> tempos = await dbProvider.getTempoProxiesAll();
+    for (TempoProxy tempo in tempos) {
+      if (tempo.trackId == -1) {
+        dbProvider.deleteTempo(tempo.id);
+      }
+    }
+  }
 }

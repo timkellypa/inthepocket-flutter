@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/bloc/spotify_playlist_bloc.dart';
+import 'package:in_the_pocket/bloc/tempo_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
+import 'package:in_the_pocket/ui/edit_tempo_form.dart';
 import 'package:in_the_pocket/ui/edit_track_form.dart';
 import 'package:in_the_pocket/ui/navigation/edit_setlist_form_route_arguments.dart';
+import 'package:in_the_pocket/ui/navigation/edit_tempo_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/edit_track_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_import_setlist_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_import_spotify_playlist_arguments.dart';
@@ -152,6 +155,27 @@ class ApplicationRouter {
             ),
           );
         };
+        break;
+      case ROUTE_EDIT_TEMPO_FORM:
+        fullScreenDialog = true;
+        builder = (BuildContext context) {
+          final EditTempoFormRouteArguments args = settings.arguments;
+          return Provider<TempoBloc>(
+            builder: (BuildContext context) => args.tempoBloc,
+            dispose: (BuildContext context, TempoBloc value) =>
+                value.unSelectItem(
+              args.itemSelectionMap,
+              args.tempo,
+              SelectionType.editing +
+                  SelectionType.add +
+                  SelectionType.selected,
+            ),
+            child: EditTempoForm(
+              tempo: args.tempo,
+            ),
+          );
+        };
+        break;
     }
 
     if (builder != null) {
@@ -175,4 +199,5 @@ class ApplicationRouter {
       '/track_import_spotify_playlist';
   static const String ROUTE_TRACK_IMPORT_SPOTIFY_TRACK =
       '/track_import_spotify_track';
+  static const String ROUTE_EDIT_TEMPO_FORM = '/edit_tempo_form';
 }

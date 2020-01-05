@@ -44,4 +44,8 @@ class TempoBloc extends ModelBlocBase<TempoProxy, TempoRepository> {
     await repository.delete(item.id);
     fetch();
   }
+
+  Future<void> clearPlaceholderTempos() async {
+    await repository.clearPlaceholderTempos();
+  }
 }
