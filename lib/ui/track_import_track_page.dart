@@ -54,7 +54,7 @@ class TrackImportTrackPageState extends State<TrackImportTrackPage> {
                 AsyncSnapshot<HashMap<SetListTrackProxy, ItemSelection>>
                     selectedItemMapSnapshot) {
               return IconButton(
-                icon: Icon(Icons.save),
+                icon: const Icon(Icons.save),
                 onPressed: () async {
                   if (selectedItemMapSnapshot.hasData) {
                     final HashMap<SetListTrackProxy, ItemSelection>

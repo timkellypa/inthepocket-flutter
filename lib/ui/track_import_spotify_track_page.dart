@@ -59,7 +59,7 @@ class TrackImportSpotifyTrackPageState
                 AsyncSnapshot<HashMap<SpotifyTrack, ItemSelection>>
                     selectedItemMapSnapshot) {
               return IconButton(
-                icon: Icon(Icons.save),
+                icon: const Icon(Icons.save),
                 onPressed: () async {
                   if (selectedItemMapSnapshot.hasData) {
                     await spotifyTrackBloc.importItems(
