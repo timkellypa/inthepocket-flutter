@@ -26,6 +26,8 @@ import 'package:f_orm_m8/f_orm_m8.dart';
 
 @DataTable('tracks')
 class Track implements DbEntity {
+  static const int NEW_TRACK_ID = -1;
+
   @DataColumn('id',
       metadataLevel: ColumnMetadata.primaryKey | ColumnMetadata.autoIncrement)
   @override

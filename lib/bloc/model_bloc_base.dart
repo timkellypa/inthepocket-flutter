@@ -6,6 +6,9 @@ import 'package:in_the_pocket/repository/repository_base.dart';
 abstract class ModelBlocBase<ModelType,
     RepositoryType extends RepositoryBase<ModelType>> {
   ModelBlocBase() {
+    listController = StreamController<List<ModelType>>.broadcast();
+    selectedItemsController =
+        StreamController<HashMap<ModelType, ItemSelection>>.broadcast();
     selectedItemsController.sink.add(HashMap<ModelType, ItemSelection>());
     fetch();
   }
@@ -20,14 +23,11 @@ abstract class ModelBlocBase<ModelType,
     return 'Items';
   }
 
-  final StreamController<List<ModelType>> listController =
-      StreamController<List<ModelType>>.broadcast();
+  StreamController<List<ModelType>> listController;
 
   Stream<List<ModelType>> get items => listController.stream;
 
-  final StreamController<HashMap<ModelType, ItemSelection>>
-      selectedItemsController =
-      StreamController<HashMap<ModelType, ItemSelection>>.broadcast();
+  StreamController<HashMap<ModelType, ItemSelection>> selectedItemsController;
 
   Stream<HashMap<ModelType, ItemSelection>> get selectedItems =>
       selectedItemsController.stream;
@@ -55,6 +55,34 @@ abstract class ModelBlocBase<ModelType,
     if (doSync) {
       syncSelections(map);
     }
+  }
+
+  void unSelectAll(HashMap<ModelType, ItemSelection> map, int selectionTypes,
+      {bool doSync = true}) {
+    final List<ModelType> modelsToRemove = <ModelType>[];
+    for (ModelType model in map.keys) {
+      map[model].selectionType &= ~selectionTypes;
+      if (map[model].selectionType == 0) {
+        modelsToRemove.add(model);
+      }
+    }
+
+    modelsToRemove.forEach(map.remove);
+
+    if (doSync) {
+      syncSelections(map);
+    }
+  }
+
+  List<ModelType> getMatchingSelections(
+      HashMap<ModelType, ItemSelection> map, int selectionTypes) {
+    final List<ModelType> matchingSelections = <ModelType>[];
+    map.forEach((ModelType model, ItemSelection selection) {
+      if (selection.selectionType & selectionTypes > 0) {
+        matchingSelections.add(model);
+      }
+    });
+    return matchingSelections;
   }
 
   Future<void> syncSelections(HashMap<ModelType, ItemSelection> map) async {

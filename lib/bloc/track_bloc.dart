@@ -9,6 +9,8 @@ import 'package:in_the_pocket/repository/track_repository.dart';
 
 import 'model_bloc_base.dart';
 
+enum TrackDirection { next, previous }
+
 class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
   TrackBloc(this.setList, {this.importTargetSetList}) : super();
 
@@ -99,5 +101,26 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
         .map((SetListTrackProxy setListTrack) => setListTrack.track);
     await repository.applySpotifyAudioFeatures(tracks);
     fetch();
+  }
+
+  void changeTrack(HashMap<SetListTrackProxy, ItemSelection> selectedItemsMap,
+      List<SetListTrackProxy> setListTracks, TrackDirection direction) {
+    final List<SetListTrackProxy> selectedSetListTracks =
+        getMatchingSelections(selectedItemsMap, SelectionType.selected);
+    final SetListTrackProxy selectedSetListTrack =
+        selectedSetListTracks.isNotEmpty ? selectedSetListTracks.first : null;
+    int targetIndex;
+    if (selectedSetListTrack == null) {
+      targetIndex =
+          direction == TrackDirection.next ? 0 : setListTracks.length - 1;
+    } else {
+      targetIndex = setListTracks.indexOf(selectedSetListTrack) +
+          (direction == TrackDirection.next ? 1 : -1);
+      if (targetIndex >= 0 && targetIndex < setListTracks.length) {
+        unSelectAll(selectedItemsMap, SelectionType.selected, doSync: false);
+        selectItem(selectedItemsMap, setListTracks[targetIndex],
+            SelectionType.selected);
+      }
+    }
   }
 }

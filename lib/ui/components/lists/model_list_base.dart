@@ -26,27 +26,25 @@ abstract class ModelListBase<ModelType extends ModelBase,
       color: Colors.white,
       padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
       child: Container(
-        //This is where the magic starts
         child: StreamBuilder<List<ModelType>>(
-          stream: modelBloc.items,
-          builder:
-              (BuildContext context, AsyncSnapshot<List<ModelType>> itemList) {
-            return StreamBuilder<HashMap<ModelType, ItemSelection>>(
-              stream: modelBloc.selectedItems,
-              initialData: HashMap<ModelType, ItemSelection>(),
-              builder: (
-                BuildContext innerContext,
-                AsyncSnapshot<HashMap<ModelType, ItemSelection>>
-                    selectedItemMap,
-              ) =>
-                  getCardWidgets(
-                modelBloc,
-                itemList,
-                selectedItemMap,
-              ),
-            );
-          },
-        ),
+            stream: modelBloc.items,
+            builder: (BuildContext context,
+                AsyncSnapshot<List<ModelType>> itemList) {
+              return StreamBuilder<HashMap<ModelType, ItemSelection>>(
+                stream: modelBloc.selectedItems,
+                initialData: HashMap<ModelType, ItemSelection>(),
+                builder: (
+                  BuildContext innerContext,
+                  AsyncSnapshot<HashMap<ModelType, ItemSelection>>
+                      selectedItemMap,
+                ) =>
+                    getCardWidgets(
+                  modelBloc,
+                  itemList,
+                  selectedItemMap,
+                ),
+              );
+            }),
       ),
     );
   }

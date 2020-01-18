@@ -6,8 +6,10 @@ import 'package:in_the_pocket/models/independent/track.g.m8.dart';
 import 'package:in_the_pocket/models/independent/tempo.g.m8.dart';
 import 'package:in_the_pocket/providers/spotify_provider.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
+import 'package:in_the_pocket/repository/tempo_repository.dart';
 
 class TrackRepository extends RepositoryBase<SetListTrackProxy> {
+  static const int NEW_TRACK_ID = -1;
   final double msToMinutes = 60000.0;
 
   @override
@@ -43,11 +45,12 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
       // Grab any tempos that are currently -1 for track ID (placeholder)
       final List<TempoProxy> tempos = await dbProvider.getTempoProxiesAll();
       for (TempoProxy tempo in tempos) {
-        if (tempo.trackId == -1) {
+        if (tempo.trackId == NEW_TRACK_ID) {
           tempo.trackId = trackId;
           await dbProvider.updateTempo(tempo);
         }
       }
+      TempoRepository().writeClickTracks(tempos: tempos);
     }
 
     return await dbProvider.updateSetListTrack(item);
@@ -123,6 +126,7 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
     for (TempoProxy tempo in temposToSave) {
       await dbProvider.saveTempo(tempo);
     }
+    await TempoRepository().writeClickTracks(tempos: temposToSave);
   }
 
   TempoProxy _buildTempoFromAudioFeatures(Map<String, dynamic> audioFeatures) {

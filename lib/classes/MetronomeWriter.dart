@@ -21,9 +21,10 @@ class MetronomeWriter extends WaveBuilder {
   }
 
   Future<void> addTempo(TempoProxy tempo) async {
-    final int numberOfBars = tempo.numberOfBars == 0
+    final int tempoNumBars = tempo.numberOfBars.ceil();
+    final int numberOfBars = tempoNumBars == 0
         ? tempo.bpm * DEFAULT_TEMPO_FILE_LENGTH_MINUTES ~/ tempo.beatsPerBar
-        : tempo.numberOfBars;
+        : tempoNumBars;
     for (int bar = 0; bar < numberOfBars; ++bar) {
       for (int beat = 1; beat <= tempo.beatsPerBar; ++beat) {
         // check to see if we are using primary or secondary
