@@ -11,11 +11,13 @@ mixin MultiSelectModelCard<WidgetType extends StatefulWidget,
   Widget getLeading() {
     bool isSelected = false;
     bool isDisabled = false;
-    if (selectedItemMap[model] != null) {
+    if (selectedItemMap[model.guid] != null) {
       isSelected =
-          selectedItemMap[model].selectionType & SelectionType.selected > 0;
+          selectedItemMap[model.guid].selectionType & SelectionType.selected >
+              0;
       isDisabled =
-          selectedItemMap[model].selectionType & SelectionType.disabled > 0;
+          selectedItemMap[model.guid].selectionType & SelectionType.disabled >
+              0;
     }
     return InkWell(
       child: Container(

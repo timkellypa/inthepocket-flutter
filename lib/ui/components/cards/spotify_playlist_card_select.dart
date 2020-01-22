@@ -8,7 +8,7 @@ import 'package:in_the_pocket/ui/components/cards/spotify_playlist_card.dart';
 
 class SpotifyPlaylistCardSelect extends SpotifyPlaylistCard {
   SpotifyPlaylistCardSelect(SpotifyPlaylist spotifyPlaylist,
-      HashMap<SpotifyPlaylist, ItemSelection> selectedItemMap)
+      HashMap<String, ItemSelection> selectedItemMap)
       : super(spotifyPlaylist, selectedItemMap);
 
   @override
@@ -20,6 +20,6 @@ class SpotifyPlaylistCardSelect extends SpotifyPlaylistCard {
 class SpotifyPlaylistCardSelectState extends SpotifyPlaylistCardState
     with SelectableModelCard<SpotifyPlaylistCard, SpotifyPlaylist> {
   SpotifyPlaylistCardSelectState(SpotifyPlaylist spotifyPlaylist,
-      HashMap<SpotifyPlaylist, ItemSelection> selectedItemMap)
+      HashMap<String, ItemSelection> selectedItemMap)
       : super(spotifyPlaylist, selectedItemMap);
 }

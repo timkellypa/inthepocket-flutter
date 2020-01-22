@@ -49,32 +49,25 @@ class TrackImportTrackPageState extends State<TrackImportTrackPage> {
       appBar: AppBar(
         title: Text('Import to ${_targetSetList.description}'),
         actions: <Widget>[
-          StreamBuilder<HashMap<SetListTrackProxy, ItemSelection>>(
+          StreamBuilder<HashMap<String, ItemSelection>>(
             builder: (BuildContext context,
-                AsyncSnapshot<HashMap<SetListTrackProxy, ItemSelection>>
+                AsyncSnapshot<HashMap<String, ItemSelection>>
                     selectedItemMapSnapshot) {
               return IconButton(
                 icon: const Icon(Icons.save),
                 onPressed: () async {
                   if (selectedItemMapSnapshot.hasData) {
-                    final HashMap<SetListTrackProxy, ItemSelection>
-                        selectedItemMap = selectedItemMapSnapshot.data;
-                    final List<MapEntry<SetListTrackProxy, ItemSelection>>
-                        entries = selectedItemMap.entries.toList();
-                    entries.sort((MapEntry<SetListTrackProxy, ItemSelection> a,
-                            MapEntry<SetListTrackProxy, ItemSelection> b) =>
-                        a.key.sortOrder.compareTo(b.key.sortOrder));
-                    for (MapEntry<SetListTrackProxy, ItemSelection> entry
-                        in entries) {
-                      if (entry.value.selectionType & SelectionType.selected >
-                          0) {
-                        final SetListTrackProxy newSetListTrackProxy =
-                            SetListTrackProxy();
-                        newSetListTrackProxy.setListId = _targetSetList.id;
-                        newSetListTrackProxy.trackId = entry.key.trackId;
-                        newSetListTrackProxy.notes = entry.key.notes;
-                        await trackBloc.insert(newSetListTrackProxy);
-                      }
+                    final List<SetListTrackProxy> entries =
+                        trackBloc.getMatchingSelections(SelectionType.selected);
+                    entries.sort((SetListTrackProxy a, SetListTrackProxy b) =>
+                        a.sortOrder.compareTo(b.sortOrder));
+                    for (SetListTrackProxy setListTrack in entries) {
+                      final SetListTrackProxy newSetListTrackProxy =
+                          SetListTrackProxy();
+                      newSetListTrackProxy.setListId = _targetSetList.id;
+                      newSetListTrackProxy.trackId = setListTrack.trackId;
+                      newSetListTrackProxy.notes = setListTrack.notes;
+                      await trackBloc.insert(newSetListTrackProxy);
 
                       Navigator.popUntil(context, (Route<dynamic> route) {
                         return route.settings.name ==
@@ -97,9 +90,9 @@ class TrackImportTrackPageState extends State<TrackImportTrackPage> {
             //This is where the magic starts
             child: Provider<TrackBloc>.value(
               value: trackBloc,
-              child: TrackImportList<TrackCardMultiSelect>((SetListTrackProxy a,
-                      HashMap<SetListTrackProxy, ItemSelection> b) =>
-                  TrackCardMultiSelect(a, b)),
+              child: TrackImportList<TrackCardMultiSelect>(
+                  (SetListTrackProxy a, HashMap<String, ItemSelection> b) =>
+                      TrackCardMultiSelect(a, b)),
             ),
           ),
         ),

@@ -48,7 +48,6 @@ class ApplicationRouter {
             builder: (BuildContext context) => args.setListBloc,
             dispose: (BuildContext context, SetListBloc value) =>
                 value.unSelectItem(
-              args.itemSelectionMap,
               args.setList,
               SelectionType.selected,
             ),
@@ -65,7 +64,6 @@ class ApplicationRouter {
               builder: (BuildContext context) => args.setListBloc,
               dispose: (BuildContext context, SetListBloc value) =>
                   value.unSelectItem(
-                    args.itemSelectionMap,
                     args.setList,
                     SelectionType.add + SelectionType.editing,
                   ),
@@ -80,7 +78,6 @@ class ApplicationRouter {
             builder: (BuildContext context) => args.setListBloc,
             dispose: (BuildContext context, SetListBloc value) {
               value.unSelectItem(
-                args.itemSelectionMap,
                 args.setList,
                 SelectionType.selected,
               );
@@ -100,7 +97,6 @@ class ApplicationRouter {
             builder: (BuildContext context) => args.trackBloc,
             dispose: (BuildContext context, TrackBloc value) =>
                 value.unSelectItem(
-              args.itemSelectionMap,
               args.setListTrack,
               SelectionType.editing +
                   SelectionType.add +
@@ -143,7 +139,6 @@ class ApplicationRouter {
             builder: (BuildContext context) => args.spotifyPlaylistBloc,
             dispose: (BuildContext context, SpotifyPlaylistBloc value) =>
                 value.unSelectItem(
-              args.itemSelectionMap,
               args.spotifyPlaylist,
               SelectionType.editing +
                   SelectionType.add +
@@ -164,7 +159,6 @@ class ApplicationRouter {
             builder: (BuildContext context) => args.tempoBloc,
             dispose: (BuildContext context, TempoBloc value) =>
                 value.unSelectItem(
-              args.itemSelectionMap,
               args.tempo,
               SelectionType.editing +
                   SelectionType.add +

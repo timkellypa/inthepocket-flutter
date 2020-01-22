@@ -11,20 +11,19 @@ mixin SelectableModelCard<WidgetType extends StatefulWidget,
   Function getTapAction() {
     return () {
       bool isSelected = false;
-      if (selectedItemMap[model] != null) {
+      if (selectedItemMap[model.guid] != null) {
         isSelected =
-            selectedItemMap[model].selectionType & SelectionType.selected > 0;
+            selectedItemMap[model.guid].selectionType & SelectionType.selected >
+                0;
       }
 
       if (!isSelected) {
         getBloc(context).selectItem(
-          selectedItemMap,
           model,
           SelectionType.selected,
         );
       } else {
         getBloc(context).unSelectItem(
-          selectedItemMap,
           model,
           SelectionType.selected,
         );

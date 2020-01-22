@@ -11,7 +11,7 @@ class SpotifyPlaylistCard extends StatefulWidget {
   SpotifyPlaylistCard(this.spotifyPlaylist, this.selectedItemMap)
       : super(key: ObjectKey(spotifyPlaylist));
   final SpotifyPlaylist spotifyPlaylist;
-  final HashMap<SpotifyPlaylist, ItemSelection> selectedItemMap;
+  final HashMap<String, ItemSelection> selectedItemMap;
 
   @override
   State<StatefulWidget> createState() {
@@ -24,11 +24,10 @@ class SpotifyPlaylistCardState
   SpotifyPlaylistCardState(this._spotifyPlaylist, this._selectedItemMap);
 
   final SpotifyPlaylist _spotifyPlaylist;
-  final HashMap<SpotifyPlaylist, ItemSelection> _selectedItemMap;
+  final HashMap<String, ItemSelection> _selectedItemMap;
 
   @override
-  HashMap<SpotifyPlaylist, ItemSelection> get selectedItemMap =>
-      _selectedItemMap;
+  HashMap<String, ItemSelection> get selectedItemMap => _selectedItemMap;
 
   @override
   SpotifyPlaylistBloc getBloc(BuildContext context) =>

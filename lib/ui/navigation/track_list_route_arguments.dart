@@ -9,5 +9,5 @@ class TrackListRouteArguments {
       this.setListBloc, this.setList, this.itemSelectionMap);
   SetListProxy setList;
   SetListBloc setListBloc;
-  HashMap<SetListProxy, ItemSelection> itemSelectionMap;
+  HashMap<String, ItemSelection> itemSelectionMap;
 }

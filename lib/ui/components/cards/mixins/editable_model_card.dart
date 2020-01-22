@@ -12,7 +12,6 @@ mixin EditableModelCard<WidgetType extends StatefulWidget,
     return InkWell(
       onTap: () {
         getBloc(context).selectItem(
-          selectedItemMap,
           model,
           SelectionType.editing,
         );

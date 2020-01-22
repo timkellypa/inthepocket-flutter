@@ -11,7 +11,7 @@ class SetListCard extends StatefulWidget {
   SetListCard(this.setList, this.selectedItemMap)
       : super(key: ObjectKey(setList));
   final SetListProxy setList;
-  final HashMap<SetListProxy, ItemSelection> selectedItemMap;
+  final HashMap<String, ItemSelection> selectedItemMap;
 
   @override
   State<StatefulWidget> createState() {
@@ -23,10 +23,10 @@ class SetListCardState extends ModelCardStateBase<SetListCard, SetListProxy> {
   SetListCardState(this._setList, this._selectedItemMap);
 
   final SetListProxy _setList;
-  final HashMap<SetListProxy, ItemSelection> _selectedItemMap;
+  final HashMap<String, ItemSelection> _selectedItemMap;
 
   @override
-  HashMap<SetListProxy, ItemSelection> get selectedItemMap => _selectedItemMap;
+  HashMap<String, ItemSelection> get selectedItemMap => _selectedItemMap;
 
   @override
   SetListBloc getBloc(BuildContext context) =>

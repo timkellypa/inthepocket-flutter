@@ -1,15 +1,46 @@
 import 'dart:async';
 import 'dart:collection';
-import 'package:in_the_pocket/classes/item_selection.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:in_the_pocket/audio/track_list_player_task.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
 import 'package:in_the_pocket/models/independent/track.g.m8.dart';
+import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:in_the_pocket/repository/track_repository.dart';
 
 import 'model_bloc_base.dart';
 
 enum TrackDirection { next, previous }
+
+const String CHANNEL_NAME = 'Metronome';
+const String NOTIFICATION_ICON = 'mipmap/ic_launcher';
+
+MediaControl playControl = const MediaControl(
+  androidIcon: 'drawable/ic_action_play_arrow',
+  label: 'Play',
+  action: MediaAction.play,
+);
+MediaControl pauseControl = const MediaControl(
+  androidIcon: 'drawable/ic_action_pause',
+  label: 'Pause',
+  action: MediaAction.pause,
+);
+MediaControl skipToNextControl = const MediaControl(
+  androidIcon: 'drawable/ic_action_skip_next',
+  label: 'Next',
+  action: MediaAction.skipToNext,
+);
+MediaControl skipToPreviousControl = const MediaControl(
+  androidIcon: 'drawable/ic_action_skip_previous',
+  label: 'Previous',
+  action: MediaAction.skipToPrevious,
+);
+MediaControl stopControl = const MediaControl(
+  androidIcon: 'drawable/ic_action_stop',
+  label: 'Stop',
+  action: MediaAction.stop,
+);
 
 class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
   TrackBloc(this.setList, {this.importTargetSetList}) : super();
@@ -52,10 +83,7 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
     if (importTargetSetList != null && firstFetch) {
       firstFetch = false;
       final List<SetListTrackProxy> existingTracks =
-          await getItemList(filter: importExclusionsFilter);
-
-      final HashMap<SetListTrackProxy, ItemSelection> itemSelections =
-          HashMap<SetListTrackProxy, ItemSelection>();
+          await getItemList(filter: importExclusionsFilter, update: false);
 
       // create reverse lookup for existing tracks
       final HashMap<String, SetListTrackProxy> existingTrackMap =
@@ -65,12 +93,11 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
 
       for (SetListTrackProxy setListTrack in setListTracks) {
         if (existingTrackMap.containsKey(setListTrack.trackId.toString())) {
-          selectItem(itemSelections, setListTrack, SelectionType.disabled,
-              doSync: false);
+          selectItem(setListTrack, SelectionType.disabled, doSync: false);
         }
       }
 
-      syncSelections(itemSelections);
+      syncSelections();
     }
 
     listController.sink.add(setListTracks);
@@ -103,24 +130,72 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
     fetch();
   }
 
-  void changeTrack(HashMap<SetListTrackProxy, ItemSelection> selectedItemsMap,
-      List<SetListTrackProxy> setListTracks, TrackDirection direction) {
+  void changeTrack(TrackDirection direction) {
     final List<SetListTrackProxy> selectedSetListTracks =
-        getMatchingSelections(selectedItemsMap, SelectionType.selected);
+        getMatchingSelections(SelectionType.selected);
     final SetListTrackProxy selectedSetListTrack =
         selectedSetListTracks.isNotEmpty ? selectedSetListTracks.first : null;
     int targetIndex;
     if (selectedSetListTrack == null) {
-      targetIndex =
-          direction == TrackDirection.next ? 0 : setListTracks.length - 1;
+      targetIndex = direction == TrackDirection.next ? 0 : itemList.length - 1;
     } else {
-      targetIndex = setListTracks.indexOf(selectedSetListTrack) +
+      targetIndex = itemList.indexOf(selectedSetListTrack) +
           (direction == TrackDirection.next ? 1 : -1);
-      if (targetIndex >= 0 && targetIndex < setListTracks.length) {
-        unSelectAll(selectedItemsMap, SelectionType.selected, doSync: false);
-        selectItem(selectedItemsMap, setListTracks[targetIndex],
-            SelectionType.selected);
+      if (targetIndex >= 0 && targetIndex < itemList.length) {
+        unSelectAll(SelectionType.selected, doSync: false);
+        selectItem(itemList[targetIndex], SelectionType.selected);
       }
     }
   }
+
+  void connectAudio() {
+    AudioService.connect();
+  }
+
+  Future<void> startAudioService() async {
+    AudioService.start(
+      backgroundTaskEntrypoint: _trackListPlayerTaskEntrypoint,
+      resumeOnClick: true,
+      notificationColor: 0xFF2196f3,
+      enableQueue: true,
+      androidNotificationChannelName: CHANNEL_NAME,
+      androidNotificationIcon: NOTIFICATION_ICON,
+    );
+
+    for (SetListTrackProxy setListTrack in itemList) {
+      AudioService.addQueueItem(
+        MediaItem(
+          id: await TempoRepository().getClickTrackPath(setListTrack.trackId),
+          album: setList.description,
+          title: setListTrack.track.title,
+          artist: setList.location,
+          duration: 2856950,
+        ),
+      );
+    }
+  }
+
+  void stop() {
+    AudioService.stop();
+  }
+
+  void play() {
+    AudioService.play();
+  }
+
+  void skipToNext() {
+    AudioService.skipToNext();
+  }
+
+  void skipToPrevious() {
+    AudioService.skipToPrevious();
+  }
+
+  void skipToQueueItem(String trackPath) {
+    AudioService.skipToQueueItem(trackPath);
+  }
+}
+
+void _trackListPlayerTaskEntrypoint() {
+  AudioServiceBackground.run(() => TrackListPlayerTask());
 }

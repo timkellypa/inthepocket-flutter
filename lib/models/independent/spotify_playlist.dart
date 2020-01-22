@@ -1,8 +1,11 @@
-import 'package:in_the_pocket/models/independent/model_base.dart';
+import 'package:in_the_pocket/models/independent/sortable_model_base.dart';
 
-class SpotifyPlaylist implements ModelBase {
+class SpotifyPlaylist implements SortableModelBase {
   @override
   int id;
+
+  @override
+  String guid;
 
   @override
   int sortOrder;

@@ -7,6 +7,7 @@ import 'package:in_the_pocket/models/independent/tempo.g.m8.dart';
 import 'package:in_the_pocket/providers/spotify_provider.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class TrackRepository extends RepositoryBase<SetListTrackProxy> {
   static const int NEW_TRACK_ID = -1;
@@ -32,6 +33,7 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
 
   @override
   Future<int> insert(SetListTrackProxy item) async {
+    await prepareInsert(item);
     final int id = await dbProvider.saveSetListTrack(item);
     item.id = id;
     item.sortOrder = id;
@@ -39,6 +41,7 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
     if (item.trackId != null && item.track != null) {
       await dbProvider.updateTrack(item.track);
     } else if (item.track != null) {
+      item.track.guid = Uuid().v4();
       final int trackId = await dbProvider.saveTrack(item.track);
       item.trackId = trackId;
 

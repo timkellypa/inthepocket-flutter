@@ -54,9 +54,9 @@ class TrackImportSpotifyTrackPageState
       appBar: AppBar(
         title: Text('Import to ${_targetSetList.description}'),
         actions: <Widget>[
-          StreamBuilder<HashMap<SpotifyTrack, ItemSelection>>(
+          StreamBuilder<HashMap<String, ItemSelection>>(
             builder: (BuildContext context,
-                AsyncSnapshot<HashMap<SpotifyTrack, ItemSelection>>
+                AsyncSnapshot<HashMap<String, ItemSelection>>
                     selectedItemMapSnapshot) {
               return IconButton(
                 icon: const Icon(Icons.save),
@@ -85,7 +85,7 @@ class TrackImportSpotifyTrackPageState
             child: Provider<SpotifyTrackBloc>.value(
               value: spotifyTrackBloc,
               child: SpotifyTrackList<SpotifyTrackCardMultiSelect>(
-                  (SpotifyTrack a, HashMap<SpotifyTrack, ItemSelection> b) =>
+                  (SpotifyTrack a, HashMap<String, ItemSelection> b) =>
                       SpotifyTrackCardMultiSelect(a, b)),
             ),
           ),

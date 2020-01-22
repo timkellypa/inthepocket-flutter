@@ -9,5 +9,5 @@ class EditTempoFormRouteArguments {
       this.tempoBloc, this.tempo, this.itemSelectionMap);
   TempoBloc tempoBloc;
   TempoProxy tempo;
-  HashMap<TempoProxy, ItemSelection> itemSelectionMap;
+  HashMap<String, ItemSelection> itemSelectionMap;
 }

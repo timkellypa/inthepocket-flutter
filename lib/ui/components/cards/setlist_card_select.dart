@@ -7,8 +7,8 @@ import 'package:in_the_pocket/ui/components/cards/mixins/selectable_model_card.d
 import 'package:in_the_pocket/ui/components/cards/setlist_card.dart';
 
 class SetListCardSelect extends SetListCard {
-  SetListCardSelect(SetListProxy setList,
-      HashMap<SetListProxy, ItemSelection> selectedItemMap)
+  SetListCardSelect(
+      SetListProxy setList, HashMap<String, ItemSelection> selectedItemMap)
       : super(setList, selectedItemMap);
 
   @override
@@ -19,7 +19,7 @@ class SetListCardSelect extends SetListCard {
 
 class SetListCardSelectState extends SetListCardState
     with SelectableModelCard<SetListCard, SetListProxy> {
-  SetListCardSelectState(SetListProxy setList,
-      HashMap<SetListProxy, ItemSelection> selectedItemMap)
+  SetListCardSelectState(
+      SetListProxy setList, HashMap<String, ItemSelection> selectedItemMap)
       : super(setList, selectedItemMap);
 }

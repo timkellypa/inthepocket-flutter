@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
-import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/repository/setlist_repository.dart';
@@ -30,12 +28,9 @@ class SetListBloc extends ModelBlocBase<SetListProxy, SetListRepository> {
     if (importTargetSetList != null && firstFetch) {
       firstFetch = false;
 
-      final HashMap<SetListProxy, ItemSelection> itemSelections =
-          HashMap<SetListProxy, ItemSelection>();
-
       for (SetListProxy setList in setLists) {
         if (setList.id == importTargetSetList.id) {
-          selectItem(itemSelections, setList, SelectionType.disabled);
+          selectItem(setList, SelectionType.disabled);
         }
       }
     }

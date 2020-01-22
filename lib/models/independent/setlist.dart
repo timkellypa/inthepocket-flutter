@@ -23,14 +23,19 @@
 //   from the command pallette
 
 import 'package:f_orm_m8/f_orm_m8.dart';
-import 'package:in_the_pocket/models/independent/model_base.dart';
+import 'package:in_the_pocket/models/independent/sortable_model_base.dart';
 
 @DataTable('set_lists')
-class SetList implements DbEntity, ModelBase {
+class SetList implements DbEntity, SortableModelBase {
   @DataColumn('id',
       metadataLevel: ColumnMetadata.primaryKey | ColumnMetadata.autoIncrement)
   @override
   int id;
+
+  @DataColumn('guid',
+      metadataLevel: ColumnMetadata.indexed | ColumnMetadata.unique)
+  @override
+  String guid;
 
   @DataColumn('description', metadataLevel: 0)
   String description;

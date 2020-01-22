@@ -11,5 +11,5 @@ class EditTrackFormRouteArguments {
   SetListProxy setList;
   SetListTrackProxy setListTrack;
   TrackBloc trackBloc;
-  HashMap<SetListTrackProxy, ItemSelection> itemSelectionMap;
+  HashMap<String, ItemSelection> itemSelectionMap;
 }

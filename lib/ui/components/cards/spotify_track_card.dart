@@ -11,7 +11,7 @@ class SpotifyTrackCard extends StatefulWidget {
   SpotifyTrackCard(this.spotifyTrack, this.selectedItemMap)
       : super(key: ObjectKey(spotifyTrack));
   final SpotifyTrack spotifyTrack;
-  final HashMap<SpotifyTrack, ItemSelection> selectedItemMap;
+  final HashMap<String, ItemSelection> selectedItemMap;
 
   @override
   State<StatefulWidget> createState() {
@@ -24,10 +24,10 @@ class SpotifyTrackCardState
   SpotifyTrackCardState(this._spotifyTrack, this._selectedItemMap);
 
   final SpotifyTrack _spotifyTrack;
-  final HashMap<SpotifyTrack, ItemSelection> _selectedItemMap;
+  final HashMap<String, ItemSelection> _selectedItemMap;
 
   @override
-  HashMap<SpotifyTrack, ItemSelection> get selectedItemMap => _selectedItemMap;
+  HashMap<String, ItemSelection> get selectedItemMap => _selectedItemMap;
 
   @override
   SpotifyTrackBloc getBloc(BuildContext context) =>

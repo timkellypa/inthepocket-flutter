@@ -9,8 +9,8 @@ import 'package:in_the_pocket/ui/components/cards/mixins/selectable_model_card.d
 import 'package:in_the_pocket/ui/components/cards/setlist_card.dart';
 
 class SetListCardSUD extends SetListCard {
-  SetListCardSUD(SetListProxy setList,
-      HashMap<SetListProxy, ItemSelection> selectedItemMap)
+  SetListCardSUD(
+      SetListProxy setList, HashMap<String, ItemSelection> selectedItemMap)
       : super(setList, selectedItemMap);
 
   @override
@@ -24,7 +24,7 @@ class SetListCardSUDState extends SetListCardState
         DismissableModelCard<SetListCard, SetListProxy>,
         EditableModelCard<SetListCard, SetListProxy>,
         SelectableModelCard<SetListCard, SetListProxy> {
-  SetListCardSUDState(SetListProxy setList,
-      HashMap<SetListProxy, ItemSelection> selectedItemMap)
+  SetListCardSUDState(
+      SetListProxy setList, HashMap<String, ItemSelection> selectedItemMap)
       : super(setList, selectedItemMap);
 }

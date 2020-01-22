@@ -11,5 +11,5 @@ class TrackImportTrackArguments {
   SetListProxy targetSetList;
   SetListProxy setList;
   SetListBloc setListBloc;
-  HashMap<SetListProxy, ItemSelection> itemSelectionMap;
+  HashMap<String, ItemSelection> itemSelectionMap;
 }

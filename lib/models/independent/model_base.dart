@@ -1,5 +1,4 @@
 abstract class ModelBase {
-  int sortOrder;
-
   int id;
+  String guid;
 }

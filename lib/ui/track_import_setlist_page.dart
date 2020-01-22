@@ -7,7 +7,6 @@ import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/helpers/item_selection_helpers.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/ui/components/cards/setlist_card_select.dart';
 import 'package:in_the_pocket/ui/navigation/application_router.dart';
@@ -36,8 +35,7 @@ class TrackImportSetlistPageState extends State<TrackImportSetlistPage> {
 
   TrackBloc trackBloc;
   SetListBloc setListBloc;
-  StreamSubscription<HashMap<SetListProxy, ItemSelection>>
-      selectedItemSubscription;
+  StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
 
   @override
   void initState() {
@@ -48,11 +46,9 @@ class TrackImportSetlistPageState extends State<TrackImportSetlistPage> {
     super.initState();
   }
 
-  void itemSelectionsChanged(
-      HashMap<SetListProxy, ItemSelection> itemSelectionMap) {
+  void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
     final List<SetListProxy> selectedItems =
-        ItemSelectionHelpers.getItemSelectionMatches<SetListProxy>(
-            itemSelectionMap, SelectionType.selected);
+        setListBloc.getMatchingSelections(SelectionType.selected);
 
     if (selectedItems.isEmpty) {
       return;
@@ -87,7 +83,7 @@ class TrackImportSetlistPageState extends State<TrackImportSetlistPage> {
             child: Provider<SetListBloc>.value(
               value: setListBloc,
               child: SetListList<SetListCardSelect>(
-                  (SetListProxy a, HashMap<SetListProxy, ItemSelection> b) =>
+                  (SetListProxy a, HashMap<String, ItemSelection> b) =>
                       SetListCardSelect(a, b)),
             ),
           ),

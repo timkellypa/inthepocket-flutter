@@ -12,6 +12,7 @@ class SetListRepository extends RepositoryBase<SetListProxy> {
 
   @override
   Future<int> insert(SetListProxy item) async {
+    await prepareInsert(item);
     final int id = await dbProvider.saveSetList(item);
     item.id = id;
     item.sortOrder = id;

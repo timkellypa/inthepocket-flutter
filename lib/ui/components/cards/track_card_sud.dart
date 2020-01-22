@@ -11,7 +11,7 @@ import 'mixins/editable_model_card.dart';
 
 class TrackCardSUD extends TrackCard {
   TrackCardSUD(SetListTrackProxy setListTrack,
-      HashMap<SetListTrackProxy, ItemSelection> selectedItemMap)
+      HashMap<String, ItemSelection> selectedItemMap)
       : super(setListTrack, selectedItemMap);
 
   @override
@@ -26,6 +26,6 @@ class TrackCardSUDState extends TrackCardState
         EditableModelCard<TrackCard, SetListTrackProxy>,
         SelectableModelCard<TrackCard, SetListTrackProxy> {
   TrackCardSUDState(SetListTrackProxy setListTrack,
-      HashMap<SetListTrackProxy, ItemSelection> selectedItemMap)
+      HashMap<String, ItemSelection> selectedItemMap)
       : super(setListTrack, selectedItemMap);
 }

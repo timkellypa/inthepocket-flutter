@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Emitted on: 2020-01-15 22:24:45.451474
+// Emitted on: 2020-01-22 00:20:53.233913
 
 // **************************************************************************
 // Generator: OrmM8GeneratorForAnnotation
@@ -15,6 +15,7 @@ class SetListProxy extends SetList {
   Map<String, dynamic> toMap() {
     var map = Map<String, dynamic>();
     map['id'] = id;
+    map['guid'] = guid;
     map['description'] = description;
     map['sort_order'] = sortOrder;
     map['date'] = date.millisecondsSinceEpoch;
@@ -26,6 +27,7 @@ class SetListProxy extends SetList {
 
   SetListProxy.fromMap(Map<String, dynamic> map) {
     this.id = map['id'];
+    this.guid = map['guid'];
     this.description = map['description'];
     this.sortOrder = map['sort_order'];
     this.date = DateTime.fromMillisecondsSinceEpoch(map['date']);
@@ -38,6 +40,7 @@ mixin SetListDatabaseProvider {
   Future<Database> db;
   final theSetListColumns = [
     "id",
+    "guid",
     "description",
     "sort_order",
     "date",
@@ -49,12 +52,16 @@ mixin SetListDatabaseProvider {
   Future createSetListTable(Database db) async {
     await db.execute('''CREATE TABLE $theSetListTableHandler (
     id INTEGER  PRIMARY KEY AUTOINCREMENT,
+    guid TEXT ,
     description TEXT ,
     sort_order INTEGER ,
     date INTEGER ,
     location TEXT ,
-    is_master INTEGER 
+    is_master INTEGER ,
+    UNIQUE (guid)
     )''');
+    await db.execute(
+        '''CREATE INDEX ix_${theSetListTableHandler}_guid ON $theSetListTableHandler (guid)''');
   }
 
   Future<int> saveSetList(SetListProxy instanceSetList) async {

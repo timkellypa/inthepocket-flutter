@@ -10,10 +10,10 @@ import 'package:in_the_pocket/models/independent/model_base.dart';
 abstract class ModelCardStateBase<WidgetType extends StatefulWidget,
     ModelType extends ModelBase> extends State<WidgetType> {
   ModelType get model;
-  HashMap<ModelType, ItemSelection> get selectedItemMap;
+  HashMap<String, ItemSelection> get selectedItemMap;
 
   int get itemSelectionType {
-    int returnVal = selectedItemMap[model]?.selectionType;
+    int returnVal = selectedItemMap[model.guid]?.selectionType;
     returnVal ??= 0;
     return returnVal;
   }

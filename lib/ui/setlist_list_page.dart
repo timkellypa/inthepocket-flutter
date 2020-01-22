@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/helpers/item_selection_helpers.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/ui/components/common_bottom_bar.dart';
 import 'package:in_the_pocket/ui/components/new_item_button.dart';
@@ -31,8 +30,7 @@ class SetListListPageState extends State<SetListListPage> {
   SetListListPageState();
 
   final SetListBloc setListBloc = SetListBloc();
-  StreamSubscription<HashMap<SetListProxy, ItemSelection>>
-      selectedItemSubscription;
+  StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
 
   @override
   void initState() {
@@ -41,19 +39,17 @@ class SetListListPageState extends State<SetListListPage> {
     super.initState();
   }
 
-  void itemSelectionsChanged(
-      HashMap<SetListProxy, ItemSelection> itemSelectionMap) {
-    final List<SetListProxy> selectedItems =
-        ItemSelectionHelpers.getItemSelectionMatches<SetListProxy>(
-            itemSelectionMap,
-            SelectionType.add + SelectionType.editing + SelectionType.selected);
+  void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
+    final List<SetListProxy> selectedItems = setListBloc.getMatchingSelections(
+        SelectionType.add + SelectionType.editing + SelectionType.selected);
 
     if (selectedItems.isEmpty) {
       return;
     }
 
     final SetListProxy selectedSetList = selectedItems.first;
-    final int selectionType = itemSelectionMap[selectedSetList].selectionType;
+    final int selectionType =
+        itemSelectionMap[selectedSetList?.guid ?? ''].selectionType;
 
     if (selectionType & (SelectionType.add + SelectionType.editing) > 0) {
       Navigator.pushNamed(
@@ -93,7 +89,7 @@ class SetListListPageState extends State<SetListListPage> {
             child: Provider<SetListBloc>.value(
               value: setListBloc,
               child: SetListList<SetListCardSUD>(
-                  (SetListProxy a, HashMap<SetListProxy, ItemSelection> b) =>
+                  (SetListProxy a, HashMap<String, ItemSelection> b) =>
                       SetListCardSUD(a, b)),
             ),
           ),

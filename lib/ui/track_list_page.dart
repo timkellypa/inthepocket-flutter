@@ -7,7 +7,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/helpers/item_selection_helpers.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
 import 'package:in_the_pocket/ui/components/cards/track_card_sud.dart';
@@ -41,8 +40,7 @@ class TrackListPageState extends State<TrackListPage> {
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey(debugLabel: 'scaffoldKey');
 
   TrackBloc trackBloc;
-  StreamSubscription<HashMap<SetListTrackProxy, ItemSelection>>
-      selectedItemSubscription;
+  StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
 
   @override
   void initState() {
@@ -52,11 +50,9 @@ class TrackListPageState extends State<TrackListPage> {
     super.initState();
   }
 
-  void itemSelectionsChanged(
-      HashMap<SetListTrackProxy, ItemSelection> itemSelectionMap) {
-    final List<SetListTrackProxy> selectedItems =
-        ItemSelectionHelpers.getItemSelectionMatches<SetListTrackProxy>(
-            itemSelectionMap, SelectionType.editing + SelectionType.add);
+  void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
+    final List<SetListTrackProxy> selectedItems = trackBloc
+        .getMatchingSelections(SelectionType.editing + SelectionType.add);
 
     if (selectedItems.isEmpty) {
       return;
@@ -64,7 +60,7 @@ class TrackListPageState extends State<TrackListPage> {
 
     final SetListTrackProxy selectedSetListTrack = selectedItems.first;
     final int selectionType =
-        itemSelectionMap[selectedSetListTrack].selectionType;
+        itemSelectionMap[selectedSetListTrack?.guid ?? ''].selectionType;
     if (selectionType & (SelectionType.editing + SelectionType.add) > 0) {
       Navigator.pushNamed(
         context,
@@ -137,7 +133,7 @@ class TrackListPageState extends State<TrackListPage> {
                   child: Provider<TrackBloc>.value(
                     value: trackBloc,
                     child: TrackList<TrackCardSUD>((SetListTrackProxy a,
-                            HashMap<SetListTrackProxy, ItemSelection> b) =>
+                            HashMap<String, ItemSelection> b) =>
                         TrackCardSUD(a, b)),
                   ),
                 ),

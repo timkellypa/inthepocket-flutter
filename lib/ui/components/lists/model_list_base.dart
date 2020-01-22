@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:in_the_pocket/bloc/model_bloc_base.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
-import 'package:in_the_pocket/models/independent/model_base.dart';
+import 'package:in_the_pocket/models/independent/sortable_model_base.dart';
 
 import '../loading.dart';
 
 typedef CardCreator<T, ModelType> = T Function(
-    ModelType item, HashMap<ModelType, ItemSelection> selectedItemMap);
+    ModelType item, HashMap<String, ItemSelection> selectedItemMap);
 
-abstract class ModelListBase<ModelType extends ModelBase,
+abstract class ModelListBase<ModelType extends SortableModelBase,
     CardType extends Widget> extends StatelessWidget {
   const ModelListBase(this.creator, {this.excludeIds = const <int>[]});
 
@@ -30,13 +30,12 @@ abstract class ModelListBase<ModelType extends ModelBase,
             stream: modelBloc.items,
             builder: (BuildContext context,
                 AsyncSnapshot<List<ModelType>> itemList) {
-              return StreamBuilder<HashMap<ModelType, ItemSelection>>(
+              return StreamBuilder<HashMap<String, ItemSelection>>(
                 stream: modelBloc.selectedItems,
-                initialData: HashMap<ModelType, ItemSelection>(),
+                initialData: HashMap<String, ItemSelection>(),
                 builder: (
                   BuildContext innerContext,
-                  AsyncSnapshot<HashMap<ModelType, ItemSelection>>
-                      selectedItemMap,
+                  AsyncSnapshot<HashMap<String, ItemSelection>> selectedItemMap,
                 ) =>
                     getCardWidgets(
                   modelBloc,
@@ -52,7 +51,7 @@ abstract class ModelListBase<ModelType extends ModelBase,
   String get addItemText;
 
   CardType createCard(
-      ModelType item, HashMap<ModelType, ItemSelection> selectedItemMap) {
+      ModelType item, HashMap<String, ItemSelection> selectedItemMap) {
     return creator(item, selectedItemMap);
   }
 
@@ -61,7 +60,7 @@ abstract class ModelListBase<ModelType extends ModelBase,
   Widget getCardWidgets(
     ModelBlocBase<dynamic, dynamic> modelBloc,
     AsyncSnapshot<List<ModelType>> itemListStream,
-    AsyncSnapshot<HashMap<ModelType, ItemSelection>> selectedItemMap,
+    AsyncSnapshot<HashMap<String, ItemSelection>> selectedItemMap,
   ) {
     /*Since most of our operations are asynchronous
     at initial state of the operation there will be no stream
@@ -73,7 +72,7 @@ abstract class ModelListBase<ModelType extends ModelBase,
       If that the case show user that you have empty SetLists
       */
 
-      itemListStream.data.removeWhere((ModelBase item) {
+      itemListStream.data.removeWhere((SortableModelBase item) {
         return excludeIds.contains(item.id);
       });
 

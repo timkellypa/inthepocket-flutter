@@ -5,7 +5,6 @@ import 'package:in_the_pocket/bloc/tempo_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/helpers/item_selection_helpers.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
 import 'package:in_the_pocket/models/independent/tempo.g.m8.dart';
@@ -54,18 +53,17 @@ class EditSetListFormState extends State<EditTrackForm> {
     super.initState();
   }
 
-  void itemSelectionsChanged(
-      HashMap<TempoProxy, ItemSelection> itemSelectionMap) {
-    final List<TempoProxy> selectedItems =
-        ItemSelectionHelpers.getItemSelectionMatches<TempoProxy>(
-            itemSelectionMap, SelectionType.editing + SelectionType.add);
+  void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
+    final List<TempoProxy> selectedItems = tempoBloc
+        .getMatchingSelections(SelectionType.editing + SelectionType.add);
 
     if (selectedItems.isEmpty) {
       return;
     }
 
     final TempoProxy selectedTempo = selectedItems.first;
-    final int selectionType = itemSelectionMap[selectedTempo].selectionType;
+    final int selectionType =
+        itemSelectionMap[selectedTempo?.guid ?? ''].selectionType;
     if (selectionType & (SelectionType.editing + SelectionType.add) > 0) {
       Navigator.pushNamed(
         context,
@@ -140,7 +138,7 @@ class EditSetListFormState extends State<EditTrackForm> {
       child: Provider<TempoBloc>(
         builder: (BuildContext context) => tempoBloc,
         child: TempoList<TempoCardSUD>(
-            (TempoProxy a, HashMap<TempoProxy, ItemSelection> b) =>
+            (TempoProxy a, HashMap<String, ItemSelection> b) =>
                 TempoCardSUD(a, b)),
       ),
     );

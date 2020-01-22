@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Emitted on: 2020-01-15 22:24:45.451474
+// Emitted on: 2020-01-22 00:20:53.233913
 
 // **************************************************************************
 // Generator: OrmM8GeneratorForAnnotation
@@ -15,6 +15,7 @@ class SetListTrackProxy extends SetListTrack {
   Map<String, dynamic> toMap() {
     var map = Map<String, dynamic>();
     map['id'] = id;
+    map['guid'] = guid;
     map['sort_order'] = sortOrder;
     map['song_id'] = trackId;
     map['song_set_id'] = setListId;
@@ -25,6 +26,7 @@ class SetListTrackProxy extends SetListTrack {
 
   SetListTrackProxy.fromMap(Map<String, dynamic> map) {
     this.id = map['id'];
+    this.guid = map['guid'];
     this.sortOrder = map['sort_order'];
     this.trackId = map['song_id'];
     this.setListId = map['song_set_id'];
@@ -36,6 +38,7 @@ mixin SetListTrackDatabaseProvider {
   Future<Database> db;
   final theSetListTrackColumns = [
     "id",
+    "guid",
     "sort_order",
     "song_id",
     "song_set_id",
@@ -46,11 +49,15 @@ mixin SetListTrackDatabaseProvider {
   Future createSetListTrackTable(Database db) async {
     await db.execute('''CREATE TABLE $theSetListTrackTableHandler (
     id INTEGER  PRIMARY KEY AUTOINCREMENT,
+    guid TEXT ,
     sort_order INTEGER ,
     song_id INTEGER ,
     song_set_id INTEGER ,
-    notes TEXT 
+    notes TEXT ,
+    UNIQUE (guid)
     )''');
+    await db.execute(
+        '''CREATE INDEX ix_${theSetListTrackTableHandler}_guid ON $theSetListTrackTableHandler (guid)''');
   }
 
   Future<int> saveSetListTrack(SetListTrackProxy instanceSetListTrack) async {

@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 class TempoCard extends StatefulWidget {
   TempoCard(this.tempo, this.selectedItemMap) : super(key: ObjectKey(tempo));
   final TempoProxy tempo;
-  final HashMap<TempoProxy, ItemSelection> selectedItemMap;
+  final HashMap<String, ItemSelection> selectedItemMap;
 
   @override
   State<StatefulWidget> createState() {
@@ -22,10 +22,10 @@ class TempoCardState extends ModelCardStateBase<TempoCard, TempoProxy> {
   TempoCardState(this._tempo, this._selectedItemMap);
 
   final TempoProxy _tempo;
-  final HashMap<TempoProxy, ItemSelection> _selectedItemMap;
+  final HashMap<String, ItemSelection> _selectedItemMap;
 
   @override
-  HashMap<TempoProxy, ItemSelection> get selectedItemMap => _selectedItemMap;
+  HashMap<String, ItemSelection> get selectedItemMap => _selectedItemMap;
 
   @override
   TempoBloc getBloc(BuildContext context) => Provider.of<TempoBloc>(context);

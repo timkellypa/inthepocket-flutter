@@ -11,15 +11,15 @@ import 'package:in_the_pocket/repository/repository_base.dart';
 class NewItemButton<ModelType extends ModelBase> extends StatelessWidget {
   const NewItemButton({Key key, @required this.modelBloc}) : super(key: key);
 
-  final ModelBlocBase<Object, RepositoryBase<Object>> modelBloc;
+  final ModelBlocBase<ModelBase, RepositoryBase<ModelBase>> modelBloc;
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<HashMap<ModelType, ItemSelection>>(
+    return StreamBuilder<HashMap<String, ItemSelection>>(
         stream: modelBloc.selectedItems,
-        initialData: HashMap<ModelType, ItemSelection>(),
+        initialData: HashMap<String, ItemSelection>(),
         builder: (BuildContext innerContext,
-            AsyncSnapshot<HashMap<ModelType, ItemSelection>>
+            AsyncSnapshot<HashMap<String, ItemSelection>>
                 selectedItemMapSnapshot) {
           return Padding(
               padding: const EdgeInsets.only(bottom: 25, left: 0),
@@ -27,8 +27,7 @@ class NewItemButton<ModelType extends ModelBase> extends StatelessWidget {
                 elevation: 5.0,
                 heroTag: 'add_item',
                 onPressed: () {
-                  modelBloc.selectItem(
-                      selectedItemMapSnapshot.data, null, SelectionType.add);
+                  modelBloc.selectItem(null, SelectionType.add);
                 },
                 backgroundColor: Colors.white,
                 child: Icon(

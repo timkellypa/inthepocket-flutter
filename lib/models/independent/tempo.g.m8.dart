@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Emitted on: 2020-01-15 22:24:45.451474
+// Emitted on: 2020-01-22 00:20:53.233913
 
 // **************************************************************************
 // Generator: OrmM8GeneratorForAnnotation
@@ -15,6 +15,7 @@ class TempoProxy extends Tempo {
   Map<String, dynamic> toMap() {
     var map = Map<String, dynamic>();
     map['id'] = id;
+    map['guid'] = guid;
     map['sort_order'] = sortOrder;
     map['track_id'] = trackId;
     map['bpm'] = bpm;
@@ -29,6 +30,7 @@ class TempoProxy extends Tempo {
 
   TempoProxy.fromMap(Map<String, dynamic> map) {
     this.id = map['id'];
+    this.guid = map['guid'];
     this.sortOrder = map['sort_order'];
     this.trackId = map['track_id'];
     this.bpm = map['bpm'];
@@ -44,6 +46,7 @@ mixin TempoDatabaseProvider {
   Future<Database> db;
   final theTempoColumns = [
     "id",
+    "guid",
     "sort_order",
     "track_id",
     "bpm",
@@ -58,6 +61,7 @@ mixin TempoDatabaseProvider {
   Future createTempoTable(Database db) async {
     await db.execute('''CREATE TABLE $theTempoTableHandler (
     id INTEGER  PRIMARY KEY AUTOINCREMENT,
+    guid TEXT ,
     sort_order INTEGER ,
     track_id INTEGER ,
     bpm REAL ,
@@ -65,8 +69,11 @@ mixin TempoDatabaseProvider {
     beat_unit INTEGER ,
     dotted_quarter_accent INTEGER ,
     accent_beats_per_bar INTEGER ,
-    number_of_bars NUMERIC 
+    number_of_bars NUMERIC ,
+    UNIQUE (guid)
     )''');
+    await db.execute(
+        '''CREATE INDEX ix_${theTempoTableHandler}_guid ON $theTempoTableHandler (guid)''');
   }
 
   Future<int> saveTempo(TempoProxy instanceTempo) async {

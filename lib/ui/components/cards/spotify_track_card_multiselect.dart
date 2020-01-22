@@ -8,8 +8,8 @@ import 'package:in_the_pocket/ui/components/cards/mixins/selectable_model_card.d
 import 'package:in_the_pocket/ui/components/cards/spotify_track_card.dart';
 
 class SpotifyTrackCardMultiSelect extends SpotifyTrackCard {
-  SpotifyTrackCardMultiSelect(SpotifyTrack spotifyTrack,
-      HashMap<SpotifyTrack, ItemSelection> selectedItemMap)
+  SpotifyTrackCardMultiSelect(
+      SpotifyTrack spotifyTrack, HashMap<String, ItemSelection> selectedItemMap)
       : super(spotifyTrack, selectedItemMap);
 
   @override
@@ -22,7 +22,7 @@ class SpotifyTrackCardMultiSelectState extends SpotifyTrackCardState
     with
         SelectableModelCard<SpotifyTrackCard, SpotifyTrack>,
         MultiSelectModelCard<SpotifyTrackCard, SpotifyTrack> {
-  SpotifyTrackCardMultiSelectState(SpotifyTrack spotifyTrack,
-      HashMap<SpotifyTrack, ItemSelection> selectedItemMap)
+  SpotifyTrackCardMultiSelectState(
+      SpotifyTrack spotifyTrack, HashMap<String, ItemSelection> selectedItemMap)
       : super(spotifyTrack, selectedItemMap);
 }

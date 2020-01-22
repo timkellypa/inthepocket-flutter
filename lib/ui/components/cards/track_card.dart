@@ -11,7 +11,7 @@ class TrackCard extends StatefulWidget {
   TrackCard(this.setListTrack, this.selectedItemMap)
       : super(key: ObjectKey(setListTrack));
   final SetListTrackProxy setListTrack;
-  final HashMap<SetListTrackProxy, ItemSelection> selectedItemMap;
+  final HashMap<String, ItemSelection> selectedItemMap;
 
   @override
   State<StatefulWidget> createState() {
@@ -23,11 +23,10 @@ class TrackCardState extends ModelCardStateBase<TrackCard, SetListTrackProxy> {
   TrackCardState(this._setListTrack, this._selectedItemMap);
 
   final SetListTrackProxy _setListTrack;
-  final HashMap<SetListTrackProxy, ItemSelection> _selectedItemMap;
+  final HashMap<String, ItemSelection> _selectedItemMap;
 
   @override
-  HashMap<SetListTrackProxy, ItemSelection> get selectedItemMap =>
-      _selectedItemMap;
+  HashMap<String, ItemSelection> get selectedItemMap => _selectedItemMap;
 
   @override
   TrackBloc getBloc(BuildContext context) => Provider.of<TrackBloc>(context);

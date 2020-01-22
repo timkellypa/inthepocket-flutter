@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Emitted on: 2020-01-15 22:24:45.451474
+// Emitted on: 2020-01-22 00:20:53.233913
 
 // **************************************************************************
 // Generator: OrmM8GeneratorForAnnotation
@@ -15,6 +15,7 @@ class TrackProxy extends Track {
   Map<String, dynamic> toMap() {
     var map = Map<String, dynamic>();
     map['id'] = id;
+    map['guid'] = guid;
     map['title'] = title;
     map['spotifyId'] = spotifyId;
     map['spotifyAudioFeatures'] = spotifyAudioFeatures;
@@ -24,6 +25,7 @@ class TrackProxy extends Track {
 
   TrackProxy.fromMap(Map<String, dynamic> map) {
     this.id = map['id'];
+    this.guid = map['guid'];
     this.title = map['title'];
     this.spotifyId = map['spotifyId'];
     this.spotifyAudioFeatures = map['spotifyAudioFeatures'];
@@ -32,16 +34,26 @@ class TrackProxy extends Track {
 
 mixin TrackDatabaseProvider {
   Future<Database> db;
-  final theTrackColumns = ["id", "title", "spotifyId", "spotifyAudioFeatures"];
+  final theTrackColumns = [
+    "id",
+    "guid",
+    "title",
+    "spotifyId",
+    "spotifyAudioFeatures"
+  ];
 
   final String theTrackTableHandler = 'tracks';
   Future createTrackTable(Database db) async {
     await db.execute('''CREATE TABLE $theTrackTableHandler (
     id INTEGER  PRIMARY KEY AUTOINCREMENT,
+    guid TEXT ,
     title TEXT ,
     spotifyId TEXT ,
-    spotifyAudioFeatures TEXT 
+    spotifyAudioFeatures TEXT ,
+    UNIQUE (guid)
     )''');
+    await db.execute(
+        '''CREATE INDEX ix_${theTrackTableHandler}_guid ON $theTrackTableHandler (guid)''');
   }
 
   Future<int> saveTrack(TrackProxy instanceTrack) async {

@@ -23,15 +23,21 @@
 //   from the command pallette
 
 import 'package:f_orm_m8/f_orm_m8.dart';
+import 'package:in_the_pocket/models/independent/model_base.dart';
 
 @DataTable('tracks')
-class Track implements DbEntity {
+class Track implements DbEntity, ModelBase {
   static const int NEW_TRACK_ID = -1;
 
   @DataColumn('id',
       metadataLevel: ColumnMetadata.primaryKey | ColumnMetadata.autoIncrement)
   @override
   int id;
+
+  @DataColumn('guid',
+      metadataLevel: ColumnMetadata.indexed | ColumnMetadata.unique)
+  @override
+  String guid;
 
   @DataColumn('title', metadataLevel: 0)
   String title;

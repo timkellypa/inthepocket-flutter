@@ -38,9 +38,6 @@ class SpotifyTrackBloc
     if (importTargetSetList != null && firstFetch) {
       firstFetch = false;
 
-      final HashMap<SpotifyTrack, ItemSelection> itemSelections =
-          HashMap<SpotifyTrack, ItemSelection>();
-
       final TrackBloc trackBloc = TrackBloc(importTargetSetList);
 
       final List<SetListTrackProxy> setListTracks =
@@ -57,7 +54,7 @@ class SpotifyTrackBloc
 
       for (SpotifyTrack spotifyTrack in spotifyTracks) {
         if (spotifyIdSetListTrackMap.containsKey(spotifyTrack.spotifyId)) {
-          selectItem(itemSelections, spotifyTrack, SelectionType.disabled);
+          selectItem(spotifyTrack, SelectionType.disabled);
         }
       }
     }
@@ -85,14 +82,18 @@ class SpotifyTrackBloc
   }
 
   Future<void> importItems(SetListProxy targetSetList,
-      HashMap<SpotifyTrack, ItemSelection> selectedItemMap) async {
-    final List<MapEntry<SpotifyTrack, ItemSelection>> entries =
-        selectedItemMap.entries.toList();
+      HashMap<String, ItemSelection> selectedItemMap) async {
+    final List<SpotifyTrack> entries = itemList
+        .where((SpotifyTrack spotifyTrack) =>
+            selectedItemMap.containsKey(spotifyTrack.guid) &&
+            selectedItemMap[spotifyTrack.guid].selectionType &
+                    SelectionType.selected >
+                0)
+        .toList();
     final List<TrackProxy> audioFeatureTracks = <TrackProxy>[];
 
-    entries.sort((MapEntry<SpotifyTrack, ItemSelection> a,
-            MapEntry<SpotifyTrack, ItemSelection> b) =>
-        a.key.sortOrder.compareTo(b.key.sortOrder));
+    entries.sort(
+        (SpotifyTrack a, SpotifyTrack b) => a.sortOrder.compareTo(b.sortOrder));
 
     final TrackRepository trackRepository = TrackRepository();
     final List<TrackProxy> trackList = await trackRepository.getTracks();
@@ -105,28 +106,26 @@ class SpotifyTrackBloc
       spotifyIdTrackMap[track.spotifyId] = track;
     }
 
-    for (MapEntry<SpotifyTrack, ItemSelection> entry in entries) {
-      if (entry.value.selectionType & SelectionType.selected > 0) {
-        TrackProxy track;
-        // check to see if it already exists
-        if (!spotifyIdTrackMap.containsKey(entry.key.spotifyId)) {
-          track = TrackProxy();
-          track.spotifyId = entry.key.spotifyId;
-          track.title = entry.key.spotifyTitle;
-          track.spotifyAudioFeatures = entry.key.spotifyAudioFeatures;
-          final int trackId = await trackRepository.insertTrack(track);
-          track.id = trackId;
-          audioFeatureTracks.add(track);
-        } else {
-          track = spotifyIdTrackMap[entry.key.spotifyId];
-        }
-
-        final SetListTrackProxy setListTrack = SetListTrackProxy();
-
-        setListTrack.trackId = track.id;
-        setListTrack.setListId = targetSetList.id;
-        await trackRepository.insert(setListTrack);
+    for (SpotifyTrack spotifyTrack in entries) {
+      TrackProxy track;
+      // check to see if it already exists
+      if (!spotifyIdTrackMap.containsKey(spotifyTrack.spotifyId)) {
+        track = TrackProxy();
+        track.spotifyId = spotifyTrack.spotifyId;
+        track.title = spotifyTrack.spotifyTitle;
+        track.spotifyAudioFeatures = spotifyTrack.spotifyAudioFeatures;
+        final int trackId = await trackRepository.insertTrack(track);
+        track.id = trackId;
+        audioFeatureTracks.add(track);
+      } else {
+        track = spotifyIdTrackMap[spotifyTrack.spotifyId];
       }
+
+      final SetListTrackProxy setListTrack = SetListTrackProxy();
+
+      setListTrack.trackId = track.id;
+      setListTrack.setListId = targetSetList.id;
+      await trackRepository.insert(setListTrack);
     }
     await trackRepository.applySpotifyAudioFeatures(audioFeatureTracks);
   }

@@ -7,7 +7,6 @@ import 'package:in_the_pocket/bloc/spotify_playlist_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/helpers/item_selection_helpers.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/models/independent/spotify_playlist.dart';
 import 'package:in_the_pocket/ui/components/cards/spotify_playlist_card_select.dart';
@@ -38,8 +37,7 @@ class TrackImportSpotifyPlaylistPageState
 
   TrackBloc trackBloc;
   SpotifyPlaylistBloc spotifyPlaylistBloc;
-  StreamSubscription<HashMap<SpotifyPlaylist, ItemSelection>>
-      selectedItemSubscription;
+  StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
 
   @override
   void initState() {
@@ -50,11 +48,9 @@ class TrackImportSpotifyPlaylistPageState
     super.initState();
   }
 
-  void itemSelectionsChanged(
-      HashMap<SpotifyPlaylist, ItemSelection> itemSelectionMap) {
+  void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
     final List<SpotifyPlaylist> selectedItems =
-        ItemSelectionHelpers.getItemSelectionMatches<SpotifyPlaylist>(
-            itemSelectionMap, SelectionType.selected);
+        spotifyPlaylistBloc.getMatchingSelections(SelectionType.selected);
 
     if (selectedItems.isEmpty) {
       return;
@@ -89,8 +85,7 @@ class TrackImportSpotifyPlaylistPageState
             child: Provider<SpotifyPlaylistBloc>.value(
               value: spotifyPlaylistBloc,
               child: SpotifyPlaylistList<SpotifyPlaylistCardSelect>(
-                  (SpotifyPlaylist a,
-                          HashMap<SpotifyPlaylist, ItemSelection> b) =>
+                  (SpotifyPlaylist a, HashMap<String, ItemSelection> b) =>
                       SpotifyPlaylistCardSelect(a, b)),
             ),
           ),

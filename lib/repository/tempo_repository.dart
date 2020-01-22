@@ -41,6 +41,7 @@ class TempoRepository extends RepositoryBase<TempoProxy> {
 
   @override
   Future<int> insert(TempoProxy item) async {
+    await prepareInsert(item);
     final int id = await dbProvider.saveTempo(item);
     item.id = id;
     item.sortOrder = id;

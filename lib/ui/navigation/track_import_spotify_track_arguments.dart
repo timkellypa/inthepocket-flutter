@@ -11,5 +11,5 @@ class TrackImportSpotifyTrackArguments {
   SetListProxy targetSetList;
   SpotifyPlaylistBloc spotifyPlaylistBloc;
   SpotifyPlaylist spotifyPlaylist;
-  HashMap<SpotifyPlaylist, ItemSelection> itemSelectionMap;
+  HashMap<String, ItemSelection> itemSelectionMap;
 }

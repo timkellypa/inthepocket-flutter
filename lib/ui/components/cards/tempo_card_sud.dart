@@ -10,8 +10,7 @@ import 'package:in_the_pocket/ui/components/cards/tempo_card.dart';
 import 'mixins/editable_model_card.dart';
 
 class TempoCardSUD extends TempoCard {
-  TempoCardSUD(
-      TempoProxy tempo, HashMap<TempoProxy, ItemSelection> selectedItemMap)
+  TempoCardSUD(TempoProxy tempo, HashMap<String, ItemSelection> selectedItemMap)
       : super(tempo, selectedItemMap);
 
   @override
@@ -26,6 +25,6 @@ class TempoCardSUDState extends TempoCardState
         EditableModelCard<TempoCard, TempoProxy>,
         SelectableModelCard<TempoCard, TempoProxy> {
   TempoCardSUDState(
-      TempoProxy tempo, HashMap<TempoProxy, ItemSelection> selectedItemMap)
+      TempoProxy tempo, HashMap<String, ItemSelection> selectedItemMap)
       : super(tempo, selectedItemMap);
 }

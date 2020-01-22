@@ -39,6 +39,7 @@ class SpotifyProvider {
     for (Map<String, dynamic> item in items) {
       final SpotifyPlaylist list = SpotifyPlaylist();
       list.spotifyId = item['id'];
+      list.guid = item['id'];
       list.id = index;
       list.sortOrder = index;
       list.spotifyTitle = item['name'];
@@ -71,6 +72,7 @@ class SpotifyProvider {
         ..sortOrder = index
         ..spotifyTitle = item['track']['name']
         ..spotifyId = item['track']['id']
+        ..guid = item['track']['id']
         ..spotifyAudioFeatures = audioFeatures;
 
       ret.add(track);

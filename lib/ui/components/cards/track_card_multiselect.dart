@@ -9,7 +9,7 @@ import 'package:in_the_pocket/ui/components/cards/track_card.dart';
 
 class TrackCardMultiSelect extends TrackCard {
   TrackCardMultiSelect(SetListTrackProxy setListTrack,
-      HashMap<SetListTrackProxy, ItemSelection> selectedItemMap)
+      HashMap<String, ItemSelection> selectedItemMap)
       : super(setListTrack, selectedItemMap);
 
   @override
@@ -23,6 +23,6 @@ class TrackCardMultiSelectState extends TrackCardState
         SelectableModelCard<TrackCard, SetListTrackProxy>,
         MultiSelectModelCard<TrackCard, SetListTrackProxy> {
   TrackCardMultiSelectState(SetListTrackProxy setListTrack,
-      HashMap<SetListTrackProxy, ItemSelection> selectedItemMap)
+      HashMap<String, ItemSelection> selectedItemMap)
       : super(setListTrack, selectedItemMap);
 }
