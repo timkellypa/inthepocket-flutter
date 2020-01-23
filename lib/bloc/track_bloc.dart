@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/rendering.dart';
 import 'package:in_the_pocket/audio/track_list_player_task.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
@@ -72,6 +73,14 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
     return setList.description;
   }
 
+  SetListTrackProxy get selectedSetListTrack {
+    final List<SetListTrackProxy> selectedSetListTracks =
+        getMatchingSelections(SelectionType.selected);
+    return selectedSetListTracks.isNotEmpty
+        ? selectedSetListTracks.first
+        : null;
+  }
+
   @override
   Future<List<SetListTrackProxy>> fetch() async {
     final List<SetListTrackProxy> setListTracks = await getItemList();
@@ -131,10 +140,6 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
   }
 
   void changeTrack(TrackDirection direction) {
-    final List<SetListTrackProxy> selectedSetListTracks =
-        getMatchingSelections(SelectionType.selected);
-    final SetListTrackProxy selectedSetListTrack =
-        selectedSetListTracks.isNotEmpty ? selectedSetListTracks.first : null;
     int targetIndex;
     if (selectedSetListTrack == null) {
       targetIndex = direction == TrackDirection.next ? 0 : itemList.length - 1;
@@ -153,7 +158,7 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
   }
 
   Future<void> startAudioService() async {
-    AudioService.start(
+    await AudioService.start(
       backgroundTaskEntrypoint: _trackListPlayerTaskEntrypoint,
       resumeOnClick: true,
       notificationColor: 0xFF2196f3,
@@ -163,7 +168,7 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
     );
 
     for (SetListTrackProxy setListTrack in itemList) {
-      AudioService.addQueueItem(
+      await AudioService.addQueueItem(
         MediaItem(
           id: await TempoRepository().getClickTrackPath(setListTrack.trackId),
           album: setList.description,
@@ -173,14 +178,17 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
         ),
       );
     }
+    await AudioService.prepare();
   }
 
   void stop() {
     AudioService.stop();
   }
 
-  void play() {
-    AudioService.play();
+  Future<void> play() async {
+    final String trackPath =
+        await TempoRepository().getClickTrackPath(selectedSetListTrack.trackId);
+    await AudioService.playFromMediaId(trackPath);
   }
 
   void skipToNext() {
@@ -193,6 +201,11 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
 
   void skipToQueueItem(String trackPath) {
     AudioService.skipToQueueItem(trackPath);
+  }
+
+  @override
+  void dispose() {
+    AudioService.stop();
   }
 }
 

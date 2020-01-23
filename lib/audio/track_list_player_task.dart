@@ -60,7 +60,7 @@ class TrackListPlayerTask extends BackgroundAudioTask {
   final AudioPlayer _audioPlayer = AudioPlayer();
   final Completer<dynamic> _completer = Completer<dynamic>();
   BasicPlaybackState _skipState;
-  bool _playing;
+  bool _playing = false;
 
   bool get hasNext => _queueIndex + 1 < _queue.length;
 
@@ -117,9 +117,9 @@ class TrackListPlayerTask extends BackgroundAudioTask {
       }
     });
 
-    AudioServiceBackground.setQueue(await getQueue());
+    // AudioServiceBackground.setQueue(await getQueue());
 
-    await onSkipToNext();
+    // await onSkipToNext();
     await _completer.future;
     playerStateSubscription.cancel();
     eventSubscription.cancel();
@@ -151,26 +151,33 @@ class TrackListPlayerTask extends BackgroundAudioTask {
   Future<void> onSkipToNext() => _skip(1);
 
   @override
-  Future<void> onSkipToPrevious() => _skip(-1);
+  void onPlayFromMediaId(String mediaId) {
+    super.onPlayFromMediaId(mediaId);
+    _playItem(mediaId);
+  }
 
-  Future<void> _skip(int offset) async {
-    final int newPos = _queueIndex + offset;
-    if (!(newPos >= 0 && newPos < _queue.length)) {
-      return;
-    }
-    if (_playing == null) {
-      // First time, we want to start playing
-      _playing = true;
-    } else if (_playing) {
+  /// Stop playback if we are playing
+  Future<void> _stopPlayback() async {
+    if (_playing) {
       // Stop current item
       await _audioPlayer.stop();
     }
-    // Load next item
-    _queueIndex = newPos;
+  }
+
+  Future<void> _playItem(String mediaId) async {
+    await _stopPlayback();
+    for (int i = 0; i < _queue.length; ++i) {
+      if (_queue[i].id == mediaId) {
+        _queueIndex = i;
+        break;
+      }
+    }
+    _playing = true;
+    await _prepareCurrentItem();
+  }
+
+  Future<void> _prepareCurrentItem() async {
     AudioServiceBackground.setMediaItem(mediaItem);
-    _skipState = offset > 0
-        ? BasicPlaybackState.skippingToNext
-        : BasicPlaybackState.skippingToPrevious;
     await _audioPlayer.setUrl(mediaItem.id);
     _skipState = null;
     // Resume playback if we were playing
@@ -179,6 +186,33 @@ class TrackListPlayerTask extends BackgroundAudioTask {
     } else {
       _setState(state: BasicPlaybackState.paused);
     }
+  }
+
+  @override
+  Future<void> onSkipToPrevious() => _skip(-1);
+
+  Future<void> _skip(int offset) async {
+    final int newPos = _queueIndex + offset;
+    if (!(newPos >= 0 && newPos < _queue.length)) {
+      return;
+    }
+
+    await _stopPlayback();
+    _playing = true;
+
+    _skipState = offset > 0
+        ? BasicPlaybackState.skippingToNext
+        : BasicPlaybackState.skippingToPrevious;
+
+    // Load next item
+    _queueIndex = newPos;
+    await _prepareCurrentItem();
+  }
+
+  @override
+  void onPrepare() {
+    super.onPrepare();
+    AudioServiceBackground.setQueue(_queue);
   }
 
   @override
@@ -209,8 +243,14 @@ class TrackListPlayerTask extends BackgroundAudioTask {
 
   @override
   void onStop() {
-    _audioPlayer.stop();
-    _setState(state: BasicPlaybackState.stopped);
+    switch (AudioServiceBackground.state.basicState) {
+      case BasicPlaybackState.paused:
+      case BasicPlaybackState.playing:
+        _audioPlayer.stop();
+        _setState(state: BasicPlaybackState.stopped);
+        break;
+      default:
+    }
     _completer.complete();
   }
 
