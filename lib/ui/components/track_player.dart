@@ -62,21 +62,21 @@ class TrackPlayerState extends State<TrackPlayer> {
                             iconSize: 90,
                             icon: Icon(Icons.skip_previous),
                             onPressed: () {
-                              trackBloc.changeTrack(TrackDirection.previous);
+                              trackBloc.skipToPrevious();
                             },
                           ),
                           IconButton(
                             iconSize: 90,
                             icon: const Icon(FontAwesomeIcons.headphones),
                             onPressed: () {
-                              trackBloc.play();
+                              trackBloc.audioClick();
                             },
                           ),
                           IconButton(
                               iconSize: 90,
                               icon: const Icon(Icons.skip_next),
                               onPressed: () {
-                                trackBloc.changeTrack(TrackDirection.next);
+                                trackBloc.skipToNext();
                               }),
                         ],
                       )

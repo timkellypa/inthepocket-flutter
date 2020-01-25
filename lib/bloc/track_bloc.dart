@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:audio_service/audio_service.dart';
-import 'package:flutter/rendering.dart';
 import 'package:in_the_pocket/audio/track_list_player_task.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
@@ -155,6 +154,40 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
 
   void connectAudio() {
     AudioService.connect();
+    AudioService.currentMediaItemStream.listen(mediaItemChanged);
+  }
+
+  void mediaItemChanged(MediaItem mediaItem) {
+    if (mediaItem == null) {
+      return;
+    }
+    final int trackId = TempoRepository().getTrackIdFromPath(mediaItem.id);
+    // find media item in list
+    final SetListTrackProxy selectedSetListTrack = itemList
+        .where(
+            (SetListTrackProxy setListTrack) => setListTrack.trackId == trackId)
+        .first;
+    selectItem(selectedSetListTrack, SelectionType.selected,
+        pushToAudioService: false);
+  }
+
+  @override
+  Future<void> selectItem(SetListTrackProxy model, int selectionTypes,
+      {bool doSync = true, bool pushToAudioService = true}) async {
+    // do nothing if selection is already done
+    if (itemSelectionMap.containsKey(model.guid) &&
+        itemSelectionMap[model.guid].selectionType & selectionTypes > 0) {
+      return;
+    }
+
+    if (selectionTypes & SelectionType.selected > 0) {
+      unSelectAll(SelectionType.selected);
+    }
+    super.selectItem(model, selectionTypes, doSync: doSync);
+    if (pushToAudioService) {
+      AudioService.skipToQueueItem(
+          await TempoRepository().getClickTrackPath(model.trackId));
+    }
   }
 
   Future<void> startAudioService() async {
@@ -185,10 +218,8 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
     AudioService.stop();
   }
 
-  Future<void> play() async {
-    final String trackPath =
-        await TempoRepository().getClickTrackPath(selectedSetListTrack.trackId);
-    await AudioService.playFromMediaId(trackPath);
+  Future<void> audioClick() async {
+    await AudioService.click();
   }
 
   void skipToNext() {

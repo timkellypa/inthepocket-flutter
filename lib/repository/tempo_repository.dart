@@ -21,6 +21,11 @@ class TempoRepository extends RepositoryBase<TempoProxy> {
     return '${await _tempoDirectory}/${trackId.toString()}.wav';
   }
 
+  int getTrackIdFromPath(String path) {
+    final List<String> pathItems = path.split('/');
+    return int.parse(pathItems.last.split('.')[0]);
+  }
+
   @override
   Future<List<TempoProxy>> fetch({Function filter}) async {
     List<TempoProxy> tempos = await dbProvider.getTempoProxiesAll();

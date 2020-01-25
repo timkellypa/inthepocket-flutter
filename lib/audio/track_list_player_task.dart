@@ -156,6 +156,12 @@ class TrackListPlayerTask extends BackgroundAudioTask {
     _playItem(mediaId);
   }
 
+  @override
+  Future<void> onSkipToQueueItem(String mediaId) async {
+    await _setIndex(mediaId);
+    await _prepareCurrentItem();
+  }
+
   /// Stop playback if we are playing
   Future<void> _stopPlayback() async {
     if (_playing) {
@@ -164,7 +170,7 @@ class TrackListPlayerTask extends BackgroundAudioTask {
     }
   }
 
-  Future<void> _playItem(String mediaId) async {
+  Future<void> _setIndex(String mediaId) async {
     await _stopPlayback();
     for (int i = 0; i < _queue.length; ++i) {
       if (_queue[i].id == mediaId) {
@@ -172,6 +178,10 @@ class TrackListPlayerTask extends BackgroundAudioTask {
         break;
       }
     }
+  }
+
+  Future<void> _playItem(String mediaId) async {
+    _setIndex(mediaId);
     _playing = true;
     await _prepareCurrentItem();
   }
@@ -198,7 +208,6 @@ class TrackListPlayerTask extends BackgroundAudioTask {
     }
 
     await _stopPlayback();
-    _playing = true;
 
     _skipState = offset > 0
         ? BasicPlaybackState.skippingToNext
@@ -210,9 +219,10 @@ class TrackListPlayerTask extends BackgroundAudioTask {
   }
 
   @override
-  void onPrepare() {
+  Future<void> onPrepare() async {
     super.onPrepare();
-    AudioServiceBackground.setQueue(_queue);
+    await AudioServiceBackground.setQueue(_queue);
+    await onSkipToNext();
   }
 
   @override
