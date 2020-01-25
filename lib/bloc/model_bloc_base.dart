@@ -98,7 +98,9 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
   }
 
   void syncSelections() {
-    selectedItemsController.sink.add(itemSelectionMap);
+    if (!selectedItemsController.isClosed) {
+      selectedItemsController.sink.add(itemSelectionMap);
+    }
   }
 
   Future<List<ModelType>> getItemList(
@@ -114,7 +116,9 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
 
   Future<List<ModelType>> fetch() async {
     await getItemList();
-    listController.sink.add(itemList);
+    if (!listController.isClosed) {
+      listController.sink.add(itemList);
+    }
     return itemList;
   }
 

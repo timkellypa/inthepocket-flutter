@@ -47,4 +47,7 @@ class Track implements DbEntity, ModelBase {
 
   @DataColumn('spotifyAudioFeatures', metadataLevel: 0)
   String spotifyAudioFeatures;
+
+  @DataColumn('countOutBars', metadataLevel: 0)
+  int countOutBars;
 }

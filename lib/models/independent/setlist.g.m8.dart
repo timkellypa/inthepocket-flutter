@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Emitted on: 2020-01-22 00:20:53.233913
+// Emitted on: 2020-01-25 00:01:00.167331
 
 // **************************************************************************
 // Generator: OrmM8GeneratorForAnnotation
@@ -20,7 +20,7 @@ class SetListProxy extends SetList {
     map['sort_order'] = sortOrder;
     map['date'] = date.millisecondsSinceEpoch;
     map['location'] = location;
-    map['is_master'] = isMaster ? 1 : 0;
+    map['set_list_type'] = setListType;
 
     return map;
   }
@@ -32,7 +32,7 @@ class SetListProxy extends SetList {
     this.sortOrder = map['sort_order'];
     this.date = DateTime.fromMillisecondsSinceEpoch(map['date']);
     this.location = map['location'];
-    this.isMaster = map['is_master'] == 1 ? true : false;
+    this.setListType = map['set_list_type'];
   }
 }
 
@@ -45,7 +45,7 @@ mixin SetListDatabaseProvider {
     "sort_order",
     "date",
     "location",
-    "is_master"
+    "set_list_type"
   ];
 
   final String theSetListTableHandler = 'set_lists';
@@ -57,7 +57,7 @@ mixin SetListDatabaseProvider {
     sort_order INTEGER ,
     date INTEGER ,
     location TEXT ,
-    is_master INTEGER ,
+    set_list_type INTEGER ,
     UNIQUE (guid)
     )''');
     await db.execute(

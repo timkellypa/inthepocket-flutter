@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Emitted on: 2020-01-22 00:20:53.233913
+// Emitted on: 2020-01-25 00:01:00.167331
 
 // **************************************************************************
 // DatabaseProviderGenerator

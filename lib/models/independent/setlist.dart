@@ -25,6 +25,8 @@
 import 'package:f_orm_m8/f_orm_m8.dart';
 import 'package:in_the_pocket/models/independent/sortable_model_base.dart';
 
+enum SetListType { master, event }
+
 @DataTable('set_lists')
 class SetList implements DbEntity, SortableModelBase {
   @DataColumn('id',
@@ -50,6 +52,6 @@ class SetList implements DbEntity, SortableModelBase {
   @DataColumn('location', metadataLevel: 0)
   String location;
 
-  @DataColumn('is_master', metadataLevel: 0)
-  bool isMaster;
+  @DataColumn('set_list_type', metadataLevel: 0)
+  int setListType;
 }

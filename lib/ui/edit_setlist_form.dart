@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/setlist_bloc.dart';
+import 'package:in_the_pocket/models/independent/setlist.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/ui/controls/date_time.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +22,7 @@ class EditSetListFormState extends State<EditSetListForm> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _dateTimeController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  bool _isMasterList = false;
+  SetListType _setListType = SetListType.master;
 
   @override
   void initState() {
@@ -29,7 +30,7 @@ class EditSetListFormState extends State<EditSetListForm> {
       _descriptionController.text = setList.description;
       _dateTimeController.text = setList.date.toString();
       _locationController.text = setList.location;
-      _isMasterList = setList.isMaster;
+      _setListType = SetListType.values[setList.setListType];
     }
     super.initState();
   }
@@ -48,7 +49,7 @@ class EditSetListFormState extends State<EditSetListForm> {
             setListToSave.description = _descriptionController.value.text;
 
             setListToSave.date = DateTime.now();
-            setListToSave.isMaster = _isMasterList;
+            setListToSave.setListType = _setListType.index;
             setListToSave.location = _locationController.value.text;
             setListToSave.date =
                 DateTime.tryParse(_dateTimeController.value.text) ??
@@ -79,19 +80,20 @@ class EditSetListFormState extends State<EditSetListForm> {
               CheckboxListTile(
                   controlAffinity: ListTileControlAffinity.leading,
                   title: const Text('Is Master List'),
-                  value: _isMasterList,
+                  value: _setListType == SetListType.master,
                   onChanged: (bool check) {
-                    setState(() => _isMasterList = check);
+                    setState(() => _setListType =
+                        check ? SetListType.master : SetListType.event);
                   }),
               Visibility(
-                  visible: !_isMasterList,
+                  visible: _setListType == SetListType.event,
                   child: ListTile(
                     leading: const Icon(Icons.access_time),
                     title: DateTimeControl(_dateTimeController),
                     subtitle: const Text('Date/Time'),
                   )),
               Visibility(
-                  visible: !_isMasterList,
+                  visible: _setListType == SetListType.event,
                   child: ListTile(
                     leading: const Icon(Icons.location_on),
                     title: TextField(controller: _locationController),

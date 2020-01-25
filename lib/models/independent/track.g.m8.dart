@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Emitted on: 2020-01-22 00:20:53.233913
+// Emitted on: 2020-01-25 00:01:00.167331
 
 // **************************************************************************
 // Generator: OrmM8GeneratorForAnnotation
@@ -19,6 +19,7 @@ class TrackProxy extends Track {
     map['title'] = title;
     map['spotifyId'] = spotifyId;
     map['spotifyAudioFeatures'] = spotifyAudioFeatures;
+    map['countOutBars'] = countOutBars;
 
     return map;
   }
@@ -29,6 +30,7 @@ class TrackProxy extends Track {
     this.title = map['title'];
     this.spotifyId = map['spotifyId'];
     this.spotifyAudioFeatures = map['spotifyAudioFeatures'];
+    this.countOutBars = map['countOutBars'];
   }
 }
 
@@ -39,7 +41,8 @@ mixin TrackDatabaseProvider {
     "guid",
     "title",
     "spotifyId",
-    "spotifyAudioFeatures"
+    "spotifyAudioFeatures",
+    "countOutBars"
   ];
 
   final String theTrackTableHandler = 'tracks';
@@ -50,6 +53,7 @@ mixin TrackDatabaseProvider {
     title TEXT ,
     spotifyId TEXT ,
     spotifyAudioFeatures TEXT ,
+    countOutBars INTEGER ,
     UNIQUE (guid)
     )''');
     await db.execute(
