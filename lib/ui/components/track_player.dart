@@ -18,9 +18,18 @@ class TrackPlayer extends StatefulWidget {
 
 class TrackPlayerState extends State<TrackPlayer> {
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final TrackBloc trackBloc = Provider.of<TrackBloc>(context);
+
+    trackBloc.connectAudio();
+    trackBloc.startAudioService();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final TrackBloc trackBloc = Provider.of<TrackBloc>(context);
-    trackBloc.connectAudio();
     return Container(
       child: StreamBuilder<List<SetListTrackProxy>>(
         stream: trackBloc.items,
@@ -30,60 +39,61 @@ class TrackPlayerState extends State<TrackPlayer> {
           if (!tracksSnapshot.hasData) {
             return Center(child: Loading());
           }
-          trackBloc.startAudioService();
 
           return StreamBuilder<HashMap<String, ItemSelection>>(
-              stream: trackBloc.selectedItems,
-              initialData: HashMap<String, ItemSelection>(),
-              builder: (BuildContext innerContext,
-                  AsyncSnapshot<HashMap<String, ItemSelection>>
-                      selectionsSnapshot) {
-                final List<SetListTrackProxy> selectedSetListTracks =
-                    trackBloc.getMatchingSelections(SelectionType.selected);
-                final SetListTrackProxy selectedSetListTrack =
-                    selectedSetListTracks.isNotEmpty
-                        ? selectedSetListTracks.first
-                        : null;
-                if (selectedSetListTrack == null) {
-                  return Container(width: 0.0, height: 0.0);
-                }
+            stream: trackBloc.selectedItems,
+            initialData: HashMap<String, ItemSelection>(),
+            builder: (BuildContext innerContext,
+                AsyncSnapshot<HashMap<String, ItemSelection>>
+                    selectionsSnapshot) {
+              final List<SetListTrackProxy> selectedSetListTracks =
+                  trackBloc.getMatchingSelections(SelectionType.selected);
+              final SetListTrackProxy selectedSetListTrack =
+                  selectedSetListTracks.isNotEmpty
+                      ? selectedSetListTracks.first
+                      : null;
+              if (selectedSetListTrack == null) {
+                return Container(width: 0.0, height: 0.0);
+              }
 
-                return Card(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(selectedSetListTrack.track.title,
-                          style: const TextStyle(fontSize: 26),
-                          overflow: TextOverflow.ellipsis),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          IconButton(
-                            iconSize: 90,
-                            icon: Icon(Icons.skip_previous),
-                            onPressed: () {
-                              trackBloc.skipToPrevious();
-                            },
-                          ),
-                          IconButton(
-                            iconSize: 90,
-                            icon: const Icon(FontAwesomeIcons.headphones),
-                            onPressed: () {
-                              trackBloc.audioClick();
-                            },
-                          ),
-                          IconButton(
-                              iconSize: 90,
-                              icon: const Icon(Icons.skip_next),
-                              onPressed: () {
-                                trackBloc.skipToNext();
-                              }),
-                        ],
-                      )
-                    ],
-                  ),
-                );
-              });
+              return Card(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(selectedSetListTrack.track.title,
+                        style: const TextStyle(fontSize: 26),
+                        overflow: TextOverflow.ellipsis),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        IconButton(
+                          iconSize: 90,
+                          icon: Icon(Icons.skip_previous),
+                          onPressed: () {
+                            trackBloc.skipToPrevious();
+                          },
+                        ),
+                        IconButton(
+                          iconSize: 90,
+                          icon: const Icon(FontAwesomeIcons.headphones),
+                          onPressed: () {
+                            trackBloc.audioClick();
+                          },
+                        ),
+                        IconButton(
+                          iconSize: 90,
+                          icon: const Icon(Icons.skip_next),
+                          onPressed: () {
+                            trackBloc.skipToNext();
+                          },
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              );
+            },
+          );
         },
       ),
     );

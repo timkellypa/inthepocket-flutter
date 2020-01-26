@@ -162,6 +162,13 @@ class TrackListPlayerTask extends BackgroundAudioTask {
     await _prepareCurrentItem();
   }
 
+  @override
+  Future<void> onCustomAction(String name, dynamic arguments) async {
+    if (name == 'resetQueue') {
+      _queue.clear();
+    }
+  }
+
   /// Stop playback if we are playing
   Future<void> _stopPlayback() async {
     if (_playing) {
@@ -222,7 +229,16 @@ class TrackListPlayerTask extends BackgroundAudioTask {
   Future<void> onPrepare() async {
     super.onPrepare();
     await AudioServiceBackground.setQueue(_queue);
-    await onSkipToNext();
+
+    // make all invalid queue indexes go to first option
+    if (_queueIndex > _queue.length) {
+      _queueIndex = -1;
+    }
+    if (_queueIndex == -1) {
+      await onSkipToNext();
+    } else {
+      _prepareCurrentItem();
+    }
   }
 
   @override

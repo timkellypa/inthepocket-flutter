@@ -108,6 +108,8 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
       syncSelections();
     }
 
+    await loadMediaItems();
+
     listController.sink.add(setListTracks);
     return setListTracks;
   }
@@ -174,6 +176,10 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
   @override
   Future<void> selectItem(SetListTrackProxy model, int selectionTypes,
       {bool doSync = true, bool pushToAudioService = true}) async {
+    // Call super if null (adding item)
+    if (model == null) {
+      return super.selectItem(model, selectionTypes, doSync: doSync);
+    }
     // do nothing if selection is already done
     if (itemSelectionMap.containsKey(model.guid) &&
         itemSelectionMap[model.guid].selectionType & selectionTypes > 0) {
@@ -184,7 +190,7 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
       unSelectAll(SelectionType.selected);
     }
     super.selectItem(model, selectionTypes, doSync: doSync);
-    if (pushToAudioService) {
+    if (pushToAudioService && selectionTypes & SelectionType.selected > 0) {
       AudioService.skipToQueueItem(
           await TempoRepository().getClickTrackPath(model.trackId));
     }
@@ -199,17 +205,19 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
       androidNotificationChannelName: CHANNEL_NAME,
       androidNotificationIcon: NOTIFICATION_ICON,
     );
+  }
+
+  Future<void> loadMediaItems() async {
+    await AudioService.customAction('resetQueue');
 
     for (SetListTrackProxy setListTrack in itemList) {
-      await AudioService.addQueueItem(
-        MediaItem(
-          id: await TempoRepository().getClickTrackPath(setListTrack.trackId),
-          album: setList.description,
-          title: setListTrack.track.title,
-          artist: setList.location,
-          duration: 2856950,
-        ),
-      );
+      await AudioService.addQueueItem(MediaItem(
+        id: await TempoRepository().getClickTrackPath(setListTrack.trackId),
+        album: setList.description,
+        title: setListTrack.track.title,
+        artist: setList.location,
+        duration: 2856950,
+      ));
     }
     await AudioService.prepare();
   }
