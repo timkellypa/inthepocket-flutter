@@ -1,7 +1,7 @@
 import 'dart:collection';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
@@ -73,11 +73,28 @@ class TrackPlayerState extends State<TrackPlayer> {
                             trackBloc.skipToPrevious();
                           },
                         ),
-                        IconButton(
-                          iconSize: 90,
-                          icon: const Icon(FontAwesomeIcons.headphones),
-                          onPressed: () {
-                            trackBloc.audioClick();
+                        StreamBuilder<PlaybackState>(
+                          stream: trackBloc.audioPlaybackStream,
+                          initialData: trackBloc.audioPlaybackState,
+                          builder: (BuildContext context,
+                              AsyncSnapshot<PlaybackState>
+                                  playbackStateSnapshot) {
+                            Icon toggleIcon;
+                            switch (playbackStateSnapshot.data.basicState) {
+                              case BasicPlaybackState.buffering:
+                              case BasicPlaybackState.playing:
+                                toggleIcon = Icon(Icons.pause);
+                                break;
+                              default:
+                                toggleIcon = Icon(Icons.headset);
+                            }
+                            return IconButton(
+                              iconSize: 90,
+                              icon: toggleIcon,
+                              onPressed: () {
+                                trackBloc.audioClick();
+                              },
+                            );
                           },
                         ),
                         IconButton(
@@ -88,7 +105,7 @@ class TrackPlayerState extends State<TrackPlayer> {
                           },
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               );

@@ -51,6 +51,15 @@ class TrackBloc extends ModelBlocBase<SetListTrackProxy, TrackRepository> {
 
   bool firstFetch = true;
 
+  /// Forward AudioService playback state
+  Stream<PlaybackState> get audioPlaybackStream {
+    return AudioService.playbackStateStream;
+  }
+
+  PlaybackState get audioPlaybackState {
+    return AudioService.playbackState;
+  }
+
   Function get importExclusionsFilter {
     return (SetListTrackProxy proxy) =>
         proxy.setListId == importTargetSetList.id;
