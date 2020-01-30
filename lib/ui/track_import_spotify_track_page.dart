@@ -8,6 +8,7 @@ import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/models/independent/spotify_playlist.dart';
 import 'package:in_the_pocket/models/independent/spotify_track.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 
 import 'components/cards/spotify_track_card_multiselect.dart';
@@ -58,37 +59,65 @@ class TrackImportSpotifyTrackPageState
             builder: (BuildContext context,
                 AsyncSnapshot<HashMap<String, ItemSelection>>
                     selectedItemMapSnapshot) {
-              return IconButton(
-                icon: const Icon(Icons.save),
-                onPressed: () async {
-                  if (selectedItemMapSnapshot.hasData) {
-                    await spotifyTrackBloc.importItems(
-                        _targetSetList, selectedItemMapSnapshot.data);
-                    Navigator.popUntil(context, (Route<dynamic> route) {
-                      return route.settings.name ==
-                          ApplicationRouter.ROUTE_TRACK_LIST;
-                    });
-                  }
-                },
-              );
+              return StreamBuilder<SaveStatus>(
+                  stream: spotifyTrackBloc.saveStatusStream,
+                  initialData: spotifyTrackBloc.saveStatus,
+                  builder: (BuildContext context,
+                      AsyncSnapshot<SaveStatus> saveStatusSnapshot) {
+                    return IconButton(
+                      icon: const Icon(Icons.save),
+                      onPressed: saveStatusSnapshot.data.total > 0
+                          ? null
+                          : () async {
+                              if (selectedItemMapSnapshot.hasData) {
+                                await spotifyTrackBloc.importItems(
+                                    _targetSetList,
+                                    selectedItemMapSnapshot.data);
+                                Navigator.popUntil(
+                                  context,
+                                  (Route<dynamic> route) {
+                                    return route.settings.name ==
+                                        ApplicationRouter.ROUTE_TRACK_LIST;
+                                  },
+                                );
+                              }
+                            },
+                    );
+                  });
             },
             stream: spotifyTrackBloc.selectedItems,
           )
         ],
       ),
       body: SafeArea(
-        child: Container(
-          color: Colors.white,
-          padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
-          child: Container(
-            //This is where the magic starts
-            child: Provider<SpotifyTrackBloc>.value(
-              value: spotifyTrackBloc,
-              child: SpotifyTrackList<SpotifyTrackCardMultiSelect>(
-                  (SpotifyTrack a, HashMap<String, ItemSelection> b) =>
-                      SpotifyTrackCardMultiSelect(a, b)),
-            ),
-          ),
+        child: StreamBuilder<SaveStatus>(
+          stream: spotifyTrackBloc.saveStatusStream,
+          initialData: spotifyTrackBloc.saveStatus,
+          builder: (BuildContext context,
+              AsyncSnapshot<SaveStatus> saveStatusSnapshot) {
+            return ModalProgressHUD(
+              inAsyncCall: saveStatusSnapshot.data.total > 0,
+              progressIndicator: CircularProgressIndicator(
+                semanticsValue: 'Importing Tracks',
+                value: saveStatusSnapshot.data.progress /
+                    saveStatusSnapshot.data.total,
+              ),
+              child: Container(
+                color: Colors.white,
+                padding:
+                    const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
+                child: Container(
+                  //This is where the magic starts
+                  child: Provider<SpotifyTrackBloc>.value(
+                    value: spotifyTrackBloc,
+                    child: SpotifyTrackList<SpotifyTrackCardMultiSelect>(
+                        (SpotifyTrack a, HashMap<String, ItemSelection> b) =>
+                            SpotifyTrackCardMultiSelect(a, b)),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
       bottomNavigationBar: CommonBottomBar(),

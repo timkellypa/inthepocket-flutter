@@ -80,12 +80,16 @@ class TempoRepository extends RepositoryBase<TempoProxy> {
     await file.writeAsBytes(writer.fileBytes);
   }
 
-  Future<void> writeClickTracks({List<TempoProxy> tempos}) async {
+  Future<void> writeClickTracks(
+      {List<TempoProxy> tempos,
+      Function(int total, double progress) notify}) async {
     int previousTrack;
     tempos ??= await fetch();
     if (tempos.isEmpty) {
       return;
     }
+    double i = 0;
+    notify(tempos.length, i);
     MetronomeWriter writer = MetronomeWriter();
     for (TempoProxy tempo in tempos) {
       if (tempo.trackId != previousTrack) {
@@ -96,9 +100,11 @@ class TempoRepository extends RepositoryBase<TempoProxy> {
       }
       await writer.addTempo(tempo);
       previousTrack = tempo.trackId;
+      notify(tempos.length, i++);
     }
     // After the loop write the last file contents, and de-reference writer
     await _writeClickTrackToFile(previousTrack, writer);
     writer = null;
+    notify(tempos.length, tempos.length * 1.0);
   }
 }

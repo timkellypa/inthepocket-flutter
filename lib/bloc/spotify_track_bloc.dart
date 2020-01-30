@@ -13,9 +13,18 @@ import 'package:in_the_pocket/repository/track_repository.dart';
 
 import 'model_bloc_base.dart';
 
+class SaveStatus {
+  SaveStatus(this.total, this.progress);
+
+  final int total;
+  final double progress;
+}
+
 class SpotifyTrackBloc
     extends ModelBlocBase<SpotifyTrack, SpotifyTrackRepository> {
-  SpotifyTrackBloc(this.spotifyPlaylist, {this.importTargetSetList}) : super();
+  SpotifyTrackBloc(this.spotifyPlaylist, {this.importTargetSetList}) : super() {
+    _saveStatusController = StreamController<SaveStatus>.broadcast();
+  }
 
   final SetListProxy importTargetSetList;
   final SpotifyPlaylist spotifyPlaylist;
@@ -25,6 +34,17 @@ class SpotifyTrackBloc
   @override
   SpotifyTrackRepository get repository {
     return SpotifyTrackRepository(spotifyPlaylist: spotifyPlaylist);
+  }
+
+  SaveStatus saveStatus = SaveStatus(0, 0.0);
+
+  StreamController<SaveStatus> _saveStatusController;
+
+  Stream<SaveStatus> get saveStatusStream => _saveStatusController.stream;
+
+  void updateSaveStatus(int total, double progress) {
+    saveStatus = SaveStatus(total, progress);
+    _saveStatusController.sink.add(saveStatus);
   }
 
   @override
@@ -83,6 +103,10 @@ class SpotifyTrackBloc
 
   Future<void> importItems(SetListProxy targetSetList,
       HashMap<String, ItemSelection> selectedItemMap) async {
+    // Start progress indicator immediately at 0.
+    //  Will only start progressing after click tracks are being written,
+    //  Since that is the most time-consuming part of the save.
+    updateSaveStatus(1, 0.0);
     final List<SpotifyTrack> entries = itemList
         .where((SpotifyTrack spotifyTrack) =>
             selectedItemMap.containsKey(spotifyTrack.guid) &&
@@ -127,6 +151,8 @@ class SpotifyTrackBloc
       setListTrack.setListId = targetSetList.id;
       await trackRepository.insert(setListTrack);
     }
-    await trackRepository.applySpotifyAudioFeatures(audioFeatureTracks);
+    await trackRepository.applySpotifyAudioFeatures(audioFeatureTracks,
+        notify: updateSaveStatus);
+    updateSaveStatus(0, 0);
   }
 }

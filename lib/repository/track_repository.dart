@@ -95,7 +95,8 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
     return await dbProvider.saveTrack(track);
   }
 
-  Future<void> applySpotifyAudioFeatures(List<TrackProxy> tracks) async {
+  Future<void> applySpotifyAudioFeatures(List<TrackProxy> tracks,
+      {Function(int total, double progress) notify}) async {
     final HashMap<String, TrackProxy> idTrackMap =
         HashMap<String, TrackProxy>();
     final List<TempoProxy> temposToSave = <TempoProxy>[];
@@ -129,7 +130,8 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
     for (TempoProxy tempo in temposToSave) {
       await dbProvider.saveTempo(tempo);
     }
-    await TempoRepository().writeClickTracks(tempos: temposToSave);
+    await TempoRepository()
+        .writeClickTracks(tempos: temposToSave, notify: notify);
   }
 
   TempoProxy _buildTempoFromAudioFeatures(Map<String, dynamic> audioFeatures) {
