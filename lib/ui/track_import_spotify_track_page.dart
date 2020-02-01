@@ -9,6 +9,7 @@ import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
 import 'package:in_the_pocket/models/independent/spotify_playlist.dart';
 import 'package:in_the_pocket/models/independent/spotify_track.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
 
 import 'components/cards/spotify_track_card_multiselect.dart';
@@ -95,12 +96,23 @@ class TrackImportSpotifyTrackPageState
           initialData: spotifyTrackBloc.saveStatus,
           builder: (BuildContext context,
               AsyncSnapshot<SaveStatus> saveStatusSnapshot) {
+            final bool showProgress = saveStatusSnapshot.data.total > 0;
+            final double ratio = showProgress
+                ? saveStatusSnapshot.data.progress /
+                    saveStatusSnapshot.data.total
+                : 0;
             return ModalProgressHUD(
-              inAsyncCall: saveStatusSnapshot.data.total > 0,
-              progressIndicator: CircularProgressIndicator(
-                semanticsValue: 'Importing Tracks',
-                value: saveStatusSnapshot.data.progress /
-                    saveStatusSnapshot.data.total,
+              inAsyncCall: showProgress,
+              opacity: 0.95,
+              progressIndicator: CircularPercentIndicator(
+                radius: 120,
+                lineWidth: 13,
+                animation: true,
+                backgroundColor: Colors.grey,
+                progressColor: Colors.blue,
+                header: const Text('Building Click Tracks'),
+                center: Text((ratio * 100).floor().toString() + '%'),
+                percent: ratio,
               ),
               child: Container(
                 color: Colors.white,
