@@ -99,6 +99,7 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
       {Function(int total, double progress) notify}) async {
     final HashMap<String, TrackProxy> idTrackMap =
         HashMap<String, TrackProxy>();
+    final TempoRepository tempoRepository = TempoRepository();
     final List<TempoProxy> temposToSave = <TempoProxy>[];
     final List<TempoProxy> existingTempos =
         await dbProvider.getTempoProxiesAll();
@@ -116,6 +117,7 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
               json.decode(track.spotifyAudioFeatures);
           final TempoProxy tempo = _buildTempoFromAudioFeatures(audioFeatures);
           tempo.trackId = track.id;
+
           temposToSave.add(tempo);
         }
       }
@@ -123,15 +125,15 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
 
     for (TempoProxy tempo in existingTempos) {
       if (idTrackMap.containsKey(tempo.trackId)) {
-        await dbProvider.deleteTempo(tempo.id);
+        await tempoRepository.delete(tempo.id);
       }
     }
 
     for (TempoProxy tempo in temposToSave) {
-      await dbProvider.saveTempo(tempo);
+      await tempoRepository.insert(tempo);
     }
-    await TempoRepository()
-        .writeClickTracks(tempos: temposToSave, notify: notify);
+    await tempoRepository.writeClickTracks(
+        tempos: temposToSave, notify: notify);
   }
 
   TempoProxy _buildTempoFromAudioFeatures(Map<String, dynamic> audioFeatures) {

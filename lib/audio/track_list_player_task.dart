@@ -66,7 +66,7 @@ class TrackListPlayerTask extends BackgroundAudioTask {
 
   bool get hasPrevious => _queueIndex > 0;
 
-  MediaItem get mediaItem => _queue[_queueIndex];
+  MediaItem get mediaItem => _queue.isNotEmpty ? _queue[_queueIndex] : null;
 
   Future<List<MediaItem>> getQueue() async {
     // wait until we have contents
@@ -194,6 +194,9 @@ class TrackListPlayerTask extends BackgroundAudioTask {
   }
 
   Future<void> _prepareCurrentItem() async {
+    if (mediaItem == null) {
+      return;
+    }
     AudioServiceBackground.setMediaItem(mediaItem);
     await _audioPlayer.setUrl(mediaItem.id);
     _skipState = null;
