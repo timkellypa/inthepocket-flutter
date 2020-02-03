@@ -6,7 +6,6 @@ import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
-import 'package:in_the_pocket/ui/components/loading.dart';
 import 'package:provider/provider.dart';
 
 class TrackPlayer extends StatefulWidget {
@@ -37,7 +36,7 @@ class TrackPlayerState extends State<TrackPlayer> {
             AsyncSnapshot<List<SetListTrackProxy>> tracksSnapshot) {
           // change in list should cause us to restart the track audio service
           if (!tracksSnapshot.hasData) {
-            return Center(child: Loading());
+            return Container();
           }
 
           return StreamBuilder<HashMap<String, ItemSelection>>(

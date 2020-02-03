@@ -107,4 +107,13 @@ class TempoRepository extends RepositoryBase<TempoProxy> {
     writer = null;
     notify(tempos.length, tempos.length * 1.0);
   }
+
+  Future<void> deleteClickTrack(int trackId) async {
+    final String path = await getClickTrackPath(trackId);
+    final File file = File(path);
+
+    if (file.existsSync()) {
+      await file.delete();
+    }
+  }
 }

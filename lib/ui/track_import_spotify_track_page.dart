@@ -74,6 +74,11 @@ class TrackImportSpotifyTrackPageState
                                 await spotifyTrackBloc.importItems(
                                     _targetSetList,
                                     selectedItemMapSnapshot.data);
+
+                                // wait a second to show the 100%
+                                await Future<void>.delayed(
+                                    const Duration(seconds: 1));
+
                                 Navigator.popUntil(
                                   context,
                                   (Route<dynamic> route) {

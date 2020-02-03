@@ -79,6 +79,13 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
         .toList();
     if (setListTracksWithCurrent.isEmpty) {
       await dbProvider.deleteTrack(current.trackId);
+      final TempoRepository tempoRepository = TempoRepository();
+      final List<TempoProxy> tempos = await tempoRepository.fetch(
+          filter: (TempoProxy tempo) => tempo.trackId == current.trackId);
+      for (TempoProxy tempo in tempos) {
+        await tempoRepository.delete(tempo.id);
+      }
+      await tempoRepository.deleteClickTrack(current.trackId);
     }
     return await dbProvider.deleteSetListTrack(id);
   }
