@@ -11,8 +11,8 @@ import 'package:in_the_pocket/ui/components/cards/track_card_multiselect.dart';
 import 'package:in_the_pocket/ui/components/common_bottom_bar.dart';
 import 'package:provider/provider.dart';
 
-import 'components/lists/track_import_list.dart';
-import 'navigation/application_router.dart';
+import '../components/lists/track_import_list.dart';
+import '../navigation/application_router.dart';
 
 class TrackImportTrackPage extends StatefulWidget {
   const TrackImportTrackPage(this._targetSetList, {Key key, this.setList})

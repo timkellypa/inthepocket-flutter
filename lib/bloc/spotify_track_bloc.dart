@@ -22,9 +22,7 @@ class SaveStatus {
 
 class SpotifyTrackBloc
     extends ModelBlocBase<SpotifyTrack, SpotifyTrackRepository> {
-  SpotifyTrackBloc(this.spotifyPlaylist, {this.importTargetSetList}) : super() {
-    _saveStatusController = StreamController<SaveStatus>.broadcast();
-  }
+  SpotifyTrackBloc(this.spotifyPlaylist, {this.importTargetSetList}) : super();
 
   final SetListProxy importTargetSetList;
   final SpotifyPlaylist spotifyPlaylist;
@@ -34,17 +32,6 @@ class SpotifyTrackBloc
   @override
   SpotifyTrackRepository get repository {
     return SpotifyTrackRepository(spotifyPlaylist: spotifyPlaylist);
-  }
-
-  SaveStatus saveStatus = SaveStatus(0, 0.0);
-
-  StreamController<SaveStatus> _saveStatusController;
-
-  Stream<SaveStatus> get saveStatusStream => _saveStatusController.stream;
-
-  void updateSaveStatus(int total, double progress) {
-    saveStatus = SaveStatus(total, progress);
-    _saveStatusController.sink.add(saveStatus);
   }
 
   @override

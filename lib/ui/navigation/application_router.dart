@@ -5,8 +5,8 @@ import 'package:in_the_pocket/bloc/spotify_playlist_bloc.dart';
 import 'package:in_the_pocket/bloc/tempo_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/ui/edit_tempo_form.dart';
-import 'package:in_the_pocket/ui/edit_track_form.dart';
+import 'package:in_the_pocket/ui/pages/edit_tempo_form.dart';
+import 'package:in_the_pocket/ui/pages/edit_track_form.dart';
 import 'package:in_the_pocket/ui/navigation/edit_setlist_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/edit_tempo_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/edit_track_form_route_arguments.dart';
@@ -15,15 +15,15 @@ import 'package:in_the_pocket/ui/navigation/track_import_spotify_playlist_argume
 import 'package:in_the_pocket/ui/navigation/track_import_spotify_track_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_import_track_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_list_route_arguments.dart';
-import 'package:in_the_pocket/ui/setlist_list_page.dart';
-import 'package:in_the_pocket/ui/track_import_spotify_playlist_page.dart';
-import 'package:in_the_pocket/ui/track_import_spotify_track_page.dart';
+import 'package:in_the_pocket/ui/pages/setlist_list_page.dart';
+import 'package:in_the_pocket/ui/pages/track_import_spotify_playlist_page.dart';
+import 'package:in_the_pocket/ui/pages/track_import_spotify_track_page.dart';
 import 'package:provider/provider.dart';
 
-import '../edit_setlist_form.dart';
-import '../track_import_setlist_page.dart';
-import '../track_import_track_page.dart';
-import '../track_list_page.dart';
+import '../pages/edit_setlist_form.dart';
+import '../pages/track_import_setlist_page.dart';
+import '../pages/track_import_track_page.dart';
+import '../pages/track_list_page.dart';
 
 // ignore: avoid_classes_with_only_static_members
 class ApplicationRouter {

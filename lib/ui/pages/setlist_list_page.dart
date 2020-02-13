@@ -14,8 +14,8 @@ import 'package:in_the_pocket/ui/navigation/edit_setlist_form_route_arguments.da
 import 'package:in_the_pocket/ui/navigation/track_list_route_arguments.dart';
 import 'package:provider/provider.dart';
 
-import 'components/cards/setlist_card_sud.dart';
-import 'components/lists/setlist_list.dart';
+import '../components/cards/setlist_card_sud.dart';
+import '../components/lists/setlist_list.dart';
 
 class SetListListPage extends StatefulWidget {
   const SetListListPage({Key key}) : super(key: key);

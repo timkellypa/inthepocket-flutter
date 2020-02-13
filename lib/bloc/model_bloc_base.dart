@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'package:in_the_pocket/bloc/spotify_track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/models/independent/model_base.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
@@ -14,7 +15,20 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     selectedItemsController =
         StreamController<HashMap<String, ItemSelection>>.broadcast();
     selectedItemsController.sink.add(HashMap<String, ItemSelection>());
+    _saveStatusController = StreamController<SaveStatus>.broadcast();
+
     fetch();
+  }
+
+  SaveStatus saveStatus = SaveStatus(0, 0.0);
+
+  StreamController<SaveStatus> _saveStatusController;
+
+  Stream<SaveStatus> get saveStatusStream => _saveStatusController.stream;
+
+  void updateSaveStatus(int total, double progress) {
+    saveStatus = SaveStatus(total, progress);
+    _saveStatusController.sink.add(saveStatus);
   }
 
   List<ModelType> itemList;

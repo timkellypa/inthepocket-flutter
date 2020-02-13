@@ -3,66 +3,64 @@ import 'dart:collection';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:in_the_pocket/bloc/spotify_playlist_bloc.dart';
+import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
-import 'package:in_the_pocket/models/independent/spotify_playlist.dart';
-import 'package:in_the_pocket/ui/components/cards/spotify_playlist_card_select.dart';
-import 'package:in_the_pocket/ui/components/lists/spotify_playlist_list.dart';
+import 'package:in_the_pocket/ui/components/cards/setlist_card_select.dart';
+import 'package:in_the_pocket/ui/navigation/application_router.dart';
+import 'package:in_the_pocket/ui/navigation/track_import_track_arguments.dart';
 import 'package:provider/provider.dart';
 
-import 'components/common_bottom_bar.dart';
-import 'navigation/application_router.dart';
-import 'navigation/track_import_spotify_track_arguments.dart';
+import '../components/common_bottom_bar.dart';
+import '../components/lists/setlist_list.dart';
 
-class TrackImportSpotifyPlaylistPage extends StatefulWidget {
-  const TrackImportSpotifyPlaylistPage(this._targetSetList, {Key key})
+class TrackImportSetlistPage extends StatefulWidget {
+  const TrackImportSetlistPage(this._targetSetList, {Key key})
       : super(key: key);
 
   final SetListProxy _targetSetList;
 
   @override
   State<StatefulWidget> createState() {
-    return TrackImportSpotifyPlaylistPageState(_targetSetList);
+    return TrackImportSetlistPageState(_targetSetList);
   }
 }
 
-class TrackImportSpotifyPlaylistPageState
-    extends State<TrackImportSpotifyPlaylistPage> {
-  TrackImportSpotifyPlaylistPageState(this._targetSetList);
+class TrackImportSetlistPageState extends State<TrackImportSetlistPage> {
+  TrackImportSetlistPageState(this._targetSetList);
 
   final SetListProxy _targetSetList;
 
   TrackBloc trackBloc;
-  SpotifyPlaylistBloc spotifyPlaylistBloc;
+  SetListBloc setListBloc;
   StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
 
   @override
   void initState() {
-    spotifyPlaylistBloc = spotifyPlaylistBloc =
-        SpotifyPlaylistBloc(importTargetSetList: _targetSetList);
+    setListBloc =
+        setListBloc = SetListBloc(importTargetSetList: _targetSetList);
     selectedItemSubscription =
-        spotifyPlaylistBloc.selectedItems.listen(itemSelectionsChanged);
+        setListBloc.selectedItems.listen(itemSelectionsChanged);
     super.initState();
   }
 
   void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
-    final List<SpotifyPlaylist> selectedItems =
-        spotifyPlaylistBloc.getMatchingSelections(SelectionType.selected);
+    final List<SetListProxy> selectedItems =
+        setListBloc.getMatchingSelections(SelectionType.selected);
 
     if (selectedItems.isEmpty) {
       return;
     }
 
-    final SpotifyPlaylist selectedSetList = selectedItems.first;
+    final SetListProxy selectedSetList = selectedItems.first;
 
     Navigator.pushNamed(
       context,
-      ApplicationRouter.ROUTE_TRACK_IMPORT_SPOTIFY_TRACK,
-      arguments: TrackImportSpotifyTrackArguments(
-        spotifyPlaylistBloc,
+      ApplicationRouter.ROUTE_TRACK_IMPORT_TRACK,
+      arguments: TrackImportTrackArguments(
+        setListBloc,
         _targetSetList,
         selectedSetList,
         itemSelectionMap,
@@ -82,11 +80,11 @@ class TrackImportSpotifyPlaylistPageState
           padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
           child: Container(
             //This is where the magic starts
-            child: Provider<SpotifyPlaylistBloc>.value(
-              value: spotifyPlaylistBloc,
-              child: SpotifyPlaylistList<SpotifyPlaylistCardSelect>(
-                  (SpotifyPlaylist a, HashMap<String, ItemSelection> b) =>
-                      SpotifyPlaylistCardSelect(a, b)),
+            child: Provider<SetListBloc>.value(
+              value: setListBloc,
+              child: SetListList<SetListCardSelect>(
+                  (SetListProxy a, HashMap<String, ItemSelection> b) =>
+                      SetListCardSelect(a, b)),
             ),
           ),
         ),
@@ -97,7 +95,7 @@ class TrackImportSpotifyPlaylistPageState
 
   @override
   void dispose() {
-    spotifyPlaylistBloc.dispose();
+    setListBloc.dispose();
     selectedItemSubscription.cancel();
     super.dispose();
   }

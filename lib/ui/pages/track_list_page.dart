@@ -16,10 +16,10 @@ import 'package:in_the_pocket/ui/navigation/edit_track_form_route_arguments.dart
 import 'package:in_the_pocket/ui/navigation/track_import_setlist_arguments.dart';
 import 'package:provider/provider.dart';
 
-import 'components/lists/track_list.dart';
-import 'components/new_item_button.dart';
-import 'components/track_player.dart';
-import 'navigation/track_import_spotify_playlist_arguments.dart';
+import '../components/lists/track_list.dart';
+import '../components/new_item_button.dart';
+import '../components/track_player.dart';
+import '../navigation/track_import_spotify_playlist_arguments.dart';
 
 class TrackListPage extends StatefulWidget {
   const TrackListPage({Key key, this.setList}) : super(key: key);

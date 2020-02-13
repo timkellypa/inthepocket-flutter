@@ -12,10 +12,10 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
 
-import 'components/cards/spotify_track_card_multiselect.dart';
-import 'components/common_bottom_bar.dart';
-import 'components/lists/spotify_track_list.dart';
-import 'navigation/application_router.dart';
+import '../components/cards/spotify_track_card_multiselect.dart';
+import '../components/common_bottom_bar.dart';
+import '../components/lists/spotify_track_list.dart';
+import '../navigation/application_router.dart';
 
 class TrackImportSpotifyTrackPage extends StatefulWidget {
   const TrackImportSpotifyTrackPage(this._targetSetList,

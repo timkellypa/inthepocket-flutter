@@ -14,8 +14,8 @@ import 'package:in_the_pocket/ui/components/lists/tempo_list.dart';
 import 'package:in_the_pocket/ui/navigation/edit_tempo_form_route_arguments.dart';
 import 'package:provider/provider.dart';
 
-import 'components/new_item_button.dart';
-import 'navigation/application_router.dart';
+import '../components/new_item_button.dart';
+import '../navigation/application_router.dart';
 
 class EditTrackForm extends StatefulWidget {
   const EditTrackForm(this.setList, {this.setListTrack});
