@@ -1,27 +1,45 @@
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:in_the_pocket/model/table_base_override.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
 
-class SetListRepository extends RepositoryBase<SetListProxy> {
+class SetListRepository extends RepositoryBase<Setlist> {
   @override
-  Future<List<SetListProxy>> fetch({Function filter}) async {
-    final List<SetListProxy> setLists = await dbProvider.getSetListProxiesAll();
-    setLists.sort(
-        (SetListProxy a, SetListProxy b) => a.sortOrder.compareTo(b.sortOrder));
+  Future<List<Setlist>> fetch({
+    bool Function(Setlist)? filter, 
+    String? whereClause,
+    String? whereParameter
+  }) async {
+    SetlistFilterBuilder setListQuery = Setlist().select();
+    if (whereClause != null) {
+      setListQuery = setListQuery.where(whereClause, parameterValue: whereParameter);
+    }
+
+    List<Setlist> setLists = await setListQuery.orderBy(TableBase.SORT_ORDER_COLUMN).toList();
+
+    if (filter != null) {
+      setLists = setLists.where(filter).toList();
+    }
+
     return setLists;
   }
 
   @override
-  Future<int> insert(SetListProxy item) async {
-    await prepareInsert(item);
-    final int id = await dbProvider.saveSetList(item);
-    item.id = id;
-    item.sortOrder = id;
-    return await dbProvider.updateSetList(item);
+  Future<String> insert(Setlist item) async {
+    item.init();
+    item.sortOrder = await Setlist().select().toCount() + 1;
+    await item.upsert();
+    return item.id!;
   }
 
   @override
-  Future<int> update(SetListProxy item) => dbProvider.updateSetList(item);
+  Future<String> update(Setlist item) async {
+    await item.upsert();
+    return item.id!;
+  }
 
   @override
-  Future<int> delete(int id) => dbProvider.deleteSetList(id);
+  Future<void> delete(String id) async {
+    final Setlist? setlist = await Setlist().getById(id);
+    await setlist?.delete();
+  }
 }

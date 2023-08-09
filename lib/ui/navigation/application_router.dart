@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/bloc/spotify_playlist_bloc.dart';
 import 'package:in_the_pocket/bloc/tempo_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/ui/pages/edit_tempo_form.dart';
-import 'package:in_the_pocket/ui/pages/edit_track_form.dart';
 import 'package:in_the_pocket/ui/navigation/edit_setlist_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/edit_tempo_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/edit_track_form_route_arguments.dart';
@@ -15,6 +12,8 @@ import 'package:in_the_pocket/ui/navigation/track_import_spotify_playlist_argume
 import 'package:in_the_pocket/ui/navigation/track_import_spotify_track_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_import_track_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_list_route_arguments.dart';
+import 'package:in_the_pocket/ui/pages/edit_tempo_form.dart';
+import 'package:in_the_pocket/ui/pages/edit_track_form.dart';
 import 'package:in_the_pocket/ui/pages/setlist_list_page.dart';
 import 'package:in_the_pocket/ui/pages/track_import_spotify_playlist_page.dart';
 import 'package:in_the_pocket/ui/pages/track_import_spotify_track_page.dart';
@@ -32,59 +31,52 @@ class ApplicationRouter {
   }
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    bool fullScreenDialog;
-    Function builder;
+    // initial route, default values.
+    bool fullScreenDialog = false;
+    Widget Function(BuildContext) builder = (BuildContext context) => const SetlistListPage();
     switch (settings.name) {
       case initialRoute:
-        fullScreenDialog = false;
-        builder = (BuildContext context) => const SetListListPage();
         break;
       case ROUTE_TRACK_LIST:
         fullScreenDialog = false;
         builder = (BuildContext context) {
-          final TrackListRouteArguments args = settings.arguments;
+          final TrackListRouteArguments args = settings.arguments as TrackListRouteArguments;
 
-          return Provider<SetListBloc>(
-            builder: (BuildContext context) => args.setListBloc,
-            dispose: (BuildContext context, SetListBloc value) =>
-                value.unSelectItem(
-              args.setList,
-              SelectionType.selected,
-            ),
-            child: TrackListPage(setList: args.setList),
+          args.setlistBloc.reset();
+
+          return Provider<SetlistBloc>(
+            create: (BuildContext context) => args.setlistBloc,
+            child: TrackListPage(setlist: args.setlist),
           );
         };
         break;
       case ROUTE_EDIT_SETLIST_FORM:
         fullScreenDialog = true;
         builder = (BuildContext context) {
-          final EditSetListFormRouteArguments args = settings.arguments;
+          final EditSetlistFormRouteArguments args = settings.arguments as EditSetlistFormRouteArguments;
 
-          return Provider<SetListBloc>(
-              builder: (BuildContext context) => args.setListBloc,
-              dispose: (BuildContext context, SetListBloc value) =>
-                  value.unSelectItem(
-                    args.setList,
-                    SelectionType.add + SelectionType.editing,
-                  ),
-              child: EditSetListForm(setList: args.setList));
+          args.setlistBloc.reset();
+
+          return Provider<SetlistBloc>(
+              create: (BuildContext context) => args.setlistBloc,
+              child: EditSetlistForm(setlist: args.setlist));
         };
         break;
       case ROUTE_TRACK_IMPORT_TRACK:
         fullScreenDialog = true;
         builder = (BuildContext context) {
-          final TrackImportTrackArguments args = settings.arguments;
-          return Provider<SetListBloc>(
-            builder: (BuildContext context) => args.setListBloc,
-            dispose: (BuildContext context, SetListBloc value) {
+          final TrackImportTrackArguments args = settings.arguments as TrackImportTrackArguments;
+          return Provider<SetlistBloc>(
+            create: (BuildContext context) => args.setlistBloc,
+            dispose: (BuildContext context, SetlistBloc value) {
               value.unSelectItem(
-                args.setList,
+                args.setlist!,
                 SelectionType.selected,
               );
             },
             child: TrackImportTrackPage(
-              args.targetSetList,
-              setList: args.setList,
+              args.targetSetlist,
+              setlist: args.setlist,
             ),
           );
         };
@@ -92,19 +84,15 @@ class ApplicationRouter {
       case ROUTE_EDIT_TRACK_FORM:
         fullScreenDialog = true;
         builder = (BuildContext context) {
-          final EditTrackFormRouteArguments args = settings.arguments;
+          final EditTrackFormRouteArguments args = settings.arguments as EditTrackFormRouteArguments;
+
+          args.trackBloc.reset();
+
           return Provider<TrackBloc>(
-            builder: (BuildContext context) => args.trackBloc,
-            dispose: (BuildContext context, TrackBloc value) =>
-                value.unSelectItem(
-              args.setListTrack,
-              SelectionType.editing +
-                  SelectionType.add +
-                  SelectionType.selected,
-            ),
+            create: (BuildContext context) => args.trackBloc,
             child: EditTrackForm(
-              args.setList,
-              setListTrack: args.setListTrack,
+              args.setlist!,
+              setlistTrack: args.setlistTrack,
             ),
           );
         };
@@ -112,40 +100,40 @@ class ApplicationRouter {
       case ROUTE_TRACK_IMPORT_SETLIST:
         fullScreenDialog = true;
         builder = (BuildContext context) {
-          final TrackImportSetListArguments args = settings.arguments;
+          final TrackImportSetlistArguments args = settings.arguments as TrackImportSetlistArguments;
           return Provider<TrackBloc>(
-            builder: (BuildContext context) => args.trackBloc,
+            create: (BuildContext context) => args.trackBloc,
             dispose: (BuildContext context, TrackBloc value) => value.fetch(),
-            child: TrackImportSetlistPage(args.setList),
+            child: TrackImportSetlistPage(args.setlist!),
           );
         };
         break;
       case ROUTE_TRACK_IMPORT_SPOTIFY_PLAYLIST:
         fullScreenDialog = true;
         builder = (BuildContext context) {
-          final TrackImportSpotifyPlaylistArguments args = settings.arguments;
+          final TrackImportSpotifyPlaylistArguments args = settings.arguments as TrackImportSpotifyPlaylistArguments;
           return Provider<TrackBloc>(
-            builder: (BuildContext context) => args.trackBloc,
+            create: (BuildContext context) => args.trackBloc,
             dispose: (BuildContext context, TrackBloc value) => value.fetch(),
-            child: TrackImportSpotifyPlaylistPage(args.setList),
+            child: TrackImportSpotifyPlaylistPage(args.setlist),
           );
         };
         break;
       case ROUTE_TRACK_IMPORT_SPOTIFY_TRACK:
         fullScreenDialog = true;
         builder = (BuildContext context) {
-          final TrackImportSpotifyTrackArguments args = settings.arguments;
+          final TrackImportSpotifyTrackArguments args = settings.arguments as TrackImportSpotifyTrackArguments;
           return Provider<SpotifyPlaylistBloc>(
-            builder: (BuildContext context) => args.spotifyPlaylistBloc,
+            create: (BuildContext context) => args.spotifyPlaylistBloc,
             dispose: (BuildContext context, SpotifyPlaylistBloc value) =>
                 value.unSelectItem(
               args.spotifyPlaylist,
               SelectionType.editing +
                   SelectionType.add +
                   SelectionType.selected,
-            ),
+            ),            
             child: TrackImportSpotifyTrackPage(
-              args.targetSetList,
+              args.targetSetlist,
               spotifyPlaylist: args.spotifyPlaylist,
             ),
           );
@@ -154,16 +142,16 @@ class ApplicationRouter {
       case ROUTE_EDIT_TEMPO_FORM:
         fullScreenDialog = true;
         builder = (BuildContext context) {
-          final EditTempoFormRouteArguments args = settings.arguments;
+          final EditTempoFormRouteArguments args = settings.arguments as EditTempoFormRouteArguments;
           return Provider<TempoBloc>(
-            builder: (BuildContext context) => args.tempoBloc,
+            create: (BuildContext context) => args.tempoBloc,
             dispose: (BuildContext context, TempoBloc value) =>
                 value.unSelectItem(
-              args.tempo,
-              SelectionType.editing +
-                  SelectionType.add +
-                  SelectionType.selected,
-            ),
+                  args.tempo,
+                  SelectionType.editing +
+                      SelectionType.add +
+                      SelectionType.selected,
+                ),
             child: EditTempoForm(
               tempo: args.tempo,
             ),
@@ -172,14 +160,11 @@ class ApplicationRouter {
         break;
     }
 
-    if (builder != null) {
-      return MaterialPageRoute<dynamic>(
-        fullscreenDialog: fullScreenDialog,
-        settings: RouteSettings(name: settings.name),
-        builder: builder,
-      );
-    }
-    return null;
+    return MaterialPageRoute<dynamic>(
+      fullscreenDialog: fullScreenDialog,
+      settings: RouteSettings(name: settings.name),
+      builder: builder,
+    );
   }
 
   static const String initialRoute = '/';

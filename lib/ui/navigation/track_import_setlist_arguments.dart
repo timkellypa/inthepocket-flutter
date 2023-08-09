@@ -1,8 +1,8 @@
 import 'package:in_the_pocket/bloc/track_bloc.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 
-class TrackImportSetListArguments {
-  TrackImportSetListArguments(this.trackBloc, this.setList);
-  SetListProxy setList;
+class TrackImportSetlistArguments {
+  TrackImportSetlistArguments(this.trackBloc, this.setlist);
+  Setlist? setlist;
   TrackBloc trackBloc;
 }

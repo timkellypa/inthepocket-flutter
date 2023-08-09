@@ -1,15 +1,14 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:in_the_pocket/bloc/model_bloc_base.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/models/independent/model_base.dart';
+import 'package:in_the_pocket/model/model_base.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
 
 class NewItemButton<ModelType extends ModelBase> extends StatelessWidget {
-  const NewItemButton({Key key, @required this.modelBloc}) : super(key: key);
+  const NewItemButton({Key? key, required this.modelBloc}) : super(key: key);
 
   final ModelBlocBase<ModelBase, RepositoryBase<ModelBase>> modelBloc;
 
@@ -30,7 +29,7 @@ class NewItemButton<ModelType extends ModelBase> extends StatelessWidget {
                   modelBloc.selectItem(null, SelectionType.add);
                 },
                 backgroundColor: Colors.white,
-                child: Icon(
+                child: const Icon(
                   Icons.add,
                   size: 32,
                   color: Colors.indigoAccent,

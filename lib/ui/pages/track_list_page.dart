@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
-import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/cards/track_card_sud.dart';
 import 'package:in_the_pocket/ui/components/common_bottom_bar.dart';
 import 'package:in_the_pocket/ui/navigation/application_router.dart';
@@ -22,53 +20,53 @@ import '../components/track_player.dart';
 import '../navigation/track_import_spotify_playlist_arguments.dart';
 
 class TrackListPage extends StatefulWidget {
-  const TrackListPage({Key key, this.setList}) : super(key: key);
+  const TrackListPage({Key? key, this.setlist}) : super(key: key);
 
-  final SetListProxy setList;
+  final Setlist? setlist;
 
   @override
   State<StatefulWidget> createState() {
-    return TrackListPageState(setList);
+    return TrackListPageState(setlist);
   }
 }
 
 class TrackListPageState extends State<TrackListPage> {
-  TrackListPageState(this.setList);
+  TrackListPageState(this.setlist);
 
-  SetListProxy setList;
+  Setlist? setlist;
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey(debugLabel: 'scaffoldKey');
 
-  TrackBloc trackBloc;
-  StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
+  late TrackBloc trackBloc;
+  late StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
 
   @override
   void initState() {
-    trackBloc = TrackBloc(setList);
+    trackBloc = TrackBloc(setlist);
     selectedItemSubscription =
         trackBloc.selectedItems.listen(itemSelectionsChanged);
     super.initState();
   }
 
   void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
-    final List<SetListTrackProxy> selectedItems = trackBloc
+    final List<SetlistTrack?> selectedItems = trackBloc
         .getMatchingSelections(SelectionType.editing + SelectionType.add);
 
     if (selectedItems.isEmpty) {
       return;
     }
 
-    final SetListTrackProxy selectedSetListTrack = selectedItems.first;
+    final SetlistTrack? selectedSetlistTrack = selectedItems.first;
     final int selectionType =
-        itemSelectionMap[selectedSetListTrack?.guid ?? ''].selectionType;
+        itemSelectionMap[selectedSetlistTrack?.id ?? '']?.selectionType ?? 0;
     if (selectionType & (SelectionType.editing + SelectionType.add) > 0) {
       Navigator.pushNamed(
         context,
         ApplicationRouter.ROUTE_EDIT_TRACK_FORM,
         arguments: EditTrackFormRouteArguments(
           trackBloc,
-          setList,
-          selectedSetListTrack,
+          setlist,
+          selectedSetlistTrack,
           itemSelectionMap,
         ),
       );
@@ -79,9 +77,9 @@ class TrackListPageState extends State<TrackListPage> {
     Navigator.pushNamed(
       context,
       ApplicationRouter.ROUTE_TRACK_IMPORT_SETLIST,
-      arguments: TrackImportSetListArguments(
+      arguments: TrackImportSetlistArguments(
         trackBloc,
-        setList,
+        setlist,
       ),
     );
   }
@@ -92,7 +90,7 @@ class TrackListPageState extends State<TrackListPage> {
       ApplicationRouter.ROUTE_TRACK_IMPORT_SPOTIFY_PLAYLIST,
       arguments: TrackImportSpotifyPlaylistArguments(
         trackBloc,
-        setList,
+        setlist,
       ),
     );
   }
@@ -102,12 +100,12 @@ class TrackListPageState extends State<TrackListPage> {
     return Scaffold(
         key: scaffoldKey,
         floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-        resizeToAvoidBottomPadding: false,
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: const Text('Track List'),
           actions: <Widget>[
             IconButton(
-                icon: Icon(FontAwesomeIcons.spotify),
+                icon: const Icon(FontAwesomeIcons.spotify),
                 tooltip: 'import from Spotify',
                 onPressed: () {
                   spotifyPressed(context);
@@ -116,7 +114,7 @@ class TrackListPageState extends State<TrackListPage> {
               onPressed: () {
                 importPressed(context);
               },
-              icon: Icon(FontAwesomeIcons.fileImport),
+              icon: const Icon(FontAwesomeIcons.fileImport),
               tooltip: 'import',
             )
           ],
@@ -132,7 +130,7 @@ class TrackListPageState extends State<TrackListPage> {
                   //This is where the magic starts
                   child: Provider<TrackBloc>.value(
                     value: trackBloc,
-                    child: TrackList<TrackCardSUD>((SetListTrackProxy a,
+                    child: TrackList<TrackCardSUD>((SetlistTrack a,
                             HashMap<String, ItemSelection> b) =>
                         TrackCardSUD(a, b)),
                   ),
@@ -153,7 +151,7 @@ class TrackListPageState extends State<TrackListPage> {
         ),
         bottomNavigationBar: CommonBottomBar(),
         floatingActionButton:
-            NewItemButton<SetListTrackProxy>(modelBloc: trackBloc));
+            NewItemButton<SetlistTrack>(modelBloc: trackBloc));
   }
 
   @override

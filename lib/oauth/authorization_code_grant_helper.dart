@@ -3,17 +3,18 @@ import 'dart:io';
 import 'package:in_the_pocket/utilities/temp_server.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
+import 'package:url_launcher/url_launcher_string.dart';
 
 // ignore: avoid_classes_with_only_static_members
 class AuthorizationCodeGrantHelper {
-  static TempServer server;
+  static late TempServer server;
 
   /// Either load an OAuth2 client from saved credentials or authenticate a new
   /// one.
   static Future<oauth2.Client> getClient(String clientId, String secret,
       Uri authorizationEndpoint, Uri tokenEndpoint,
-      {File credentialsFile}) async {
-    final bool exists = credentialsFile != null && credentialsFile.existsSync();
+      {required File credentialsFile}) async {
+    final bool exists = credentialsFile.existsSync();
 
     // If the OAuth2 credentials have already been saved from a previous run, we
     // just want to reload them.
@@ -45,7 +46,7 @@ class AuthorizationCodeGrantHelper {
 
     final Map<String, String> queryParams = await onparams.first;
 
-    url_launcher.closeWebView();
+    url_launcher.closeInAppWebView();
 
     // Once the user is redirected to `redirectUrl`, pass the query parameters to
     // the AuthorizationCodeGrant. It will validate them and extract the
@@ -60,13 +61,11 @@ class AuthorizationCodeGrantHelper {
   }
 
   static Future<void> redirect(Uri uri) async {
-    if (await url_launcher.canLaunch(uri.toString())) {
-      await url_launcher.launch(
-        uri.toString(),
-        forceWebView: true,
-        enableDomStorage: true,
-        enableJavaScript: true,
-        universalLinksOnly: false,
+    if (await url_launcher.canLaunchUrl(uri)) {
+      await url_launcher.launchUrl(
+        uri,
+        webViewConfiguration: const WebViewConfiguration(enableJavaScript: true, enableDomStorage: true),
+        webOnlyWindowName: '_blank'
       );
     } else {
       throw 'could not launch $uri';

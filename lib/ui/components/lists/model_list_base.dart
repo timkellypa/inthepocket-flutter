@@ -1,27 +1,26 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:in_the_pocket/bloc/model_bloc_base.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
-import 'package:in_the_pocket/models/independent/sortable_model_base.dart';
+import 'package:in_the_pocket/model/model_base.dart';
 
 import '../loading.dart';
 
 typedef CardCreator<T, ModelType> = T Function(
     ModelType item, HashMap<String, ItemSelection> selectedItemMap);
 
-abstract class ModelListBase<ModelType extends SortableModelBase,
+abstract class ModelListBase<ModelType extends ModelBase,
     CardType extends Widget> extends StatelessWidget {
-  const ModelListBase(this.creator, {this.excludeIds = const <int>[]});
+  const ModelListBase(this.creator, {this.excludeIds = const <String>[]});
 
   final CardCreator<CardType, ModelType> creator;
 
-  final List<int> excludeIds;
+  final List<String> excludeIds;
 
   @override
   Widget build(BuildContext context) {
-    final ModelBlocBase<dynamic, dynamic> modelBloc = getBloc(context);
+    final ModelBlocBase<ModelType, dynamic> modelBloc = getBloc(context);
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
@@ -55,7 +54,7 @@ abstract class ModelListBase<ModelType extends SortableModelBase,
     return creator(item, selectedItemMap);
   }
 
-  ModelBlocBase<dynamic, dynamic> getBloc(BuildContext context);
+  ModelBlocBase<ModelType, dynamic> getBloc(BuildContext context);
 
   Widget getCardWidgets(
     ModelBlocBase<dynamic, dynamic> modelBloc,
@@ -66,24 +65,24 @@ abstract class ModelListBase<ModelType extends SortableModelBase,
     at initial state of the operation there will be no stream
     so we need to handle it if this was the case
     by showing users a processing/loading indicator*/
-    if (itemListStream.hasData) {
+    if (itemListStream.hasData && itemListStream.data != null) {
       /*Also handles whenever there's stream
-      but returned returned 0 records of SetList from DB.
-      If that the case show user that you have empty SetLists
+      but returned returned 0 records of setlist from DB.
+      If that the case show user that you have empty Setlists
       */
 
-      itemListStream.data.removeWhere((SortableModelBase item) {
+      itemListStream.data!.removeWhere((ModelBase item) {
         return excludeIds.contains(item.id);
       });
 
-      if (itemListStream.data.isNotEmpty) {
+      if (itemListStream.data!.isNotEmpty) {
         return ReorderableListView(
           header: Text(modelBloc.listTitle),
-          children: itemListStream.data
+          children: itemListStream.data!
               .map<CardType>(
                 (ModelType item) => createCard(
                   item,
-                  selectedItemMap.data,
+                  selectedItemMap.data!,
                 ),
               )
               .toList(),
@@ -92,20 +91,20 @@ abstract class ModelListBase<ModelType extends SortableModelBase,
 
             toIndex = iterator == -1 ? toIndex - 1 : toIndex;
 
-            final int mobileSortOrder = itemListStream.data[toIndex].sortOrder;
+            final int mobileSortOrder = itemListStream.data![toIndex].sortOrder!;
 
             int i = toIndex;
 
             while (i != fromIndex) {
               // set each item's order index to the next one in the direction we are going.
-              itemListStream.data[i].sortOrder =
-                  itemListStream.data[i + iterator].sortOrder;
-              await modelBloc.update(itemListStream.data[i]);
+              itemListStream.data![i].sortOrder =
+                  itemListStream.data![i + iterator].sortOrder;
+              await modelBloc.update(itemListStream.data![i]);
               i += iterator;
             }
 
-            itemListStream.data[fromIndex].sortOrder = mobileSortOrder;
-            await modelBloc.update(itemListStream.data[fromIndex]);
+            itemListStream.data![fromIndex].sortOrder = mobileSortOrder;
+            await modelBloc.update(itemListStream.data![fromIndex]);
           },
         );
       } else {
@@ -114,7 +113,7 @@ abstract class ModelListBase<ModelType extends SortableModelBase,
           child: Container(
             child: Text(
               addItemText,
-              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w500),
             ),
           ),
         ));

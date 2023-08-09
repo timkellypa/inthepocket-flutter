@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:provider/provider.dart';
 
 class TrackPlayer extends StatefulWidget {
@@ -19,21 +19,16 @@ class TrackPlayerState extends State<TrackPlayer> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    final TrackBloc trackBloc = Provider.of<TrackBloc>(context);
-
-    trackBloc.connectAudio();
-    trackBloc.startAudioService();
   }
 
   @override
   Widget build(BuildContext context) {
     final TrackBloc trackBloc = Provider.of<TrackBloc>(context);
     return Container(
-      child: StreamBuilder<List<SetListTrackProxy>>(
+      child: StreamBuilder<List<SetlistTrack>>(
         stream: trackBloc.items,
         builder: (BuildContext context,
-            AsyncSnapshot<List<SetListTrackProxy>> tracksSnapshot) {
+            AsyncSnapshot<List<SetlistTrack>> tracksSnapshot) {
           // change in list should cause us to restart the track audio service
           if (!tracksSnapshot.hasData) {
             return Container();
@@ -45,13 +40,13 @@ class TrackPlayerState extends State<TrackPlayer> {
             builder: (BuildContext innerContext,
                 AsyncSnapshot<HashMap<String, ItemSelection>>
                     selectionsSnapshot) {
-              final List<SetListTrackProxy> selectedSetListTracks =
+              final List<SetlistTrack?> selectedSetlistTracks =
                   trackBloc.getMatchingSelections(SelectionType.selected);
-              final SetListTrackProxy selectedSetListTrack =
-                  selectedSetListTracks.isNotEmpty
-                      ? selectedSetListTracks.first
+              final SetlistTrack? selectedSetlistTrack =
+                  selectedSetlistTracks.isNotEmpty
+                      ? selectedSetlistTracks.first
                       : null;
-              if (selectedSetListTrack == null) {
+              if (selectedSetlistTrack == null) {
                 return Container(width: 0.0, height: 0.0);
               }
 
@@ -59,7 +54,7 @@ class TrackPlayerState extends State<TrackPlayer> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Text(selectedSetListTrack.track.title,
+                    Text(selectedSetlistTrack.plTrack!.title!,
                         style: const TextStyle(fontSize: 26),
                         overflow: TextOverflow.ellipsis),
                     Row(
@@ -67,7 +62,7 @@ class TrackPlayerState extends State<TrackPlayer> {
                       children: <Widget>[
                         IconButton(
                           iconSize: 90,
-                          icon: Icon(Icons.skip_previous),
+                          icon: const Icon(Icons.skip_previous),
                           onPressed: () {
                             trackBloc.skipToPrevious();
                           },
@@ -79,14 +74,13 @@ class TrackPlayerState extends State<TrackPlayer> {
                               AsyncSnapshot<PlaybackState>
                                   playbackStateSnapshot) {
                             Icon toggleIcon;
-                            switch (playbackStateSnapshot.data.basicState) {
-                              case BasicPlaybackState.buffering:
-                              case BasicPlaybackState.playing:
-                                toggleIcon = Icon(Icons.pause);
-                                break;
-                              default:
-                                toggleIcon = Icon(Icons.headset);
+
+                            if (playbackStateSnapshot.data!.playing || playbackStateSnapshot.data!.processingState == AudioProcessingState.buffering) {
+                                toggleIcon = const Icon(Icons.pause);                              
+                            } else {
+                                toggleIcon = const Icon(Icons.headset);
                             }
+                            
                             return IconButton(
                               iconSize: 90,
                               icon: toggleIcon,

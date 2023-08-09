@@ -1,15 +1,13 @@
 import 'dart:async';
-import 'package:in_the_pocket/models/independent/tempo.g.m8.dart';
-import 'package:in_the_pocket/models/independent/track.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
-import 'package:in_the_pocket/repository/track_repository.dart';
 
 import 'model_bloc_base.dart';
 
-class TempoBloc extends ModelBlocBase<TempoProxy, TempoRepository> {
+class TempoBloc extends ModelBlocBase<Tempo, TempoRepository> {
   TempoBloc(this.track) : super();
 
-  final TrackProxy track;
+  final Track track;
 
   bool firstFetch = true;
 
@@ -19,8 +17,8 @@ class TempoBloc extends ModelBlocBase<TempoProxy, TempoRepository> {
   }
 
   @override
-  Function get listFilter {
-    return (TempoProxy proxy) => proxy.trackId == track.id;
+  bool Function(Tempo) get listFilter {
+    return (Tempo proxy) => proxy.trackId == track.id;
   }
 
   @override
@@ -29,33 +27,42 @@ class TempoBloc extends ModelBlocBase<TempoProxy, TempoRepository> {
   }
 
   @override
-  Future<List<TempoProxy>> fetch({bool updateTempoFile = false}) async {
-    final List<TempoProxy> tempos = await super.fetch();
+  Future<List<Tempo>> fetch({bool updateTempoFile = false}) async {
+    final List<Tempo> tempos = await super.fetch();
+    track.init();
 
     // Do not write out click tracks until track is at least saved
     // for the first time
-    if (updateTempoFile && track.id != TrackRepository.NEW_TRACK_ID) {
-      await repository.writeClickTracks(tempos: tempos);
+    if (updateTempoFile) {
+
+      if (tempos.isEmpty) {
+        await repository.writeEmptyClickTrack(track.id!);
+        return tempos;
+      }
+
+      await repository.writeClickTracks(tempos: tempos, notify: (int total, double progress) {
+        
+      },);
     }
 
     return tempos;
   }
 
   @override
-  Future<void> insert(TempoProxy item) async {
+  Future<void> insert(Tempo item) async {
     await repository.insert(item);
     fetch(updateTempoFile: true);
   }
 
   @override
-  Future<void> update(TempoProxy item) async {
+  Future<void> update(Tempo item) async {
     await repository.update(item);
     fetch(updateTempoFile: true);
   }
 
   @override
-  Future<void> delete(TempoProxy item) async {
-    await repository.delete(item.id);
+  Future<void> delete(Tempo item) async {
+    await repository.delete(item.id!);
     fetch(updateTempoFile: true);
   }
 

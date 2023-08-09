@@ -2,24 +2,24 @@ import 'dart:collection';
 
 import 'package:flutter/widgets.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/cards/mixins/selectable_model_card.dart';
 import 'package:in_the_pocket/ui/components/cards/setlist_card.dart';
 
-class SetListCardSelect extends SetListCard {
-  SetListCardSelect(
-      SetListProxy setList, HashMap<String, ItemSelection> selectedItemMap)
-      : super(setList, selectedItemMap);
+class SetlistCardSelect extends SetlistCard {
+  SetlistCardSelect(
+      Setlist setlist, HashMap<String, ItemSelection> selectedItemMap)
+      : super(setlist, selectedItemMap);
 
   @override
   State<StatefulWidget> createState() {
-    return SetListCardSelectState(setList, selectedItemMap);
+    return SetlistCardSelectState(setlist, selectedItemMap);
   }
 }
 
-class SetListCardSelectState extends SetListCardState
-    with SelectableModelCard<SetListCard, SetListProxy> {
-  SetListCardSelectState(
-      SetListProxy setList, HashMap<String, ItemSelection> selectedItemMap)
-      : super(setList, selectedItemMap);
+class SetlistCardSelectState extends SetlistCardState
+    with SelectableModelCard<SetlistCard, Setlist> {
+  SetlistCardSelectState(
+      Setlist setlist, HashMap<String, ItemSelection> selectedItemMap)
+      : super(setlist, selectedItemMap);
 }

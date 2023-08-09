@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:in_the_pocket/services/service_locator.dart';
 import 'package:in_the_pocket/ui/navigation/application_router.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  setupServiceLocator();
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override

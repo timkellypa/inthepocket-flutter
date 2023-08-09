@@ -1,5 +1,5 @@
 class Secret {
-  Secret({this.spotifyClientId = '', this.spotifyClientSecret});
+  Secret({required this.spotifyClientId, required this.spotifyClientSecret});
   factory Secret.fromJson(Map<String, dynamic> jsonMap) {
     return Secret(
       spotifyClientId: jsonMap['spotify_client_id'],

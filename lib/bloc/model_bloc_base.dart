@@ -2,27 +2,21 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:in_the_pocket/bloc/spotify_track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
-import 'package:in_the_pocket/models/independent/model_base.dart';
+import 'package:in_the_pocket/classes/selection_type.dart';
+import 'package:in_the_pocket/model/model_base.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
 
 abstract class ModelBlocBase<ModelType extends ModelBase,
     RepositoryType extends RepositoryBase<ModelType>> {
   ModelBlocBase() {
-    itemSelectionMap = HashMap<String, ItemSelection>();
-    itemList = <ModelType>[];
-
-    listController = StreamController<List<ModelType>>.broadcast();
-    selectedItemsController =
-        StreamController<HashMap<String, ItemSelection>>.broadcast();
     selectedItemsController.sink.add(HashMap<String, ItemSelection>());
-    _saveStatusController = StreamController<SaveStatus>.broadcast();
 
     fetch();
   }
 
   SaveStatus saveStatus = SaveStatus(0, 0.0);
 
-  StreamController<SaveStatus> _saveStatusController;
+  final StreamController<SaveStatus> _saveStatusController  = StreamController<SaveStatus>.broadcast();
 
   Stream<SaveStatus> get saveStatusStream => _saveStatusController.stream;
 
@@ -31,11 +25,12 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     _saveStatusController.sink.add(saveStatus);
   }
 
-  List<ModelType> itemList;
-  HashMap<String, ItemSelection> itemSelectionMap;
+  
+  List<ModelType> itemList = <ModelType>[];
+  HashMap<String, ItemSelection> itemSelectionMap = HashMap<String, ItemSelection>();
   RepositoryType get repository;
 
-  Function get listFilter {
+  bool Function(ModelType)? get listFilter {
     return null;
   }
 
@@ -43,30 +38,31 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     return 'Items';
   }
 
-  StreamController<List<ModelType>> listController;
+  StreamController<List<ModelType>> listController = StreamController<List<ModelType>>.broadcast();
 
   Stream<List<ModelType>> get items => listController.stream;
 
-  StreamController<HashMap<String, ItemSelection>> selectedItemsController;
+  StreamController<HashMap<String, ItemSelection>> selectedItemsController =
+        StreamController<HashMap<String, ItemSelection>>.broadcast();
 
   Stream<HashMap<String, ItemSelection>> get selectedItems =>
       selectedItemsController.stream;
 
-  void selectItem(ModelType model, int selectionTypes, {bool doSync = true}) {
-    final String guid = model?.guid ?? '';
+  void selectItem(ModelType? model, int selectionTypes, {bool doSync = true}) {
+    final String guid = model?.id ?? '';
     itemSelectionMap.putIfAbsent(guid, () => ItemSelection(0));
-    itemSelectionMap[guid].selectionType |= selectionTypes;
+    itemSelectionMap[guid]!.selectionType |= selectionTypes;
     if (doSync) {
       syncSelections();
     }
   }
 
-  void unSelectItem(ModelType model, int selectionTypes, {bool doSync = true}) {
-    final String guid = model?.guid ?? '';
+  void unSelectItem(ModelType? model, int selectionTypes, {bool doSync = true}) {
+    final String guid = model?.id ?? '';
     itemSelectionMap.putIfAbsent(guid, () => ItemSelection(0));
-    itemSelectionMap[guid].selectionType &= ~selectionTypes;
+    itemSelectionMap[guid]!.selectionType &= ~selectionTypes;
 
-    if (itemSelectionMap[guid].selectionType == 0) {
+    if (itemSelectionMap[guid]!.selectionType == 0) {
       itemSelectionMap.remove(model);
     }
 
@@ -79,8 +75,8 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     final List<String> keysToRemove = <String>[];
 
     for (String key in itemSelectionMap.keys) {
-      itemSelectionMap[key].selectionType &= ~selectionTypes;
-      if (itemSelectionMap[key].selectionType == 0) {
+      itemSelectionMap[key]!.selectionType &= ~selectionTypes;
+      if (itemSelectionMap[key]!.selectionType == 0) {
         keysToRemove.add(key);
       }
     }
@@ -92,19 +88,22 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     }
   }
 
-  List<ModelType> getMatchingSelections(int selectionTypes) {
-    final List<ModelType> matchingSelections = <ModelType>[];
+  List<ModelType?> getMatchingSelections(int selectionTypes) {
+    final List<ModelType?> matchingSelections = <ModelType?>[];
 
-    for (ModelType item in itemList) {
-      if (itemSelectionMap.containsKey(item.guid) &&
-          itemSelectionMap[item.guid].selectionType & selectionTypes > 0) {
+    for (ModelType? item in itemList) {
+      if (item == null) {
+        continue;
+      }
+      if (itemSelectionMap.containsKey(item.id) &&
+          itemSelectionMap[item.id]!.selectionType & selectionTypes > 0) {
         matchingSelections.add(item);
       }
     }
 
     // blank means new item was selected
     if (itemSelectionMap.containsKey('') &&
-        itemSelectionMap[''].selectionType & selectionTypes > 0) {
+        itemSelectionMap['']!.selectionType & selectionTypes > 0) {
       matchingSelections.add(null);
     }
 
@@ -118,7 +117,7 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
   }
 
   Future<List<ModelType>> getItemList(
-      {Function filter, bool update = true}) async {
+      {bool Function(ModelType)? filter, bool update = true}) async {
     filter ??= listFilter;
     final List<ModelType> itemListRetrieved =
         await repository.fetch(filter: filter);
@@ -145,5 +144,9 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
   void dispose() {
     listController.close();
     selectedItemsController.close();
+  }
+
+  void reset () {
+    unSelectAll(SelectionType.all);
   }
 }

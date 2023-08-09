@@ -42,7 +42,7 @@ class TempServer {
   /// stops server and removes from static map of servers (keyed by port)
   Future<void> stop(String port) async {
     if (portServerMap.containsKey(port)) {
-      await portServerMap[port].close(force: true);
+      await portServerMap[port]!.close(force: true);
     }
 
     portServerMap.remove(port);

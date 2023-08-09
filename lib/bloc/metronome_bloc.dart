@@ -1,48 +1,34 @@
 import 'package:audio_service/audio_service.dart';
-import 'package:in_the_pocket/audio/track_list_player_task.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
-import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:in_the_pocket/services/service_locator.dart';
 
 const String CHANNEL_NAME = 'Metronome';
 const String NOTIFICATION_ICON = 'mipmap/ic_launcher';
 
 class MetronomeBloc {
-  MetronomeBloc(this.setList, this.setListTracks);
+  MetronomeBloc(this.setlist, this.setlistTracks);
 
-  final List<SetListTrackProxy> setListTracks;
-  final SetListProxy setList;
+  final List<SetlistTrack> setlistTracks;
+  final Setlist setlist;
 
-  void connect() {
-    AudioService.connect();
-  }
-
-  Future<void> _trackListPlayerTaskEntrypoint() async {
-    AudioServiceBackground.run(() => TrackListPlayerTask());
-  }
+  final AudioHandler _audioHandler = getIt<AudioHandler>();
 
   void start() {
-    AudioService.start(
-      backgroundTaskEntrypoint: _trackListPlayerTaskEntrypoint,
-      enableQueue: true,
-      resumeOnClick: true,
-      androidNotificationChannelName: CHANNEL_NAME,
-      androidNotificationIcon: NOTIFICATION_ICON,
-    );
   }
 
   void stop() {
-    AudioService.stop();
+    _audioHandler.stop();
   }
 
   void skipToNext() {
-    AudioService.skipToNext();
+    _audioHandler.skipToNext();
   }
 
   void skipToPrevious() {
-    AudioService.skipToPrevious();
+    _audioHandler.skipToPrevious();
   }
 
-  void skipToQueueItem(String trackPath) {
-    AudioService.skipToQueueItem(trackPath);
+  void skipToQueueItem(int trackIndex) {
+    _audioHandler.skipToQueueItem(trackIndex);
   }
 }

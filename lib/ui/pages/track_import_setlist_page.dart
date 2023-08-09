@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/setlist_bloc.dart';
-import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/cards/setlist_card_select.dart';
 import 'package:in_the_pocket/ui/navigation/application_router.dart';
 import 'package:in_the_pocket/ui/navigation/track_import_track_arguments.dart';
@@ -17,52 +15,51 @@ import '../components/common_bottom_bar.dart';
 import '../components/lists/setlist_list.dart';
 
 class TrackImportSetlistPage extends StatefulWidget {
-  const TrackImportSetlistPage(this._targetSetList, {Key key})
+  const TrackImportSetlistPage(this._targetSetlist, {Key? key})
       : super(key: key);
 
-  final SetListProxy _targetSetList;
+  final Setlist _targetSetlist;
 
   @override
   State<StatefulWidget> createState() {
-    return TrackImportSetlistPageState(_targetSetList);
+    return TrackImportSetlistPageState(_targetSetlist);
   }
 }
 
 class TrackImportSetlistPageState extends State<TrackImportSetlistPage> {
-  TrackImportSetlistPageState(this._targetSetList);
+  TrackImportSetlistPageState(this._targetSetlist);
 
-  final SetListProxy _targetSetList;
+  final Setlist _targetSetlist;
 
-  TrackBloc trackBloc;
-  SetListBloc setListBloc;
-  StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
+  late SetlistBloc setlistBloc;
+  late StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
 
   @override
   void initState() {
-    setListBloc =
-        setListBloc = SetListBloc(importTargetSetList: _targetSetList);
+    setlistBloc =
+        setlistBloc = SetlistBloc(importTargetSetlist: _targetSetlist);
     selectedItemSubscription =
-        setListBloc.selectedItems.listen(itemSelectionsChanged);
+        setlistBloc.selectedItems.listen(itemSelectionsChanged);
     super.initState();
   }
 
   void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
-    final List<SetListProxy> selectedItems =
-        setListBloc.getMatchingSelections(SelectionType.selected);
+    final List<Setlist?> selectedItems =
+        setlistBloc.getMatchingSelections(SelectionType.selected);
 
     if (selectedItems.isEmpty) {
       return;
     }
 
-    final SetListProxy selectedSetList = selectedItems.first;
+    final Setlist? selectedSetlist = selectedItems.first;
 
     Navigator.pushNamed(
       context,
       ApplicationRouter.ROUTE_TRACK_IMPORT_TRACK,
       arguments: TrackImportTrackArguments(
-        setListBloc,
-        _targetSetList,
-        selectedSetList,
+        setlistBloc,
+        _targetSetlist,
+        selectedSetlist,
         itemSelectionMap,
       ),
     );
@@ -72,19 +69,19 @@ class TrackImportSetlistPageState extends State<TrackImportSetlistPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      resizeToAvoidBottomPadding: false,
-      appBar: AppBar(title: Text('Import to ${_targetSetList.description}')),
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(title: Text('Import to ${_targetSetlist.description}')),
       body: SafeArea(
         child: Container(
           color: Colors.white,
           padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
           child: Container(
             //This is where the magic starts
-            child: Provider<SetListBloc>.value(
-              value: setListBloc,
-              child: SetListList<SetListCardSelect>(
-                  (SetListProxy a, HashMap<String, ItemSelection> b) =>
-                      SetListCardSelect(a, b)),
+            child: Provider<SetlistBloc>.value(
+              value: setlistBloc,
+              child: SetlistList<SetlistCardSelect>(
+                  (Setlist a, HashMap<String, ItemSelection> b) =>
+                      SetlistCardSelect(a, b)),
             ),
           ),
         ),
@@ -95,7 +92,7 @@ class TrackImportSetlistPageState extends State<TrackImportSetlistPage> {
 
   @override
   void dispose() {
-    setListBloc.dispose();
+    setlistBloc.dispose();
     selectedItemSubscription.cancel();
     super.dispose();
   }

@@ -2,7 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/widgets.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
-import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/cards/mixins/dismissable_model_card.dart';
 import 'package:in_the_pocket/ui/components/cards/mixins/selectable_model_card.dart';
 import 'package:in_the_pocket/ui/components/cards/track_card.dart';
@@ -10,22 +10,22 @@ import 'package:in_the_pocket/ui/components/cards/track_card.dart';
 import 'mixins/editable_model_card.dart';
 
 class TrackCardSUD extends TrackCard {
-  TrackCardSUD(SetListTrackProxy setListTrack,
+  TrackCardSUD(SetlistTrack setlistTrack,
       HashMap<String, ItemSelection> selectedItemMap)
-      : super(setListTrack, selectedItemMap);
+      : super(setlistTrack, selectedItemMap);
 
   @override
   State<StatefulWidget> createState() {
-    return TrackCardSUDState(setListTrack, selectedItemMap);
+    return TrackCardSUDState(setlistTrack, selectedItemMap);
   }
 }
 
 class TrackCardSUDState extends TrackCardState
     with
-        DismissableModelCard<TrackCard, SetListTrackProxy>,
-        EditableModelCard<TrackCard, SetListTrackProxy>,
-        SelectableModelCard<TrackCard, SetListTrackProxy> {
-  TrackCardSUDState(SetListTrackProxy setListTrack,
+        DismissableModelCard<TrackCard, SetlistTrack>,
+        EditableModelCard<TrackCard, SetlistTrack>,
+        SelectableModelCard<TrackCard, SetlistTrack> {
+  TrackCardSUDState(SetlistTrack setlistTrack,
       HashMap<String, ItemSelection> selectedItemMap)
-      : super(setListTrack, selectedItemMap);
+      : super(setlistTrack, selectedItemMap);
 }

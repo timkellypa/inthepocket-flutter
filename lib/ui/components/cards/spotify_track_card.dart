@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/spotify_track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
-import 'package:in_the_pocket/models/independent/spotify_track.dart';
+import 'package:in_the_pocket/model/spotify_track.dart';
 import 'package:in_the_pocket/ui/components/cards/model_card_state_base.dart';
 import 'package:provider/provider.dart';
 
@@ -40,7 +40,7 @@ class SpotifyTrackCardState
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.grey[200], width: 0.5),
+        side: BorderSide(color: Colors.grey[200]!, width: 0.5),
         borderRadius: BorderRadius.circular(5),
       ),
       color: getColor(),

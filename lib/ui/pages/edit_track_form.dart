@@ -5,10 +5,7 @@ import 'package:in_the_pocket/bloc/tempo_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
-import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
-import 'package:in_the_pocket/models/independent/tempo.g.m8.dart';
-import 'package:in_the_pocket/models/independent/track.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/cards/tempo_card_sud.dart';
 import 'package:in_the_pocket/ui/components/lists/tempo_list.dart';
 import 'package:in_the_pocket/ui/navigation/edit_tempo_form_route_arguments.dart';
@@ -18,35 +15,32 @@ import '../components/new_item_button.dart';
 import '../navigation/application_router.dart';
 
 class EditTrackForm extends StatefulWidget {
-  const EditTrackForm(this.setList, {this.setListTrack});
-  final SetListTrackProxy setListTrack;
-  final SetListProxy setList;
+  const EditTrackForm(this.setlist, {this.setlistTrack});
+  final SetlistTrack? setlistTrack;
+  final Setlist setlist;
 
   @override
   State<StatefulWidget> createState() {
-    return EditSetListFormState(setList, setListTrack);
+    return EditSetlistFormState(setlist, setlistTrack);
   }
 }
 
-class EditSetListFormState extends State<EditTrackForm> {
-  EditSetListFormState(this.setList, this.setListTrack);
+class EditSetlistFormState extends State<EditTrackForm> {
+  EditSetlistFormState(this.setlist, this.setlistTrack);
 
-  SetListProxy setList;
-  SetListTrackProxy setListTrack;
-  TempoBloc tempoBloc;
+  Setlist setlist;
+  SetlistTrack? setlistTrack;
+  late TempoBloc tempoBloc;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   @override
   void initState() {
-    if (setListTrack != null) {
-      _titleController.text = setListTrack.track.title;
-      _notesController.text = setListTrack.notes;
-      tempoBloc = TempoBloc(setListTrack.track);
-    } else {
-      // Use a placeholder track with -1 ID if track is not saved yet.
-      tempoBloc = TempoBloc(TrackProxy()..id = -1);
-    }
+    setlistTrack ??= SetlistTrack();
+    setlistTrack!.plTrack ??= Track();
+    _titleController.text = setlistTrack!.plTrack!.title ?? '';
+    _notesController.text = setlistTrack!.plTrack!.notes ?? '';
+    tempoBloc = TempoBloc(setlistTrack!.plTrack!);
 
     tempoBloc.selectedItems.listen(itemSelectionsChanged);
 
@@ -54,16 +48,16 @@ class EditSetListFormState extends State<EditTrackForm> {
   }
 
   void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
-    final List<TempoProxy> selectedItems = tempoBloc
+    final List<Tempo?> selectedItems = tempoBloc
         .getMatchingSelections(SelectionType.editing + SelectionType.add);
 
     if (selectedItems.isEmpty) {
       return;
     }
 
-    final TempoProxy selectedTempo = selectedItems.first;
+    final Tempo? selectedTempo = selectedItems.first;
     final int selectionType =
-        itemSelectionMap[selectedTempo?.guid ?? ''].selectionType;
+        itemSelectionMap[selectedTempo?.id ?? '']?.selectionType ?? SelectionType.add;
     if (selectionType & (SelectionType.editing + SelectionType.add) > 0) {
       Navigator.pushNamed(
         context,
@@ -86,22 +80,22 @@ class EditSetListFormState extends State<EditTrackForm> {
         IconButton(
           icon: const Icon(Icons.save),
           onPressed: () {
-            final SetListTrackProxy setListTrackToSave =
-                setListTrack ?? SetListTrackProxy();
+            final SetlistTrack setlistTrackToSave =
+                setlistTrack ?? SetlistTrack();
 
-            setListTrackToSave.setListId = setList.id;
+            setlistTrackToSave.setlistId = setlist.id;
 
-            setListTrackToSave.track ??= TrackProxy();
+            setlistTrackToSave.plTrack ??= Track();
 
-            setListTrackToSave.track.title = _titleController.value.text;
+            setlistTrackToSave.plTrack!.title = _titleController.value.text;
 
-            setListTrackToSave.notes = _notesController.value.text;
+            setlistTrackToSave.notes = _notesController.value.text;
 
-            if (setListTrackToSave.track.title.isNotEmpty) {
-              if (setListTrack != null) {
-                trackBloc.update(setListTrackToSave);
+            if (setlistTrackToSave.plTrack!.title!.isNotEmpty) {
+              if (setlistTrack?.id != null) {
+                trackBloc.update(setlistTrackToSave);
               } else {
-                trackBloc.insert(setListTrackToSave);
+                trackBloc.insert(setlistTrackToSave);
               }
 
               Navigator.pop(context);
@@ -129,16 +123,16 @@ class EditSetListFormState extends State<EditTrackForm> {
           ),
         ),
       ),
-      floatingActionButton: NewItemButton<TempoProxy>(modelBloc: tempoBloc),
+      floatingActionButton: NewItemButton<Tempo>(modelBloc: tempoBloc),
     );
   }
 
   Widget buildTempoList() {
     return Expanded(
       child: Provider<TempoBloc>(
-        builder: (BuildContext context) => tempoBloc,
+        create: (BuildContext context) => tempoBloc,
         child: TempoList<TempoCardSUD>(
-            (TempoProxy a, HashMap<String, ItemSelection> b) =>
+            (Tempo a, HashMap<String, ItemSelection> b) =>
                 TempoCardSUD(a, b)),
       ),
     );

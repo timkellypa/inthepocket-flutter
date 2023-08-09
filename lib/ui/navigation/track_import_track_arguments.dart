@@ -2,14 +2,14 @@ import 'dart:collection';
 
 import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 
 class TrackImportTrackArguments {
-  TrackImportTrackArguments(this.setListBloc, this.targetSetList, this.setList,
+  TrackImportTrackArguments(this.setlistBloc, this.targetSetlist, this.setlist,
       this.itemSelectionMap);
 
-  SetListProxy targetSetList;
-  SetListProxy setList;
-  SetListBloc setListBloc;
+  Setlist targetSetlist;
+  Setlist? setlist;
+  SetlistBloc setlistBloc;
   HashMap<String, ItemSelection> itemSelectionMap;
 }

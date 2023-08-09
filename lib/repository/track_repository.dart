@@ -1,128 +1,121 @@
 import 'dart:collection';
 import 'dart:convert';
 
-import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
-import 'package:in_the_pocket/models/independent/track.g.m8.dart';
-import 'package:in_the_pocket/models/independent/tempo.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:in_the_pocket/model/table_base_override.dart';
 import 'package:in_the_pocket/providers/spotify_provider.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:uuid/uuid.dart';
 
-class TrackRepository extends RepositoryBase<SetListTrackProxy> {
+class TrackRepository extends RepositoryBase<SetlistTrack> {
   static const int NEW_TRACK_ID = -1;
   final double msToMinutes = 60000.0;
 
   @override
-  Future<List<SetListTrackProxy>> fetch({Function filter}) async {
-    List<SetListTrackProxy> tracks =
-        await dbProvider.getSetListTrackProxiesAll();
+  Future<List<SetlistTrack>> fetch({
+    bool Function(SetlistTrack)? filter, 
+    String? whereClause,
+    String? whereParameter
+  }) async {
+    SetlistTrackFilterBuilder setlistTrackQuery = SetlistTrack().select();
+    if (whereClause != null) {
+      setlistTrackQuery = setlistTrackQuery.where(whereClause, parameterValue: whereParameter);
+    }
+
+    List<SetlistTrack> setlistTracks = await setlistTrackQuery.orderBy(TableBase.SORT_ORDER_COLUMN).toList(preload: true);
 
     if (filter != null) {
-      tracks = tracks.where(filter).toList();
-    }
-    tracks.sort((SetListTrackProxy a, SetListTrackProxy b) =>
-        a.sortOrder.compareTo(b.sortOrder));
-
-    for (SetListTrackProxy track in tracks) {
-      track.track = await getTrackById(track.trackId);
+      setlistTracks = setlistTracks.where(filter).toList();
     }
 
-    return tracks;
+    return setlistTracks;
   }
 
   @override
-  Future<int> insert(SetListTrackProxy item) async {
-    await prepareInsert(item);
-    final int id = await dbProvider.saveSetListTrack(item);
-    item.id = id;
-    item.sortOrder = id;
+  Future<String> insert(SetlistTrack item) async {
+    item.init();
+    item.plTrack!.init();
+    item.trackId = item.plTrack!.id;
+    item.sortOrder = await SetlistTrack().select().toCount() + 1;
+    await item.upsert();
+    await item.plTrack?.upsert();
 
-    if (item.trackId != null && item.track != null) {
-      await dbProvider.updateTrack(item.track);
-    } else if (item.track != null) {
-      item.track.guid = Uuid().v4();
-      final int trackId = await dbProvider.saveTrack(item.track);
-      item.trackId = trackId;
+    final List<Tempo>? tempos = item.plTrack?.plTempos;
 
-      // Grab any tempos that are currently -1 for track ID (placeholder)
-      final List<TempoProxy> tempos = await dbProvider.getTempoProxiesAll();
-      for (TempoProxy tempo in tempos) {
-        if (tempo.trackId == NEW_TRACK_ID) {
-          tempo.trackId = trackId;
-          await dbProvider.updateTempo(tempo);
-        }
-      }
-      TempoRepository().writeClickTracks(tempos: tempos);
+    if (tempos == null || tempos.isEmpty) {
+      TempoRepository().writeEmptyClickTrack(item.trackId!);
+    } else {
+      TempoRepository().writeClickTracks(tempos: tempos, notify: (int total, double progress) {
+        // TODO(timkellypa): Create progress notifier here.
+      },);
     }
-
-    return await dbProvider.updateSetListTrack(item);
+    return item.id!;
   }
 
   @override
-  Future<int> update(SetListTrackProxy item) async {
-    final int ret = await dbProvider.updateSetListTrack(item);
-    await dbProvider.updateTrack(item.track);
-    return ret;
+  Future<String> update(SetlistTrack item) async {
+    // at this point, we can assume item has an ID and a track.
+    item.upsert();
+    item.plTrack!.upsert();
+    return item.id!;
   }
 
   @override
-  Future<int> delete(int id) async {
-    final SetListTrackProxy current = await dbProvider.getSetListTrack(id);
+  Future<void> delete(String id) async {
+    final SetlistTrack current = SetlistTrack().getById(id) as SetlistTrack;
 
-    final List<SetListTrackProxy> setListTracks =
-        await dbProvider.getSetListTrackProxiesAll();
+    final List<SetlistTrack> setListTracksWithCurrent = await SetlistTrack().select().where("trackId = '${current.trackId}' and id != '$id'").toList();
 
-    final List<SetListTrackProxy> setListTracksWithCurrent = setListTracks
-        .where((SetListTrackProxy setListTrack) =>
-            setListTrack.trackId == current.trackId && setListTrack.id != id)
-        .toList();
     if (setListTracksWithCurrent.isEmpty) {
-      await dbProvider.deleteTrack(current.trackId);
+      await (await Track().getById(id))?.delete();
       final TempoRepository tempoRepository = TempoRepository();
-      final List<TempoProxy> tempos = await tempoRepository.fetch(
-          filter: (TempoProxy tempo) => tempo.trackId == current.trackId);
-      for (TempoProxy tempo in tempos) {
-        await tempoRepository.delete(tempo.id);
+      final List<Tempo> tempos = await tempoRepository.fetch(
+          whereClause: 'trackId == ?', whereParameter: current.trackId);
+      for (Tempo tempo in tempos) {
+        await tempo.delete();
       }
-      await tempoRepository.deleteClickTrack(current.trackId);
+      await tempoRepository.deleteClickTrack(current.trackId!);
     }
-    return await dbProvider.deleteSetListTrack(id);
+    await current.delete();
   }
 
-  Future<TrackProxy> getTrackById(int id) {
-    return dbProvider.getTrack(id);
+  Future<Track> getTrackById(String id) async {
+    return await Track().getById(id) as Track;
   }
 
-  Future<List<TrackProxy>> getTracks() {
-    return dbProvider.getTrackProxiesAll();
+  Future<List<Track>> getTracks() async {
+    return await Track().select().toList();
   }
 
-  Future<int> insertTrack(TrackProxy track) async {
-    return await dbProvider.saveTrack(track);
+  Future<String> insertTrack(Track track) async {
+    track.id ??= const Uuid().v4();
+    await track.upsert();
+    return track.id!;
   }
 
-  Future<void> applySpotifyAudioFeatures(List<TrackProxy> tracks,
-      {Function(int total, double progress) notify}) async {
-    final HashMap<String, TrackProxy> idTrackMap =
-        HashMap<String, TrackProxy>();
+  Future<void> applySpotifyAudioFeatures(List<Track> tracks,
+      {required void Function(int total, double progress) notify
+  }) async {
+    final HashMap<String, Track> idTrackMap =
+        HashMap<String, Track>();
     final TempoRepository tempoRepository = TempoRepository();
-    final List<TempoProxy> temposToSave = <TempoProxy>[];
-    final List<TempoProxy> existingTempos =
-        await dbProvider.getTempoProxiesAll();
+    final List<Tempo> temposToSave = <Tempo>[];
+    final List<Tempo> existingTempos =
+        await Tempo().select().toList();
 
-    for (TrackProxy track in tracks) {
+    for (Track track in tracks) {
       idTrackMap[track.id.toString()] = track;
-      if (track.spotifyAudioFeatures != null) {
+      if (track.spotifyAudioFeatures != null && track.spotifyId != null) {
         idTrackMap[track.id.toString()] = track;
         track.spotifyAudioFeatures =
-            await SpotifyProvider().getAudioFeaturesJSON(track.spotifyId);
-        await dbProvider.updateTrack(track);
+            await SpotifyProvider().getAudioFeaturesJSON(track.spotifyId!);
+        await Track().save();
 
         if (track.spotifyAudioFeatures != '') {
           final Map<String, dynamic> audioFeatures =
-              json.decode(track.spotifyAudioFeatures);
-          final TempoProxy tempo = _buildTempoFromAudioFeatures(audioFeatures);
+              json.decode(track.spotifyAudioFeatures!);
+          final Tempo tempo = _buildTempoFromAudioFeatures(audioFeatures);
           tempo.trackId = track.id;
 
           temposToSave.add(tempo);
@@ -130,21 +123,27 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
       }
     }
 
-    for (TempoProxy tempo in existingTempos) {
+    for (Tempo tempo in existingTempos) {
       if (idTrackMap.containsKey(tempo.trackId)) {
-        await tempoRepository.delete(tempo.id);
+        await tempoRepository.delete(tempo.id!);
       }
     }
 
-    for (TempoProxy tempo in temposToSave) {
+    for (Tempo tempo in temposToSave) {
       await tempoRepository.insert(tempo);
     }
+
+    // no click tracks to write, just exit.
+    if (temposToSave.isEmpty) {
+      return;
+    }
+
     await tempoRepository.writeClickTracks(
         tempos: temposToSave, notify: notify);
   }
 
-  TempoProxy _buildTempoFromAudioFeatures(Map<String, dynamic> audioFeatures) {
-    final TempoProxy tempo = TempoProxy();
+  Tempo _buildTempoFromAudioFeatures(Map<String, dynamic> audioFeatures) {
+    final Tempo tempo = Tempo();
     final int duration = audioFeatures['duration_ms'];
 
     tempo.beatsPerBar = 4;
@@ -164,7 +163,7 @@ class TrackRepository extends RepositoryBase<SetListTrackProxy> {
       tempo.dottedQuarterAccent = true;
     }
     tempo.numberOfBars =
-        duration * tempo.bpm / (msToMinutes * tempo.beatsPerBar);
+        duration * tempo.bpm! / (msToMinutes * tempo.beatsPerBar!);
     return tempo;
   }
 }

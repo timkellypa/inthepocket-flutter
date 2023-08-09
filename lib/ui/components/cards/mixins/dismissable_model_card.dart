@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:in_the_pocket/models/independent/model_base.dart';
+import 'package:in_the_pocket/model/model_base.dart';
 import 'package:in_the_pocket/ui/components/cards/model_card_state_base.dart';
 
 mixin DismissableModelCard<WidgetType extends StatefulWidget,
@@ -12,8 +11,8 @@ mixin DismissableModelCard<WidgetType extends StatefulWidget,
     final Widget original = super.build(context);
     return Dismissible(
       background: Container(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 10),
+        child: const Padding(
+          padding: EdgeInsets.only(left: 10),
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(

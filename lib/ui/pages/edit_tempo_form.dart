@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/tempo_bloc.dart';
-import 'package:in_the_pocket/models/independent/tempo.g.m8.dart';
-import 'package:in_the_pocket/models/independent/track.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:provider/provider.dart';
 
 class EditTempoForm extends StatefulWidget {
   const EditTempoForm({this.tempo});
-  final TempoProxy tempo;
+  final Tempo? tempo;
 
   @override
   State<StatefulWidget> createState() {
@@ -17,8 +16,7 @@ class EditTempoForm extends StatefulWidget {
 class EditTempoFormState extends State<EditTempoForm> {
   EditTempoFormState(this.tempo);
 
-  TempoBloc tempoBloc;
-  TempoProxy tempo;
+  Tempo? tempo;
   final TextEditingController _accentBeatsPerBarController =
       TextEditingController();
   final TextEditingController _beatsPerBarController = TextEditingController();
@@ -26,32 +24,23 @@ class EditTempoFormState extends State<EditTempoForm> {
   final TextEditingController _bpmController = TextEditingController();
   final TextEditingController _numberofBarsController = TextEditingController();
 
-  bool _dottedQuarterAccent;
+  bool _dottedQuarterAccent = false;
 
   @override
   void initState() {
-    if (tempo != null) {
-      _accentBeatsPerBarController.text = tempo.accentBeatsPerBar.toString();
-      _beatsPerBarController.text = tempo.beatsPerBar.toString();
-      _beatUnitController.text = tempo.beatUnit.toString();
-      _bpmController.text = tempo.bpm.toString();
-      _dottedQuarterAccent = tempo.dottedQuarterAccent;
-      _numberofBarsController.text = tempo.numberOfBars.toString();
-    } else {
-      _accentBeatsPerBarController.text = '1';
-      _beatsPerBarController.text = '4';
-      _beatUnitController.text = '4';
-      _bpmController.text = '';
-      _dottedQuarterAccent = false;
-      _numberofBarsController.text = '';
-    }
+    _accentBeatsPerBarController.text = tempo?.accentBeatsPerBar.toString() ?? '1';
+    _beatsPerBarController.text = tempo?.beatsPerBar.toString() ?? '4';
+    _beatUnitController.text = tempo?.beatUnit.toString() ?? '4';
+    _bpmController.text = tempo?.bpm.toString() ?? '';
+    _dottedQuarterAccent = tempo?.dottedQuarterAccent ?? false;
+    _numberofBarsController.text = tempo?.numberOfBars.toString() ?? '';
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    tempoBloc = Provider.of<TempoBloc>(context);
-    final TrackProxy track = tempoBloc.track;
+    final TempoBloc tempoBloc = Provider.of<TempoBloc>(context);
+    final Track track = tempoBloc.track;
 
     String pageTitle = 'Tempo Info';
     if (track.title != null) {
@@ -63,7 +52,7 @@ class EditTempoFormState extends State<EditTempoForm> {
         IconButton(
           icon: const Icon(Icons.save),
           onPressed: () {
-            final TempoProxy tempoToSave = tempo ?? TempoProxy();
+            final Tempo tempoToSave = tempo ?? Tempo();
 
             tempoToSave.accentBeatsPerBar =
                 int.tryParse(_accentBeatsPerBarController.text) ?? 60;
@@ -73,7 +62,7 @@ class EditTempoFormState extends State<EditTempoForm> {
             tempoToSave.bpm = double.tryParse(_bpmController.text) ?? 60;
             tempoToSave.dottedQuarterAccent = _dottedQuarterAccent;
             tempoToSave.numberOfBars =
-                int.tryParse(_numberofBarsController.text) ?? 0;
+                double.tryParse(_numberofBarsController.text) ?? 0;
             tempoToSave.trackId = track.id;
 
             if (tempo != null) {
@@ -110,8 +99,8 @@ class EditTempoFormState extends State<EditTempoForm> {
                 controlAffinity: ListTileControlAffinity.leading,
                 title: const Text('Dotted Quarter Accent'),
                 value: _dottedQuarterAccent,
-                onChanged: (bool check) {
-                  setState(() => _dottedQuarterAccent = check);
+                onChanged: (bool? check) {
+                  setState(() => _dottedQuarterAccent = check ?? false);
                 },
               ),
               ListTile(

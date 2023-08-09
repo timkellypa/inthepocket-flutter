@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:in_the_pocket/classes/secret.dart';
 import 'package:in_the_pocket/classes/secret_loader.dart';
-import 'package:in_the_pocket/models/independent/spotify_playlist.dart';
-import 'package:in_the_pocket/models/independent/spotify_track.dart';
+import 'package:in_the_pocket/model/spotify_playlist.dart';
+import 'package:in_the_pocket/model/spotify_track.dart';
 import 'package:in_the_pocket/oauth/authorization_code_grant_helper.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
 import 'package:path_provider/path_provider.dart';
@@ -32,15 +32,14 @@ class SpotifyProvider {
     final oauth2.Client client = await login();
 
     final String result =
-        await client.read('https://api.spotify.com/v1/me/playlists');
+        await client.read(Uri.https('api.spotify.com', '/v1/me/playlists'));
 
     final List<dynamic> items = json.decode(result)['items'];
 
     for (Map<String, dynamic> item in items) {
       final SpotifyPlaylist list = SpotifyPlaylist();
       list.spotifyId = item['id'];
-      list.guid = item['id'];
-      list.id = index;
+      list.id = item['id'];
       list.sortOrder = index;
       list.spotifyTitle = item['name'];
       ret.add(list);
@@ -57,7 +56,8 @@ class SpotifyProvider {
     final oauth2.Client client = await login();
 
     final String result = await client.read(
-        'https://api.spotify.com/v1/playlists/${playlist.spotifyId}/tracks');
+      Uri.https('api.spotify.com', '/v1/playlists/${playlist.spotifyId}/tracks')
+    );
 
     final List<dynamic> items = json.decode(result)['items'];
 
@@ -68,11 +68,10 @@ class SpotifyProvider {
       }
 
       final SpotifyTrack track = SpotifyTrack()
-        ..id = index
+        ..id = item['track']['id']
         ..sortOrder = index
         ..spotifyTitle = item['track']['name']
         ..spotifyId = item['track']['id']
-        ..guid = item['track']['id']
         ..spotifyAudioFeatures = audioFeatures;
 
       ret.add(track);
@@ -81,12 +80,13 @@ class SpotifyProvider {
     return ret;
   }
 
-  Future<String> getAudioFeaturesJSON(String trackId,
-      {oauth2.Client client}) async {
-    client ??= await login();
+  Future<String> getAudioFeaturesJSON(String trackId) async {
+    final oauth2.Client client = await login();
 
     final String result =
-        await client.read('https://api.spotify.com/v1/audio-features/$trackId');
+        await client.read(
+          Uri.https('api.spotify.com', '/v1/audio-features/$trackId')
+        );
 
     return result;
   }

@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
+
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
-import 'package:in_the_pocket/models/independent/setlist_track.g.m8.dart';
-import 'package:in_the_pocket/models/independent/spotify_playlist.dart';
-import 'package:in_the_pocket/models/independent/spotify_track.dart';
-import 'package:in_the_pocket/models/independent/track.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:in_the_pocket/model/spotify_playlist.dart';
+import 'package:in_the_pocket/model/spotify_track.dart';
 import 'package:in_the_pocket/repository/spotify_track_repository.dart';
 import 'package:in_the_pocket/repository/track_repository.dart';
 
@@ -22,10 +21,10 @@ class SaveStatus {
 
 class SpotifyTrackBloc
     extends ModelBlocBase<SpotifyTrack, SpotifyTrackRepository> {
-  SpotifyTrackBloc(this.spotifyPlaylist, {this.importTargetSetList}) : super();
+  SpotifyTrackBloc(this.spotifyPlaylist, {required this.importTargetSetlist}) : super();
 
-  final SetListProxy importTargetSetList;
-  final SpotifyPlaylist spotifyPlaylist;
+  final Setlist? importTargetSetlist;
+  final SpotifyPlaylist? spotifyPlaylist;
 
   bool firstFetch = true;
 
@@ -36,31 +35,31 @@ class SpotifyTrackBloc
 
   @override
   String get listTitle {
-    return spotifyPlaylist.spotifyTitle;
+    return spotifyPlaylist?.spotifyTitle ?? '';
   }
 
   @override
   Future<List<SpotifyTrack>> fetch() async {
     final List<SpotifyTrack> spotifyTracks = await getItemList();
-    if (importTargetSetList != null && firstFetch) {
+    if (firstFetch) {
       firstFetch = false;
 
-      final TrackBloc trackBloc = TrackBloc(importTargetSetList);
+      final TrackBloc trackBloc = TrackBloc(importTargetSetlist);
 
-      final List<SetListTrackProxy> setListTracks =
+      final List<SetlistTrack> setlistTracks =
           await trackBloc.getItemList();
 
-      final HashMap<String, SetListTrackProxy> spotifyIdSetListTrackMap =
-          HashMap<String, SetListTrackProxy>();
+      final HashMap<String, SetlistTrack> spotifyIdSetlistTrackMap =
+          HashMap<String, SetlistTrack>();
 
-      for (SetListTrackProxy setListTrack in setListTracks) {
-        if (setListTrack.track.spotifyId != null) {
-          spotifyIdSetListTrackMap[setListTrack.track.spotifyId] = setListTrack;
+      for (SetlistTrack setlistTrack in setlistTracks) {
+        if (setlistTrack.plTrack?.spotifyId != null) {
+          spotifyIdSetlistTrackMap[setlistTrack.plTrack!.spotifyId!] = setlistTrack;
         }
       }
 
       for (SpotifyTrack spotifyTrack in spotifyTracks) {
-        if (spotifyIdSetListTrackMap.containsKey(spotifyTrack.spotifyId)) {
+        if (spotifyIdSetlistTrackMap.containsKey(spotifyTrack.spotifyId)) {
           selectItem(spotifyTrack, SelectionType.disabled);
         }
       }
@@ -84,11 +83,11 @@ class SpotifyTrackBloc
 
   @override
   Future<void> delete(SpotifyTrack item) async {
-    await repository.delete(item.id);
+    await repository.delete(item.id!);
     fetch();
   }
 
-  Future<void> importItems(SetListProxy targetSetList,
+  Future<void> importItems(Setlist targetSetlist,
       HashMap<String, ItemSelection> selectedItemMap) async {
     // Start progress indicator immediately at 0.
     //  Will only start progressing after click tracks are being written,
@@ -96,47 +95,47 @@ class SpotifyTrackBloc
     updateSaveStatus(1, 0.0);
     final List<SpotifyTrack> entries = itemList
         .where((SpotifyTrack spotifyTrack) =>
-            selectedItemMap.containsKey(spotifyTrack.guid) &&
-            selectedItemMap[spotifyTrack.guid].selectionType &
+            selectedItemMap.containsKey(spotifyTrack.id) &&
+            selectedItemMap[spotifyTrack.id]!.selectionType &
                     SelectionType.selected >
                 0)
         .toList();
-    final List<TrackProxy> audioFeatureTracks = <TrackProxy>[];
+    final List<Track> audioFeatureTracks = <Track>[];
 
     entries.sort(
-        (SpotifyTrack a, SpotifyTrack b) => a.sortOrder.compareTo(b.sortOrder));
+        (SpotifyTrack a, SpotifyTrack b) => a.sortOrder!.compareTo(b.sortOrder!));
 
     final TrackRepository trackRepository = TrackRepository();
-    final List<TrackProxy> trackList = await trackRepository.getTracks();
+    final List<Track> trackList = await trackRepository.getTracks();
 
     // generate a reverse lookup tracklist by spotify id
-    final HashMap<String, TrackProxy> spotifyIdTrackMap =
-        HashMap<String, TrackProxy>();
+    final HashMap<String, Track> spotifyIdTrackMap =
+        HashMap<String, Track>();
 
-    for (TrackProxy track in trackList) {
-      spotifyIdTrackMap[track.spotifyId] = track;
+    for (Track track in trackList) {
+      spotifyIdTrackMap[track.spotifyId!] = track;
     }
 
     for (SpotifyTrack spotifyTrack in entries) {
-      TrackProxy track;
+      Track track;
       // check to see if it already exists
       if (!spotifyIdTrackMap.containsKey(spotifyTrack.spotifyId)) {
-        track = TrackProxy();
+        track = Track();
         track.spotifyId = spotifyTrack.spotifyId;
         track.title = spotifyTrack.spotifyTitle;
         track.spotifyAudioFeatures = spotifyTrack.spotifyAudioFeatures;
-        final int trackId = await trackRepository.insertTrack(track);
+        final String trackId = await trackRepository.insertTrack(track);
         track.id = trackId;
         audioFeatureTracks.add(track);
       } else {
-        track = spotifyIdTrackMap[spotifyTrack.spotifyId];
+        track = spotifyIdTrackMap[spotifyTrack.spotifyId]!;
       }
 
-      final SetListTrackProxy setListTrack = SetListTrackProxy();
+      final SetlistTrack setlistTrack = SetlistTrack();
 
-      setListTrack.trackId = track.id;
-      setListTrack.setListId = targetSetList.id;
-      await trackRepository.insert(setListTrack);
+      setlistTrack.trackId = track.id;
+      setlistTrack.setlistId = targetSetlist.id;
+      await trackRepository.insert(setlistTrack);
     }
     await trackRepository.applySpotifyAudioFeatures(audioFeatureTracks,
         notify: updateSaveStatus);

@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import 'package:in_the_pocket/classes/MetronomeWriter.dart';
-import 'package:in_the_pocket/models/independent/tempo.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:in_the_pocket/model/table_base_override.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
 import 'package:in_the_pocket/repository/track_repository.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:wave_builder/wave_builder.dart';
 
-class TempoRepository extends RepositoryBase<TempoProxy> {
+class TempoRepository extends RepositoryBase<Tempo> {
   Future<String> get _localPath async {
     final Directory directory = await getApplicationDocumentsDirectory();
 
@@ -17,59 +19,65 @@ class TempoRepository extends RepositoryBase<TempoProxy> {
     return '${await _localPath}/click_tracks';
   }
 
-  Future<String> getClickTrackPath(int trackId) async {
-    return '${await _tempoDirectory}/${trackId.toString()}.wav';
+  Future<String> getClickTrackPath(String trackId) async {
+    return '${await _tempoDirectory}/$trackId.wav';
   }
 
-  int getTrackIdFromPath(String path) {
+  String getTrackIdFromPath(String path) {
     final List<String> pathItems = path.split('/');
-    return int.parse(pathItems.last.split('.')[0]);
+    return pathItems.last.split('.')[0];
   }
 
   @override
-  Future<List<TempoProxy>> fetch({Function filter}) async {
-    List<TempoProxy> tempos = await dbProvider.getTempoProxiesAll();
+  Future<List<Tempo>> fetch({
+    bool Function(Tempo)? filter, 
+    String? whereClause,
+    String? whereParameter
+  }) async {
+    TempoFilterBuilder tempoQuery = Tempo().select();
+    
+    if (whereClause != null) {
+      tempoQuery = tempoQuery.where(whereClause, parameterValue: whereParameter);
+    }
+    
+    List<Tempo> tempos = await tempoQuery.orderBy(TableBase.SORT_ORDER_COLUMN).toList();
 
     if (filter != null) {
       tempos = tempos.where(filter).toList();
     }
 
-    tempos.sort((TempoProxy a, TempoProxy b) {
-      final int trackComparison = a.trackId.compareTo(b.trackId);
-      if (trackComparison == 0) {
-        return a.sortOrder.compareTo(b.sortOrder);
-      }
-      return trackComparison;
-    });
     return tempos;
   }
 
   @override
-  Future<int> insert(TempoProxy item) async {
-    await prepareInsert(item);
-    final int id = await dbProvider.saveTempo(item);
-    item.id = id;
-    item.sortOrder = id;
-    return await dbProvider.updateTempo(item);
+  Future<String> insert(Tempo item) async {
+    item.init();
+    item.sortOrder = await Tempo().select().toCount() + 1;
+    await item.upsert();
+    return item.id!;
   }
 
   @override
-  Future<int> update(TempoProxy item) => dbProvider.updateTempo(item);
+  Future<String> update(Tempo item) async {
+    await item.upsert();
+    return item.id!;
+  }
 
   @override
-  Future<int> delete(int id) => dbProvider.deleteTempo(id);
+  Future<void> delete(String id) async {
+    final Tempo tempo = await Tempo().getById(id) as Tempo;
+    await tempo.delete();
+  }
 
   Future<void> clearPlaceholderTempos() async {
-    final List<TempoProxy> tempos = await dbProvider.getTempoProxiesAll();
-    for (TempoProxy tempo in tempos) {
-      if (tempo.trackId == TrackRepository.NEW_TRACK_ID) {
-        dbProvider.deleteTempo(tempo.id);
-      }
+    final List<Tempo> placeHolderTempos = await Tempo().select().where('trackId = ${TrackRepository.NEW_TRACK_ID}').toList();
+    for (Tempo tempo in placeHolderTempos) {
+      await tempo.delete();
     }
   }
 
   Future<void> _writeClickTrackToFile(
-      int trackId, MetronomeWriter writer) async {
+      String trackId, MetronomeWriter writer) async {
     final String path = await getClickTrackPath(trackId);
     final File file = File(path);
 
@@ -80,19 +88,22 @@ class TempoRepository extends RepositoryBase<TempoProxy> {
     await file.writeAsBytes(writer.fileBytes);
   }
 
+  Future<void> writeEmptyClickTrack(String trackId) async {
+    final MetronomeWriter writer = MetronomeWriter();
+    writer.appendSilence(60000, WaveBuilderSilenceType.BeginningOfLastSample);
+    await _writeClickTrackToFile(trackId, writer);
+  }
+
   Future<void> writeClickTracks(
-      {List<TempoProxy> tempos,
-      Function(int total, double progress) notify}) async {
-    int previousTrack;
-    tempos ??= await fetch();
-    if (tempos.isEmpty) {
-      return;
-    }
+      {required List<Tempo> tempos,
+      required Function(int total, double progress) notify}) async {
+    String? previousTrack;
     double i = 0;
     notify(tempos.length, i);
     MetronomeWriter writer = MetronomeWriter();
-    for (TempoProxy tempo in tempos) {
-      if (tempo.trackId != previousTrack) {
+
+    for (Tempo tempo in tempos) {
+      if (tempo.trackId != previousTrack && previousTrack != null) {
         // if next track is new, write the contents of writer
         // and create a new one to keep going
         await _writeClickTrackToFile(previousTrack, writer);
@@ -102,18 +113,25 @@ class TempoRepository extends RepositoryBase<TempoProxy> {
       previousTrack = tempo.trackId;
       notify(tempos.length, i++);
     }
+
     // After the loop write the last file contents, and de-reference writer
-    await _writeClickTrackToFile(previousTrack, writer);
-    writer = null;
+    await _writeClickTrackToFile(previousTrack!, writer);
     notify(tempos.length, tempos.length * 1.0);
   }
 
-  Future<void> deleteClickTrack(int trackId) async {
+  Future<void> deleteClickTrack(String trackId) async {
     final String path = await getClickTrackPath(trackId);
     final File file = File(path);
 
     if (file.existsSync()) {
       await file.delete();
     }
+  }
+
+  /// Get the display text for the tempo.
+  /// Would normally be an instance method in the tempo model,
+  /// but I don't have that kind of access to the generated model.
+  String getTempoDisplayText(Tempo tempo) {
+    return '${tempo.bpm} BPM (${tempo.beatsPerBar}/${tempo.beatUnit})';
   }
 }

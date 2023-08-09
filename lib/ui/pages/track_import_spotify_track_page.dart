@@ -1,15 +1,12 @@
 import 'dart:collection';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/spotify_track_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
-import 'package:in_the_pocket/models/independent/spotify_playlist.dart';
-import 'package:in_the_pocket/models/independent/spotify_track.dart';
-import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:in_the_pocket/model/spotify_playlist.dart';
+import 'package:in_the_pocket/model/spotify_track.dart';
 import 'package:provider/provider.dart';
 
 import '../components/cards/spotify_track_card_multiselect.dart';
@@ -18,33 +15,33 @@ import '../components/lists/spotify_track_list.dart';
 import '../navigation/application_router.dart';
 
 class TrackImportSpotifyTrackPage extends StatefulWidget {
-  const TrackImportSpotifyTrackPage(this._targetSetList,
-      {Key key, this.spotifyPlaylist})
+  const TrackImportSpotifyTrackPage(this._targetSetlist,
+      {Key? key, this.spotifyPlaylist})
       : super(key: key);
 
-  final SetListProxy _targetSetList;
-  final SpotifyPlaylist spotifyPlaylist;
+  final Setlist? _targetSetlist;
+  final SpotifyPlaylist? spotifyPlaylist;
 
   @override
   State<StatefulWidget> createState() {
-    return TrackImportSpotifyTrackPageState(_targetSetList, spotifyPlaylist);
+    return TrackImportSpotifyTrackPageState(_targetSetlist, spotifyPlaylist);
   }
 }
 
 class TrackImportSpotifyTrackPageState
     extends State<TrackImportSpotifyTrackPage> {
-  TrackImportSpotifyTrackPageState(this._targetSetList, this.spotifyPlaylist);
+  TrackImportSpotifyTrackPageState(this._targetSetlist, this.spotifyPlaylist);
 
-  final SetListProxy _targetSetList;
-  final SpotifyPlaylist spotifyPlaylist;
+  final Setlist? _targetSetlist;
+  final SpotifyPlaylist? spotifyPlaylist;
 
-  TrackBloc trackBloc;
-  SpotifyTrackBloc spotifyTrackBloc;
+  late TrackBloc trackBloc;
+  late SpotifyTrackBloc spotifyTrackBloc;
 
   @override
   void initState() {
     spotifyTrackBloc = spotifyTrackBloc =
-        SpotifyTrackBloc(spotifyPlaylist, importTargetSetList: _targetSetList);
+        SpotifyTrackBloc(spotifyPlaylist, importTargetSetlist: _targetSetlist);
     super.initState();
   }
 
@@ -52,9 +49,9 @@ class TrackImportSpotifyTrackPageState
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      resizeToAvoidBottomPadding: false,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text('Import to ${_targetSetList.description}'),
+        title: Text('Import to ${_targetSetlist?.description ?? ''}'),
         actions: <Widget>[
           StreamBuilder<HashMap<String, ItemSelection>>(
             builder: (BuildContext context,
@@ -67,13 +64,13 @@ class TrackImportSpotifyTrackPageState
                       AsyncSnapshot<SaveStatus> saveStatusSnapshot) {
                     return IconButton(
                       icon: const Icon(Icons.save),
-                      onPressed: saveStatusSnapshot.data.total > 0
+                      onPressed: (saveStatusSnapshot.data?.total ?? 0) > 0
                           ? null
                           : () async {
                               if (selectedItemMapSnapshot.hasData) {
                                 await spotifyTrackBloc.importItems(
-                                    _targetSetList,
-                                    selectedItemMapSnapshot.data);
+                                    _targetSetlist!,
+                                    selectedItemMapSnapshot.data!);
 
                                 // wait a second to show the 100%
                                 await Future<void>.delayed(
@@ -101,25 +98,7 @@ class TrackImportSpotifyTrackPageState
           initialData: spotifyTrackBloc.saveStatus,
           builder: (BuildContext context,
               AsyncSnapshot<SaveStatus> saveStatusSnapshot) {
-            final bool showProgress = saveStatusSnapshot.data.total > 0;
-            final double ratio = showProgress
-                ? saveStatusSnapshot.data.progress /
-                    saveStatusSnapshot.data.total
-                : 0;
-            return ModalProgressHUD(
-              inAsyncCall: showProgress,
-              opacity: 0.95,
-              progressIndicator: CircularPercentIndicator(
-                radius: 120,
-                lineWidth: 13,
-                animation: true,
-                backgroundColor: Colors.grey,
-                progressColor: Colors.blue,
-                header: const Text('Building Click Tracks'),
-                center: Text((ratio * 100).floor().toString() + '%'),
-                percent: ratio,
-              ),
-              child: Container(
+            return Container(
                 color: Colors.white,
                 padding:
                     const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
@@ -132,10 +111,8 @@ class TrackImportSpotifyTrackPageState
                             SpotifyTrackCardMultiSelect(a, b)),
                   ),
                 ),
-              ),
             );
-          },
-        ),
+        })
       ),
       bottomNavigationBar: CommonBottomBar(),
     );

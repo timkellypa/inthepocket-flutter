@@ -1,21 +1,16 @@
 import 'dart:async';
 import 'package:in_the_pocket/classes/selection_type.dart';
-import 'package:in_the_pocket/models/independent/setlist.g.m8.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/repository/setlist_repository.dart';
 
 import 'model_bloc_base.dart';
 
-class SetListBloc extends ModelBlocBase<SetListProxy, SetListRepository> {
-  SetListBloc({this.importTargetSetList}) : super();
+class SetlistBloc extends ModelBlocBase<Setlist, SetListRepository> {
+  SetlistBloc({this.importTargetSetlist}) : super();
 
-  final SetListProxy importTargetSetList;
+  final Setlist? importTargetSetlist;
 
   bool firstFetch = true;
-
-  @override
-  SetListRepository get repository {
-    return SetListRepository();
-  }
 
   @override
   String get listTitle {
@@ -23,37 +18,40 @@ class SetListBloc extends ModelBlocBase<SetListProxy, SetListRepository> {
   }
 
   @override
-  Future<List<SetListProxy>> fetch() async {
-    final List<SetListProxy> setLists = await getItemList();
-    if (importTargetSetList != null && firstFetch) {
+  Future<List<Setlist>> fetch() async {
+    final List<Setlist> setlists = await getItemList();
+    if (firstFetch) {
       firstFetch = false;
 
-      for (SetListProxy setList in setLists) {
-        if (setList.id == importTargetSetList.id) {
-          selectItem(setList, SelectionType.disabled);
+      for (Setlist setlist in setlists) {
+        if (setlist.id == importTargetSetlist?.id) {
+          selectItem(setlist, SelectionType.disabled);
         }
       }
     }
 
-    listController.sink.add(setLists);
-    return setLists;
+    listController.sink.add(setlists);
+    return setlists;
   }
 
   @override
-  Future<void> insert(SetListProxy item) async {
+  Future<void> insert(Setlist item) async {
     await repository.insert(item);
     fetch();
   }
 
   @override
-  Future<void> update(SetListProxy item) async {
+  Future<void> update(Setlist item) async {
     await repository.update(item);
     fetch();
   }
 
   @override
-  Future<void> delete(SetListProxy item) async {
-    await repository.delete(item.id);
+  Future<void> delete(Setlist item) async {
+    await repository.delete(item.id!);
     fetch();
   }
+  
+  @override
+  SetListRepository get repository => SetListRepository();
 }

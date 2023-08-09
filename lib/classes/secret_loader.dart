@@ -4,7 +4,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:in_the_pocket/classes/secret.dart';
 
 class SecretLoader {
-  SecretLoader({this.secretPath});
+  SecretLoader({required this.secretPath});
+
   final String secretPath;
 
   Future<Secret> load() {
