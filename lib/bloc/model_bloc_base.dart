@@ -16,7 +16,8 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
 
   SaveStatus saveStatus = SaveStatus(0, 0.0);
 
-  final StreamController<SaveStatus> _saveStatusController  = StreamController<SaveStatus>.broadcast();
+  final StreamController<SaveStatus> _saveStatusController =
+      StreamController<SaveStatus>.broadcast();
 
   Stream<SaveStatus> get saveStatusStream => _saveStatusController.stream;
 
@@ -25,9 +26,9 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     _saveStatusController.sink.add(saveStatus);
   }
 
-  
   List<ModelType> itemList = <ModelType>[];
-  HashMap<String, ItemSelection> itemSelectionMap = HashMap<String, ItemSelection>();
+  HashMap<String, ItemSelection> itemSelectionMap =
+      HashMap<String, ItemSelection>();
   RepositoryType get repository;
 
   bool Function(ModelType)? get listFilter {
@@ -38,18 +39,41 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     return 'Items';
   }
 
-  StreamController<List<ModelType>> listController = StreamController<List<ModelType>>.broadcast();
+  StreamController<List<ModelType>> listController =
+      StreamController<List<ModelType>>.broadcast();
 
   Stream<List<ModelType>> get items => listController.stream;
 
   StreamController<HashMap<String, ItemSelection>> selectedItemsController =
-        StreamController<HashMap<String, ItemSelection>>.broadcast();
+      StreamController<HashMap<String, ItemSelection>>.broadcast();
 
   Stream<HashMap<String, ItemSelection>> get selectedItems =>
       selectedItemsController.stream;
 
-  void selectItem(ModelType? model, int selectionTypes, {bool doSync = true}) {
+  bool isSelected(ModelType? model, int selectionTypes) {
+    return (itemSelectionMap[model?.id ?? '']?.selectionType ?? 0) &
+            selectionTypes ==
+        selectionTypes;
+  }
+
+  void selectItem(ModelType? model, int selectionTypes,
+      {bool doSync = true, bool allowMultiSelect = false}) {
     final String guid = model?.id ?? '';
+
+    // unselect if all our selection types are currently active.
+    if ((itemSelectionMap[guid]?.selectionType ?? 0) & selectionTypes ==
+        selectionTypes) {
+      unSelectItem(model, selectionTypes);
+      if (doSync) {
+        syncSelections();
+      }
+      return;
+    }
+
+    if (!allowMultiSelect) {
+      unSelectAll(selectionTypes, doSync: false);
+    }
+
     itemSelectionMap.putIfAbsent(guid, () => ItemSelection(0));
     itemSelectionMap[guid]!.selectionType |= selectionTypes;
     if (doSync) {
@@ -57,7 +81,8 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     }
   }
 
-  void unSelectItem(ModelType? model, int selectionTypes, {bool doSync = true}) {
+  void unSelectItem(ModelType? model, int selectionTypes,
+      {bool doSync = true}) {
     final String guid = model?.id ?? '';
     itemSelectionMap.putIfAbsent(guid, () => ItemSelection(0));
     itemSelectionMap[guid]!.selectionType &= ~selectionTypes;
@@ -117,22 +142,24 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
   }
 
   Future<List<ModelType>> getItemList(
-      {bool Function(ModelType)? filter, bool update = true}) async {
+      {bool Function(ModelType)? filter}) async {
     filter ??= listFilter;
     final List<ModelType> itemListRetrieved =
         await repository.fetch(filter: filter);
-    if (update) {
-      itemList = itemListRetrieved;
-    }
     return itemListRetrieved;
   }
 
-  Future<List<ModelType>> fetch() async {
-    await getItemList();
+  void syncList(List<ModelType> newItemList) {
+    itemList = newItemList;
     if (!listController.isClosed) {
       listController.sink.add(itemList);
     }
-    return itemList;
+  }
+
+  Future<List<ModelType>> fetch() async {
+    final List<ModelType> newItemList = await getItemList();
+    syncList(newItemList);
+    return newItemList;
   }
 
   Future<void> insert(ModelType item);
@@ -146,7 +173,7 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     selectedItemsController.close();
   }
 
-  void reset () {
+  void reset() {
     unSelectAll(SelectionType.all);
   }
 }

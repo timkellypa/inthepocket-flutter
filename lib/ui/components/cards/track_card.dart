@@ -42,6 +42,6 @@ class TrackCardState extends ModelCardStateBase<TrackCard, SetlistTrack> {
           borderRadius: BorderRadius.circular(5),
         ),
         color: getColor(),
-        child: getListTile(_setlistTrack.plTrack!.title!));
+        child: getListTile(_setlistTrack.plTrack?.title ?? ''));
   }
 }

@@ -8,7 +8,6 @@ import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/cards/track_card_sud.dart';
-import 'package:in_the_pocket/ui/components/common_bottom_bar.dart';
 import 'package:in_the_pocket/ui/navigation/application_router.dart';
 import 'package:in_the_pocket/ui/navigation/edit_track_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_import_setlist_arguments.dart';
@@ -38,7 +37,8 @@ class TrackListPageState extends State<TrackListPage> {
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey(debugLabel: 'scaffoldKey');
 
   late TrackBloc trackBloc;
-  late StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
+  late StreamSubscription<HashMap<String, ItemSelection>>
+      selectedItemSubscription;
 
   @override
   void initState() {
@@ -48,7 +48,8 @@ class TrackListPageState extends State<TrackListPage> {
     super.initState();
   }
 
-  void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
+  Future<void> itemSelectionsChanged(
+      HashMap<String, ItemSelection> itemSelectionMap) async {
     final List<SetlistTrack?> selectedItems = trackBloc
         .getMatchingSelections(SelectionType.editing + SelectionType.add);
 
@@ -60,7 +61,7 @@ class TrackListPageState extends State<TrackListPage> {
     final int selectionType =
         itemSelectionMap[selectedSetlistTrack?.id ?? '']?.selectionType ?? 0;
     if (selectionType & (SelectionType.editing + SelectionType.add) > 0) {
-      Navigator.pushNamed(
+      await Navigator.pushNamed(
         context,
         ApplicationRouter.ROUTE_EDIT_TRACK_FORM,
         arguments: EditTrackFormRouteArguments(
@@ -70,11 +71,12 @@ class TrackListPageState extends State<TrackListPage> {
           itemSelectionMap,
         ),
       );
+      await trackBloc.fetch();
     }
   }
 
-  void importPressed(BuildContext context) {
-    Navigator.pushNamed(
+  Future<void> importPressed(BuildContext context) async {
+    await Navigator.pushNamed(
       context,
       ApplicationRouter.ROUTE_TRACK_IMPORT_SETLIST,
       arguments: TrackImportSetlistArguments(
@@ -82,10 +84,11 @@ class TrackListPageState extends State<TrackListPage> {
         setlist,
       ),
     );
+    await trackBloc.fetch();
   }
 
-  void spotifyPressed(BuildContext context) {
-    Navigator.pushNamed(
+  Future<void> spotifyPressed(BuildContext context) async {
+    await Navigator.pushNamed(
       context,
       ApplicationRouter.ROUTE_TRACK_IMPORT_SPOTIFY_PLAYLIST,
       arguments: TrackImportSpotifyPlaylistArguments(
@@ -93,6 +96,7 @@ class TrackListPageState extends State<TrackListPage> {
         setlist,
       ),
     );
+    await trackBloc.fetch();
   }
 
   @override
@@ -130,26 +134,19 @@ class TrackListPageState extends State<TrackListPage> {
                   //This is where the magic starts
                   child: Provider<TrackBloc>.value(
                     value: trackBloc,
-                    child: TrackList<TrackCardSUD>((SetlistTrack a,
-                            HashMap<String, ItemSelection> b) =>
-                        TrackCardSUD(a, b)),
+                    child: TrackList<TrackCardSUD>(
+                        (SetlistTrack a, HashMap<String, ItemSelection> b) =>
+                            TrackCardSUD(a, b)),
                   ),
-                ),
-              ),
-              // your code here
-              Positioned(
-                left: 0.0,
-                right: 0.0,
-                bottom: 0.0,
-                child: Provider<TrackBloc>.value(
-                  value: trackBloc,
-                  child: TrackPlayer(),
                 ),
               ),
             ],
           ),
         ),
-        bottomNavigationBar: CommonBottomBar(),
+        bottomNavigationBar: Provider<TrackBloc>.value(
+          value: trackBloc,
+          child: TrackPlayer(),
+        ),
         floatingActionButton:
             NewItemButton<SetlistTrack>(modelBloc: trackBloc));
   }

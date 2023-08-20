@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 class CommonBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    return const SizedBox.shrink();
+
+
+    // In case the bottom nav bar becomes necessary.
+    /*
     return BottomAppBar(
       color: Colors.white,
       child: Container(
@@ -28,5 +33,6 @@ class CommonBottomBar extends StatelessWidget {
         ),
       ),
     );
+    */
   }
 }

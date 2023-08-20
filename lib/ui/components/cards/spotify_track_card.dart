@@ -31,7 +31,7 @@ class SpotifyTrackCardState
 
   @override
   SpotifyTrackBloc getBloc(BuildContext context) =>
-      Provider.of<SpotifyTrackBloc>(context);
+      Provider.of<SpotifyTrackBloc>(context, listen: false);
 
   @override
   SpotifyTrack get model => _spotifyTrack;

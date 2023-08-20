@@ -21,7 +21,8 @@ class SaveStatus {
 
 class SpotifyTrackBloc
     extends ModelBlocBase<SpotifyTrack, SpotifyTrackRepository> {
-  SpotifyTrackBloc(this.spotifyPlaylist, {required this.importTargetSetlist}) : super();
+  SpotifyTrackBloc(this.spotifyPlaylist, {required this.importTargetSetlist})
+      : super();
 
   final Setlist? importTargetSetlist;
   final SpotifyPlaylist? spotifyPlaylist;
@@ -46,15 +47,15 @@ class SpotifyTrackBloc
 
       final TrackBloc trackBloc = TrackBloc(importTargetSetlist);
 
-      final List<SetlistTrack> setlistTracks =
-          await trackBloc.getItemList();
+      final List<SetlistTrack> setlistTracks = await trackBloc.getItemList();
 
       final HashMap<String, SetlistTrack> spotifyIdSetlistTrackMap =
           HashMap<String, SetlistTrack>();
 
       for (SetlistTrack setlistTrack in setlistTracks) {
         if (setlistTrack.plTrack?.spotifyId != null) {
-          spotifyIdSetlistTrackMap[setlistTrack.plTrack!.spotifyId!] = setlistTrack;
+          spotifyIdSetlistTrackMap[setlistTrack.plTrack!.spotifyId!] =
+              setlistTrack;
         }
       }
 
@@ -65,26 +66,24 @@ class SpotifyTrackBloc
       }
     }
 
-    listController.sink.add(spotifyTracks);
+    syncList(spotifyTracks);
+    syncSelections();
     return spotifyTracks;
   }
 
   @override
   Future<void> insert(SpotifyTrack item) async {
     await repository.insert(item);
-    fetch();
   }
 
   @override
   Future<void> update(SpotifyTrack item) async {
     await repository.update(item);
-    fetch();
   }
 
   @override
   Future<void> delete(SpotifyTrack item) async {
     await repository.delete(item.id!);
-    fetch();
   }
 
   Future<void> importItems(Setlist targetSetlist,
@@ -102,15 +101,14 @@ class SpotifyTrackBloc
         .toList();
     final List<Track> audioFeatureTracks = <Track>[];
 
-    entries.sort(
-        (SpotifyTrack a, SpotifyTrack b) => a.sortOrder!.compareTo(b.sortOrder!));
+    entries.sort((SpotifyTrack a, SpotifyTrack b) =>
+        a.sortOrder!.compareTo(b.sortOrder!));
 
     final TrackRepository trackRepository = TrackRepository();
     final List<Track> trackList = await trackRepository.getTracks();
 
     // generate a reverse lookup tracklist by spotify id
-    final HashMap<String, Track> spotifyIdTrackMap =
-        HashMap<String, Track>();
+    final HashMap<String, Track> spotifyIdTrackMap = HashMap<String, Track>();
 
     for (Track track in trackList) {
       spotifyIdTrackMap[track.spotifyId!] = track;

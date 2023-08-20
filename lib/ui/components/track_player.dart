@@ -57,6 +57,9 @@ class TrackPlayerState extends State<TrackPlayer> {
                     Text(selectedSetlistTrack.plTrack!.title!,
                         style: const TextStyle(fontSize: 26),
                         overflow: TextOverflow.ellipsis),
+                    Text(selectedSetlistTrack.notes ?? '',
+                        style: const TextStyle(fontSize: 16),
+                        overflow: TextOverflow.ellipsis),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
@@ -75,12 +78,14 @@ class TrackPlayerState extends State<TrackPlayer> {
                                   playbackStateSnapshot) {
                             Icon toggleIcon;
 
-                            if (playbackStateSnapshot.data!.playing || playbackStateSnapshot.data!.processingState == AudioProcessingState.buffering) {
-                                toggleIcon = const Icon(Icons.pause);                              
+                            if (playbackStateSnapshot.data!.playing ||
+                                playbackStateSnapshot.data!.processingState ==
+                                    AudioProcessingState.buffering) {
+                              toggleIcon = const Icon(Icons.pause);
                             } else {
-                                toggleIcon = const Icon(Icons.headset);
+                              toggleIcon = const Icon(Icons.headset);
                             }
-                            
+
                             return IconButton(
                               iconSize: 90,
                               icon: toggleIcon,

@@ -6,6 +6,12 @@ import '../model_card_state_base.dart';
 
 mixin MultiSelectModelCard<WidgetType extends StatefulWidget,
     ModelType extends ModelBase> on ModelCardStateBase<WidgetType, ModelType> {
+  
+  @override
+  void tapAction({bool allowMultiSelect = true}) {
+    super.tapAction(allowMultiSelect: allowMultiSelect);
+  }
+
   @override
   Widget getLeading() {
     bool isSelected = false;

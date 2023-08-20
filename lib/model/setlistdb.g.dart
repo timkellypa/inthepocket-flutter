@@ -91,11 +91,9 @@ class TableTrack extends SqfEntityTableBase {
     // declare fields
     fields = [
       SqfEntityFieldBase('title', DbType.text),
-      SqfEntityFieldBase('notes', DbType.text),
       SqfEntityFieldBase('row__sortOrder', DbType.integer, defaultValue: 1),
       SqfEntityFieldBase('spotifyId', DbType.text),
       SqfEntityFieldBase('spotifyAudioFeatures', DbType.text),
-      SqfEntityFieldBase('countOutBars', DbType.text),
     ];
     super.init();
   }
@@ -2069,20 +2067,18 @@ class Track extends TableBase {
   Track(
       {this.row__id,
       this.title,
-      this.notes,
       this.row__sortOrder,
       this.spotifyId,
-      this.spotifyAudioFeatures,
-      this.countOutBars}) {
+      this.spotifyAudioFeatures}) {
     _setDefaultValues();
     softDeleteActivated = false;
   }
-  Track.withFields(this.row__id, this.title, this.notes, this.row__sortOrder,
-      this.spotifyId, this.spotifyAudioFeatures, this.countOutBars) {
+  Track.withFields(this.row__id, this.title, this.row__sortOrder,
+      this.spotifyId, this.spotifyAudioFeatures) {
     _setDefaultValues();
   }
-  Track.withId(this.row__id, this.title, this.notes, this.row__sortOrder,
-      this.spotifyId, this.spotifyAudioFeatures, this.countOutBars) {
+  Track.withId(this.row__id, this.title, this.row__sortOrder, this.spotifyId,
+      this.spotifyAudioFeatures) {
     _setDefaultValues();
   }
   // fromMap v2.0
@@ -2094,9 +2090,6 @@ class Track extends TableBase {
     if (o['title'] != null) {
       title = o['title'].toString();
     }
-    if (o['notes'] != null) {
-      notes = o['notes'].toString();
-    }
     if (o['row__sortOrder'] != null) {
       row__sortOrder = int.tryParse(o['row__sortOrder'].toString());
     }
@@ -2106,20 +2099,15 @@ class Track extends TableBase {
     if (o['spotifyAudioFeatures'] != null) {
       spotifyAudioFeatures = o['spotifyAudioFeatures'].toString();
     }
-    if (o['countOutBars'] != null) {
-      countOutBars = o['countOutBars'].toString();
-    }
 
     isSaved = true;
   }
   // FIELDS (Track)
   String? row__id;
   String? title;
-  String? notes;
   int? row__sortOrder;
   String? spotifyId;
   String? spotifyAudioFeatures;
-  String? countOutBars;
   bool? isSaved;
   // end FIELDS (Track)
 
@@ -2176,9 +2164,6 @@ class Track extends TableBase {
     if (title != null || !forView) {
       map['title'] = title;
     }
-    if (notes != null || !forView) {
-      map['notes'] = notes;
-    }
     if (row__sortOrder != null || !forView) {
       map['row__sortOrder'] = row__sortOrder;
     }
@@ -2187,9 +2172,6 @@ class Track extends TableBase {
     }
     if (spotifyAudioFeatures != null || !forView) {
       map['spotifyAudioFeatures'] = spotifyAudioFeatures;
-    }
-    if (countOutBars != null || !forView) {
-      map['countOutBars'] = countOutBars;
     }
 
     return map;
@@ -2205,9 +2187,6 @@ class Track extends TableBase {
     if (title != null || !forView) {
       map['title'] = title;
     }
-    if (notes != null || !forView) {
-      map['notes'] = notes;
-    }
     if (row__sortOrder != null || !forView) {
       map['row__sortOrder'] = row__sortOrder;
     }
@@ -2216,9 +2195,6 @@ class Track extends TableBase {
     }
     if (spotifyAudioFeatures != null || !forView) {
       map['spotifyAudioFeatures'] = spotifyAudioFeatures;
-    }
-    if (countOutBars != null || !forView) {
-      map['countOutBars'] = countOutBars;
     }
 
 // COLLECTIONS (Track)
@@ -2247,28 +2223,12 @@ class Track extends TableBase {
 
   @override
   List<dynamic> toArgs() {
-    return [
-      row__id,
-      title,
-      notes,
-      row__sortOrder,
-      spotifyId,
-      spotifyAudioFeatures,
-      countOutBars
-    ];
+    return [row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures];
   }
 
   @override
   List<dynamic> toArgsWithIds() {
-    return [
-      row__id,
-      title,
-      notes,
-      row__sortOrder,
-      spotifyId,
-      spotifyAudioFeatures,
-      countOutBars
-    ];
+    return [row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures];
   }
 
   static Future<List<Track>?> fromWebUrl(Uri uri,
@@ -2407,7 +2367,7 @@ class Track extends TableBase {
     final result = BoolResult(success: false);
     try {
       await _mnTrack.rawInsert(
-          'INSERT ${isSaved! ? 'OR REPLACE' : ''} INTO Track (row__id, title, notes, row__sortOrder, spotifyId, spotifyAudioFeatures, countOutBars)  VALUES (?,?,?,?,?,?,?)',
+          'INSERT ${isSaved! ? 'OR REPLACE' : ''} INTO Track (row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures)  VALUES (?,?,?,?,?)',
           toArgsWithIds(),
           ignoreBatch);
       result.success = true;
@@ -2445,16 +2405,8 @@ class Track extends TableBase {
   Future<int?> upsert({bool ignoreBatch = true}) async {
     try {
       final result = await _mnTrack.rawInsert(
-          'INSERT OR REPLACE INTO Track (row__id, title, notes, row__sortOrder, spotifyId, spotifyAudioFeatures, countOutBars)  VALUES (?,?,?,?,?,?,?)',
-          [
-            row__id,
-            title,
-            notes,
-            row__sortOrder,
-            spotifyId,
-            spotifyAudioFeatures,
-            countOutBars
-          ],
+          'INSERT OR REPLACE INTO Track (row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures)  VALUES (?,?,?,?,?)',
+          [row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures],
           ignoreBatch);
       if (result! > 0) {
         saveResult = BoolResult(
@@ -2744,11 +2696,6 @@ class TrackFilterBuilder extends ConjunctionBase {
     return _title = _setField(_title, 'title', DbType.text);
   }
 
-  TrackField? _notes;
-  TrackField get notes {
-    return _notes = _setField(_notes, 'notes', DbType.text);
-  }
-
   TrackField? _row__sortOrder;
   TrackField get row__sortOrder {
     return _row__sortOrder =
@@ -2764,12 +2711,6 @@ class TrackFilterBuilder extends ConjunctionBase {
   TrackField get spotifyAudioFeatures {
     return _spotifyAudioFeatures =
         _setField(_spotifyAudioFeatures, 'spotifyAudioFeatures', DbType.text);
-  }
-
-  TrackField? _countOutBars;
-  TrackField get countOutBars {
-    return _countOutBars =
-        _setField(_countOutBars, 'countOutBars', DbType.text);
   }
 
   /// Deletes List<Track> bulk by query
@@ -3057,12 +2998,6 @@ class TrackFields {
         _fTitle ?? SqlSyntax.setField(_fTitle, 'title', DbType.text);
   }
 
-  static TableField? _fNotes;
-  static TableField get notes {
-    return _fNotes =
-        _fNotes ?? SqlSyntax.setField(_fNotes, 'notes', DbType.text);
-  }
-
   static TableField? _fRow__sortOrder;
   static TableField get row__sortOrder {
     return _fRow__sortOrder = _fRow__sortOrder ??
@@ -3080,12 +3015,6 @@ class TrackFields {
     return _fSpotifyAudioFeatures = _fSpotifyAudioFeatures ??
         SqlSyntax.setField(
             _fSpotifyAudioFeatures, 'spotifyAudioFeatures', DbType.text);
-  }
-
-  static TableField? _fCountOutBars;
-  static TableField get countOutBars {
-    return _fCountOutBars = _fCountOutBars ??
-        SqlSyntax.setField(_fCountOutBars, 'countOutBars', DbType.text);
   }
 }
 // endregion TrackFields

@@ -41,7 +41,9 @@ MediaControl stopControl = const MediaControl(
 );
 
 class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
-  TrackBloc(this.setlist, {this.importTargetSetlist}) : super();
+  TrackBloc(this.setlist, {this.importTargetSetlist}) : super() {
+    audioQueueItemState.listen(mediaItemChanged);
+  }
 
   final Setlist? setlist;
 
@@ -56,13 +58,16 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     return _audioHandler.playbackState;
   }
 
+  Stream<MediaItem?> get audioQueueItemState {
+    return _audioHandler.mediaItem;
+  }
+
   PlaybackState get audioPlaybackState {
     return _audioHandler.playbackState.value;
   }
 
   bool Function(SetlistTrack) get importExclusionsFilter {
-    return (SetlistTrack track) =>
-        track.setlistId == importTargetSetlist?.id;
+    return (SetlistTrack track) => track.setlistId == importTargetSetlist?.id;
   }
 
   @override
@@ -72,8 +77,7 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
 
   @override
   bool Function(SetlistTrack) get listFilter {
-    return (SetlistTrack track) =>
-        track.setlistId == setlist?.id;
+    return (SetlistTrack track) => track.setlistId == setlist?.id;
   }
 
   @override
@@ -96,7 +100,7 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     if (firstFetch) {
       firstFetch = false;
       final List<SetlistTrack> existingTracks =
-          await getItemList(filter: importExclusionsFilter, update: false);
+          await getItemList(filter: importExclusionsFilter);
 
       // create reverse lookup for existing tracks
       final HashMap<String, SetlistTrack> existingTrackMap =
@@ -109,42 +113,44 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
           selectItem(setlistTrack, SelectionType.disabled, doSync: false);
         }
       }
-
-      syncSelections();
     }
 
-    await loadMediaItems();
+    syncSelections();
+    await syncList(setlistTracks);
 
-    listController.sink.add(setlistTracks);
     return setlistTracks;
+  }
+
+  @override
+  Future<void> syncList(List<SetlistTrack> newItemList) async {
+    super.syncList(newItemList);
+    loadMediaItems(newItemList);
   }
 
   @override
   Future<void> insert(SetlistTrack item) async {
     await repository.insert(item);
-    fetch();
   }
 
   @override
   Future<void> update(SetlistTrack item) async {
     await repository.update(item);
-    fetch();
   }
 
   @override
   Future<void> delete(SetlistTrack item) async {
     await repository.delete(item.id!);
-    fetch();
   }
 
   Future<void> applySpotifyAudioFeatures(
       List<SetlistTrack> setlistTracks) async {
-    final List<Track> tracks = setlistTracks
-        .map((SetlistTrack setlistTrack) => setlistTrack.plTrack) as List<Track>;
-    await repository.applySpotifyAudioFeatures(tracks, notify: (int total, double progress) {
-      
-    },);
-    fetch();
+    final List<Track> tracks =
+        setlistTracks.map((SetlistTrack setlistTrack) => setlistTrack.plTrack)
+            as List<Track>;
+    await repository.applySpotifyAudioFeatures(
+      tracks,
+      notify: (int total, double progress) {},
+    );
   }
 
   void changeTrack(TrackDirection direction) {
@@ -161,47 +167,47 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     }
   }
 
-  void mediaItemChanged(MediaItem mediaItem) {
-    final String trackId = TempoRepository().getTrackIdFromPath(mediaItem.id);
-    // find media item in list
-    final SetlistTrack selectedSetlistTrack = itemList
-        .where(
-            (SetlistTrack setlistTrack) => setlistTrack.trackId == trackId)
-        .first;
-    selectItem(selectedSetlistTrack, SelectionType.selected,
-        pushToAudioService: false);
+  void mediaItemChanged(MediaItem? mediaItem) {
+    final SetlistTrack? currentTrack = itemList
+        .where((SetlistTrack element) => element.id == mediaItem?.extras?['id'])
+        .firstOrNull;
+
+    // if no track or is already selected, return without doing anything.
+    if (currentTrack == null ||
+        isSelected(currentTrack, SelectionType.selected)) {
+      return;
+    }
+
+    selectItem(currentTrack, SelectionType.selected,
+        doSync: true, pushToAudioService: false);
   }
 
   @override
   Future<void> selectItem(SetlistTrack? model, int selectionTypes,
-      {bool doSync = true, bool pushToAudioService = true}) async {
+      {bool doSync = true,
+      bool pushToAudioService = true,
+      bool allowMultiSelect = false}) async {
+    super.selectItem(model, selectionTypes,
+        doSync: doSync, allowMultiSelect: allowMultiSelect);
 
-    // do nothing if selection is already done
-    if (itemSelectionMap.containsKey(model?.id) &&
-        itemSelectionMap[model?.id]!.selectionType & selectionTypes > 0) {
-      return;
-    }
-
-    if (selectionTypes & SelectionType.selected > 0) {
-      unSelectAll(SelectionType.selected);
-    }
-    super.selectItem(model, selectionTypes, doSync: doSync);
-    if (pushToAudioService && selectionTypes & SelectionType.selected > 0 && model != null) {
-        final int index = itemList.indexOf(model);
-        _audioHandler.skipToQueueItem(index);
+    if (pushToAudioService &&
+        selectionTypes & SelectionType.selected > 0 &&
+        model != null) {
+      final int index = itemList.indexOf(model);
+      _audioHandler.skipToQueueItem(index);
     }
   }
 
-  Future<void> loadMediaItems() async {
-    await _audioHandler.customAction('resetQueue');
+  Future<void> loadMediaItems(List<SetlistTrack> setlistTracks) async {
+    await _audioHandler.customAction('clear');
 
-    for (SetlistTrack setlistTrack in itemList) {
+    for (SetlistTrack setlistTrack in setlistTracks) {
       await _audioHandler.addQueueItem(MediaItem(
-        id: await TempoRepository().getClickTrackPath(setlistTrack.trackId!),
-        album: setlist?.description ?? '',
-        title: setlistTrack.plTrack?.title ?? '',
-        artist: setlist?.location ?? ''
-      ));
+          id: await TempoRepository().getClickTrackPath(setlistTrack.trackId!),
+          album: setlist?.description ?? '',
+          title: setlistTrack.plTrack?.title ?? '',
+          extras: <String, dynamic>{'id': setlistTrack.id},
+          artist: setlist?.location ?? ''));
     }
     await _audioHandler.prepare();
   }
@@ -215,15 +221,22 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   }
 
   void skipToNext() {
+    if (isSelected(itemList.lastOrNull, SelectionType.selected)) {
+      return;
+    }
     _audioHandler.skipToNext();
   }
 
   void skipToPrevious() {
+    if (isSelected(itemList.firstOrNull, SelectionType.selected)) {
+      return;
+    }
     _audioHandler.skipToPrevious();
   }
 
   @override
-  void dispose() {
-    _audioHandler.stop();
+  Future<void> dispose() async {
+    await _audioHandler.stop();
+    await _audioHandler.customAction('clear');
   }
 }

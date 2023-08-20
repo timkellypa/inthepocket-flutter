@@ -38,7 +38,7 @@ class SetlistListPageState extends State<SetlistListPage> {
     super.initState();
   }
 
-  void itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) {
+  Future<void> itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) async {
     final List<Setlist?> selectedItems = setlistBloc.getMatchingSelections(
         SelectionType.add + SelectionType.editing + SelectionType.selected);
 
@@ -51,7 +51,7 @@ class SetlistListPageState extends State<SetlistListPage> {
         itemSelectionMap[selectedSetlist?.id ?? '']?.selectionType ?? 0;
 
     if (selectionType & (SelectionType.add + SelectionType.editing) > 0) {
-      Navigator.pushNamed(
+      await Navigator.pushNamed(
         context,
         ApplicationRouter.ROUTE_EDIT_SETLIST_FORM,
         arguments: EditSetlistFormRouteArguments(
@@ -60,6 +60,7 @@ class SetlistListPageState extends State<SetlistListPage> {
           itemSelectionMap,
         ),
       );
+      await setlistBloc.fetch();
     } else {
       Navigator.pushNamed(
         context,

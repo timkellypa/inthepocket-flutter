@@ -31,7 +31,7 @@ class SpotifyPlaylistCardState
 
   @override
   SpotifyPlaylistBloc getBloc(BuildContext context) =>
-      Provider.of<SpotifyPlaylistBloc>(context);
+      Provider.of<SpotifyPlaylistBloc>(context, listen: false);
 
   @override
   SpotifyPlaylist get model => _spotifyPlaylist;

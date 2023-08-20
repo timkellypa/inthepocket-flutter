@@ -30,26 +30,23 @@ class SetlistBloc extends ModelBlocBase<Setlist, SetListRepository> {
       }
     }
 
-    listController.sink.add(setlists);
+    syncList(setlists);
     return setlists;
   }
 
   @override
   Future<void> insert(Setlist item) async {
     await repository.insert(item);
-    fetch();
   }
 
   @override
   Future<void> update(Setlist item) async {
     await repository.update(item);
-    fetch();
   }
 
   @override
   Future<void> delete(Setlist item) async {
     await repository.delete(item.id!);
-    fetch();
   }
   
   @override

@@ -69,12 +69,12 @@ class TrackImportTrackPageState extends State<TrackImportTrackPage> {
                       newSetlistTrack.trackId = setlistTrack.trackId;
                       newSetlistTrack.notes = setlistTrack.notes;
                       await trackBloc.insert(newSetlistTrack);
-
-                      Navigator.popUntil(context, (Route<dynamic> route) {
-                        return route.settings.name ==
-                            ApplicationRouter.ROUTE_TRACK_LIST;
-                      });
                     }
+                    
+                    Navigator.popUntil(context, (Route<dynamic> route) {
+                      return route.settings.name ==
+                          ApplicationRouter.ROUTE_TRACK_LIST;
+                    });
                   }
                 },
               );

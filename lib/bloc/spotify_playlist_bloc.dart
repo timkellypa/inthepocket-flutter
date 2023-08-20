@@ -26,18 +26,15 @@ class SpotifyPlaylistBloc
   @override
   Future<void> insert(SpotifyPlaylist item) async {
     await repository.insert(item);
-    fetch();
   }
 
   @override
   Future<void> update(SpotifyPlaylist item) async {
     await repository.update(item);
-    fetch();
   }
 
   @override
   Future<void> delete(SpotifyPlaylist item) async {
     await repository.delete(item.id!);
-    fetch();
   }
 }

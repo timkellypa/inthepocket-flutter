@@ -9,7 +9,6 @@ import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:uuid/uuid.dart';
 
 class TrackRepository extends RepositoryBase<SetlistTrack> {
-  static const int NEW_TRACK_ID = -1;
   final double msToMinutes = 60000.0;
 
   @override
@@ -35,7 +34,10 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
   @override
   Future<String> insert(SetlistTrack item) async {
     item.init();
+
+    item.plTrack ??= (await Track().getById(item.trackId)) ?? Track();
     item.plTrack!.init();
+
     item.trackId = item.plTrack!.id;
     item.sortOrder = await SetlistTrack().select().toCount() + 1;
     await item.upsert();
@@ -63,9 +65,15 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
 
   @override
   Future<void> delete(String id) async {
-    final SetlistTrack current = SetlistTrack().getById(id) as SetlistTrack;
+    final SetlistTrack? current = await SetlistTrack().getById(id);
 
-    final List<SetlistTrack> setListTracksWithCurrent = await SetlistTrack().select().where("trackId = '${current.trackId}' and id != '$id'").toList();
+    // If it is null, it means we've already deleted but must have
+    // accidentally double-invoked the deletion or attempted a deletion on a stale list.
+    if (current == null) {
+      return;
+    }
+
+    final List<SetlistTrack> setListTracksWithCurrent = await SetlistTrack().select().where("trackId = '${current.trackId}' and row__id != '$id'").toList();
 
     if (setListTracksWithCurrent.isEmpty) {
       await (await Track().getById(id))?.delete();

@@ -62,11 +62,10 @@ class AuthorizationCodeGrantHelper {
 
   static Future<void> redirect(Uri uri) async {
     if (await url_launcher.canLaunchUrl(uri)) {
-      await url_launcher.launchUrl(
-        uri,
-        webViewConfiguration: const WebViewConfiguration(enableJavaScript: true, enableDomStorage: true),
-        webOnlyWindowName: '_blank'
-      );
+      await url_launcher.launchUrl(uri,
+          webViewConfiguration: const WebViewConfiguration(
+              enableJavaScript: true, enableDomStorage: true),
+          webOnlyWindowName: '_blank');
     } else {
       throw 'could not launch $uri';
     }

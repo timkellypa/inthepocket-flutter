@@ -41,7 +41,7 @@ class EditSetlistFormState extends State<EditSetlistForm> {
       appBar: AppBar(title: const Text('Set List Info'), actions: <Widget>[
         IconButton(
           icon: const Icon(Icons.save),
-          onPressed: () {
+          onPressed: () async {
             final Setlist setlistToSave = setlist ?? Setlist();
 
             setlistToSave.description = _descriptionController.value.text;
@@ -55,9 +55,9 @@ class EditSetlistFormState extends State<EditSetlistForm> {
 
             if (setlistToSave.description!.isNotEmpty) {
               if (setlist != null) {
-                setlistBloc.update(setlistToSave);
+                await setlistBloc.update(setlistToSave);
               } else {
-                setlistBloc.insert(setlistToSave);
+                await setlistBloc.insert(setlistToSave);
               }
 
               Navigator.pop(context);

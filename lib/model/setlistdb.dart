@@ -34,13 +34,11 @@ const tableTrack = SqfEntityTable(
     primaryKeyType: PrimaryKeyType.text,
     fields: [
       SqfEntityField('title', DbType.text),
-      SqfEntityField('notes', DbType.text),
 
       // unused, only for model base abstraction
       SqfEntityField('row__sortOrder', DbType.integer, defaultValue: 1),
       SqfEntityField('spotifyId', DbType.text),
       SqfEntityField('spotifyAudioFeatures', DbType.text),
-      SqfEntityField('countOutBars', DbType.text),
 
     ]);
 

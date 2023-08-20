@@ -4,7 +4,6 @@ import 'package:in_the_pocket/classes/MetronomeWriter.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/model/table_base_override.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
-import 'package:in_the_pocket/repository/track_repository.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wave_builder/wave_builder.dart';
 
@@ -67,13 +66,6 @@ class TempoRepository extends RepositoryBase<Tempo> {
   Future<void> delete(String id) async {
     final Tempo tempo = await Tempo().getById(id) as Tempo;
     await tempo.delete();
-  }
-
-  Future<void> clearPlaceholderTempos() async {
-    final List<Tempo> placeHolderTempos = await Tempo().select().where('trackId = ${TrackRepository.NEW_TRACK_ID}').toList();
-    for (Tempo tempo in placeHolderTempos) {
-      await tempo.delete();
-    }
   }
 
   Future<void> _writeClickTrackToFile(

@@ -39,7 +39,7 @@ class EditSetlistFormState extends State<EditTrackForm> {
     setlistTrack ??= SetlistTrack();
     setlistTrack!.plTrack ??= Track();
     _titleController.text = setlistTrack!.plTrack!.title ?? '';
-    _notesController.text = setlistTrack!.plTrack!.notes ?? '';
+    _notesController.text = setlistTrack!.notes ?? '';
     tempoBloc = TempoBloc(setlistTrack!.plTrack!);
 
     tempoBloc.selectedItems.listen(itemSelectionsChanged);
@@ -79,7 +79,7 @@ class EditSetlistFormState extends State<EditTrackForm> {
       appBar: AppBar(title: const Text('Track Info'), actions: <Widget>[
         IconButton(
           icon: const Icon(Icons.save),
-          onPressed: () {
+          onPressed: () async {
             final SetlistTrack setlistTrackToSave =
                 setlistTrack ?? SetlistTrack();
 
@@ -93,9 +93,9 @@ class EditSetlistFormState extends State<EditTrackForm> {
 
             if (setlistTrackToSave.plTrack!.title!.isNotEmpty) {
               if (setlistTrack?.id != null) {
-                trackBloc.update(setlistTrackToSave);
+                await trackBloc.update(setlistTrackToSave);
               } else {
-                trackBloc.insert(setlistTrackToSave);
+                await trackBloc.insert(setlistTrackToSave);
               }
 
               Navigator.pop(context);
@@ -136,11 +136,5 @@ class EditSetlistFormState extends State<EditTrackForm> {
                 TempoCardSUD(a, b)),
       ),
     );
-  }
-
-  @override
-  Future<void> dispose() async {
-    tempoBloc.clearPlaceholderTempos();
-    super.dispose();
   }
 }

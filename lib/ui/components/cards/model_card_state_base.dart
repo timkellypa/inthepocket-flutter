@@ -20,7 +20,7 @@ abstract class ModelCardStateBase<WidgetType extends StatefulWidget,
     return null;
   }
 
-  void tapAction() {
+  void tapAction({bool allowMultiSelect = false}) {
 
   }
 

@@ -93,26 +93,19 @@ class TrackImportSpotifyTrackPageState
         ],
       ),
       body: SafeArea(
-        child: StreamBuilder<SaveStatus>(
-          stream: spotifyTrackBloc.saveStatusStream,
-          initialData: spotifyTrackBloc.saveStatus,
-          builder: (BuildContext context,
-              AsyncSnapshot<SaveStatus> saveStatusSnapshot) {
-            return Container(
-                color: Colors.white,
-                padding:
-                    const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
-                child: Container(
-                  //This is where the magic starts
-                  child: Provider<SpotifyTrackBloc>.value(
-                    value: spotifyTrackBloc,
-                    child: SpotifyTrackList<SpotifyTrackCardMultiSelect>(
-                        (SpotifyTrack a, HashMap<String, ItemSelection> b) =>
-                            SpotifyTrackCardMultiSelect(a, b)),
-                  ),
-                ),
-            );
-        })
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
+          child: Container(
+            //This is where the magic starts
+            child: Provider<SpotifyTrackBloc>.value(
+              value: spotifyTrackBloc,
+              child: SpotifyTrackList<SpotifyTrackCardMultiSelect>(
+                  (SpotifyTrack a, HashMap<String, ItemSelection> b) =>
+                      SpotifyTrackCardMultiSelect(a, b)),
+            ),
+          ),
+        ),
       ),
       bottomNavigationBar: CommonBottomBar(),
     );

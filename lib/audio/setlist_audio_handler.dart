@@ -28,7 +28,8 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   }
 
   final AudioPlayer _player = AudioPlayer();
-  final ConcatenatingAudioSource _playlist = ConcatenatingAudioSource(children: <AudioSource>[]);
+  final ConcatenatingAudioSource _playlist =
+      ConcatenatingAudioSource(children: <AudioSource>[]);
 
   Future<void> _loadPlaylist() async {
     try {
@@ -110,11 +111,13 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
 
   void _listenForSequenceStateChanges() {
     _player.sequenceStateStream.listen((SequenceState? sequenceState) {
-      final List<IndexedAudioSource>? sequence = sequenceState?.effectiveSequence;
+      final List<IndexedAudioSource>? sequence =
+          sequenceState?.effectiveSequence;
       if (sequence == null || sequence.isEmpty) {
         return;
       }
-      final Iterable<MediaItem> items = sequence.map((IndexedAudioSource source) => source.tag as MediaItem);
+      final Iterable<MediaItem> items =
+          sequence.map((IndexedAudioSource source) => source.tag as MediaItem);
       queue.add(items.toList());
     });
   }
@@ -122,7 +125,8 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   @override
   Future<void> addQueueItems(List<MediaItem> mediaItems) async {
     // manage Just Audio
-    final Iterable<UriAudioSource> audioSource = mediaItems.map(_createAudioSource);
+    final Iterable<UriAudioSource> audioSource =
+        mediaItems.map(_createAudioSource);
     _playlist.addAll(audioSource.toList());
 
     // notify system
@@ -179,10 +183,14 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   }
 
   @override
-  Future<void> skipToNext() => _player.seekToNext();
+  Future<void> skipToNext() async {
+    await _player.seekToNext();
+  }
 
   @override
-  Future<void> skipToPrevious() => _player.seekToPrevious();
+  Future<void> skipToPrevious() async {
+    await _player.seekToPrevious();
+  }
 
   @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
@@ -214,16 +222,14 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
     if (name == 'clear') {
       _playlist.clear();
+      queue.add(<MediaItem>[]);
       await _loadPlaylist();
-      stop();
     }
   }
 
   @override
   Future<void> stop() async {
     await _player.stop();
-    await _player.dispose();
     return super.stop();
   }
 }
-

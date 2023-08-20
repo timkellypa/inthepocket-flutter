@@ -86,7 +86,12 @@ abstract class ModelListBase<ModelType extends ModelBase,
                 ),
               )
               .toList(),
-          onReorder: (int fromIndex, int toIndex) async {
+          onReorder: (int fromIndex, int toIndex) {
+            // Note, we are purposely not awaiting updates here.
+            // We are simultaneously sorting the stream data based on our new sort orders,
+            // so we do not need to refresh the whole list based on the DB.
+            // This makes the UI react a lot more smoothly to item reorders.
+
             final int iterator = toIndex > fromIndex ? -1 : 1;
 
             toIndex = iterator == -1 ? toIndex - 1 : toIndex;
@@ -99,12 +104,19 @@ abstract class ModelListBase<ModelType extends ModelBase,
               // set each item's order index to the next one in the direction we are going.
               itemListStream.data![i].sortOrder =
                   itemListStream.data![i + iterator].sortOrder;
-              await modelBloc.update(itemListStream.data![i]);
+              modelBloc.update(itemListStream.data![i]);
               i += iterator;
             }
 
             itemListStream.data![fromIndex].sortOrder = mobileSortOrder;
-            await modelBloc.update(itemListStream.data![fromIndex]);
+
+            modelBloc.update(itemListStream.data![fromIndex]);
+
+            // perform an array sort for the UI layer to update quickly.
+            itemListStream.data!.sort((ModelType a, ModelType b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+            // sync the list immediately, don't wait for round trip from DB.
+            modelBloc.syncList(itemListStream.data!);
           },
         );
       } else {
