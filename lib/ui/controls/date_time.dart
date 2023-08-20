@@ -21,20 +21,28 @@ class DateTimeControlState extends State<DateTimeControl> {
 
   late TextEditingController _controller;
 
-  final DateFormat format = DateFormat('yyyy-MM-dd HH:mm');
+  static DateFormat dateFormat = DateFormat('dd-MMM-yyyy');
   @override
   Widget build(BuildContext context) {
     return Column(children: <Widget>[
-      IconButton(
-          icon: const Icon(Icons.calendar_month),
-          onPressed: () {
-            DatePicker.showDatePicker(
-              context,
-              onChanged: (DateTime time) {
-                _controller.text = time.toString();
-              },
-            );
-          }),
+      TextField(
+        controller: _controller,
+        onTap: () {
+          DateTime initialDate;
+          try {
+            initialDate = dateFormat.parse(_controller.text);
+          } on FormatException {
+            initialDate = DateTime.now();
+          }
+          DatePicker.showDatePicker(
+            currentTime: initialDate,
+            context,
+            onConfirm: (DateTime date) {
+              _controller.text = dateFormat.format(date);
+            },
+          );
+        },
+      ),
     ]);
   }
 }

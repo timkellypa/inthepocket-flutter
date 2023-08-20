@@ -3,6 +3,7 @@ import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/classes/setlist_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/controls/date_time.dart';
+import 'package:intl/src/intl/date_format.dart';
 import 'package:provider/provider.dart';
 
 class EditSetlistForm extends StatefulWidget {
@@ -26,8 +27,17 @@ class EditSetlistFormState extends State<EditSetlistForm> {
 
   @override
   void initState() {
+    final DateFormat dateFormat = DateTimeControlState.dateFormat;
+
     _descriptionController.text = setlist?.description ?? '';
-    _dateTimeController.text = setlist?.date?.toString() ?? '';
+
+    try {
+      _dateTimeController.text =
+          dateFormat.format(setlist?.date ?? DateTime.now());
+    } on FormatException {
+      _dateTimeController.text = dateFormat.format(DateTime.now());
+    }
+
     _locationController.text = setlist?.location ?? '';
     _setlistType = SetlistType.values[setlist?.setlistType ?? 0];
     super.initState();
@@ -46,12 +56,15 @@ class EditSetlistFormState extends State<EditSetlistForm> {
 
             setlistToSave.description = _descriptionController.value.text;
 
-            setlistToSave.date = DateTime.now();
+            final DateFormat dateFormat = DateTimeControlState.dateFormat;
+
+            try {
+              setlistToSave.date = dateFormat.parse(_dateTimeController.text);
+            } on FormatException {
+              setlistToSave.date = DateTime.now();
+            }
             setlistToSave.setlistType = _setlistType.index;
             setlistToSave.location = _locationController.value.text;
-            setlistToSave.date =
-                DateTime.tryParse(_dateTimeController.value.text) ??
-                    DateTime.now();
 
             if (setlistToSave.description!.isNotEmpty) {
               if (setlist != null) {
@@ -80,15 +93,16 @@ class EditSetlistFormState extends State<EditSetlistForm> {
                   title: const Text('Is Master List'),
                   value: _setlistType == SetlistType.master,
                   onChanged: (bool? check) {
-                    setState(() => _setlistType =
-                        (check ?? false) ? SetlistType.master : SetlistType.event);
+                    setState(() => _setlistType = (check ?? false)
+                        ? SetlistType.master
+                        : SetlistType.event);
                   }),
               Visibility(
                   visible: _setlistType == SetlistType.event,
                   child: ListTile(
-                    leading: const Icon(Icons.access_time),
+                    leading: const Icon(Icons.calendar_month),
                     title: DateTimeControl(_dateTimeController),
-                    subtitle: const Text('Date/Time'),
+                    subtitle: const Text('Date'),
                   )),
               Visibility(
                   visible: _setlistType == SetlistType.event,
