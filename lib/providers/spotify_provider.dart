@@ -25,14 +25,38 @@ class SpotifyProvider {
             File('/$localPath/credentials/spotify-credentials.json'));
   }
 
+  Future<oauth2.Client> reLogin() async {
+    final String localPath = (await getApplicationDocumentsDirectory()).path;
+    final File credentialsFile =
+        File('/$localPath/credentials/spotify-credentials.json');
+
+    await credentialsFile.delete();
+    return await login();
+  }
+
+  /// Wrapper for client.read.
+  /// Logs in and tries to read URI.
+  /// On authorization exception, releases credentilas file
+  /// and calls "login" again.
+  Future<String> read(Uri uri) async {
+    final oauth2.Client client = await login();
+    String result;
+
+    try {
+      result = await client.read(uri);
+    } on oauth2.AuthorizationException {
+      await reLogin();
+      result = await client.read(uri);
+    }
+    return result;
+  }
+
   Future<List<SpotifyPlaylist>> getUserPlaylistsAll() async {
     final List<SpotifyPlaylist> ret = <SpotifyPlaylist>[];
     int index = 0;
 
-    final oauth2.Client client = await login();
-
     final String result =
-        await client.read(Uri.https('api.spotify.com', '/v1/me/playlists'));
+        await read(Uri.https('api.spotify.com', '/v1/me/playlists'));
 
     final List<dynamic> items = json.decode(result)['items'];
 
@@ -53,11 +77,8 @@ class SpotifyProvider {
     final List<SpotifyTrack> ret = <SpotifyTrack>[];
     int index = 0;
 
-    final oauth2.Client client = await login();
-
-    final String result = await client.read(
-      Uri.https('api.spotify.com', '/v1/playlists/${playlist.spotifyId}/tracks')
-    );
+    final String result = await read(Uri.https(
+        'api.spotify.com', '/v1/playlists/${playlist.spotifyId}/tracks'));
 
     final List<dynamic> items = json.decode(result)['items'];
 
@@ -71,7 +92,7 @@ class SpotifyProvider {
         ..id = item['track']['id']
         ..sortOrder = index
         ..spotifyTitle = item['track']['name']
-        ..spotifyId = item['track']['id']
+        ..spotifyId = item['track']['id'] ?? ''
         ..spotifyAudioFeatures = audioFeatures;
 
       ret.add(track);
@@ -83,10 +104,8 @@ class SpotifyProvider {
   Future<String> getAudioFeaturesJSON(String trackId) async {
     final oauth2.Client client = await login();
 
-    final String result =
-        await client.read(
-          Uri.https('api.spotify.com', '/v1/audio-features/$trackId')
-        );
+    final String result = await client
+        .read(Uri.https('api.spotify.com', '/v1/audio-features/$trackId'));
 
     return result;
   }
