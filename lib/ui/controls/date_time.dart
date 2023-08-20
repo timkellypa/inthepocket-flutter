@@ -26,16 +26,15 @@ class DateTimeControlState extends State<DateTimeControl> {
   Widget build(BuildContext context) {
     return Column(children: <Widget>[
       IconButton(
-        icon: const Icon(Icons.calendar_month),
-        onPressed: () => {
-          DatePicker.showDatePicker(
-            context,
-            onChanged:(DateTime time) {
-              _controller.text = time.toString();
-            },
-          )
-        }
-      ),
+          icon: const Icon(Icons.calendar_month),
+          onPressed: () {
+            DatePicker.showDatePicker(
+              context,
+              onChanged: (DateTime time) {
+                _controller.text = time.toString();
+              },
+            );
+          }),
     ]);
   }
 }
