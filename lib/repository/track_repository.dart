@@ -12,17 +12,19 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
   final double msToMinutes = 60000.0;
 
   @override
-  Future<List<SetlistTrack>> fetch({
-    bool Function(SetlistTrack)? filter, 
-    String? whereClause,
-    String? whereParameter
-  }) async {
+  Future<List<SetlistTrack>> fetch(
+      {bool Function(SetlistTrack)? filter,
+      String? whereClause,
+      String? whereParameter}) async {
     SetlistTrackFilterBuilder setlistTrackQuery = SetlistTrack().select();
     if (whereClause != null) {
-      setlistTrackQuery = setlistTrackQuery.where(whereClause, parameterValue: whereParameter);
+      setlistTrackQuery =
+          setlistTrackQuery.where(whereClause, parameterValue: whereParameter);
     }
 
-    List<SetlistTrack> setlistTracks = await setlistTrackQuery.orderBy(TableBase.SORT_ORDER_COLUMN).toList(preload: true);
+    List<SetlistTrack> setlistTracks = await setlistTrackQuery
+        .orderBy(TableBase.SORT_ORDER_COLUMN)
+        .toList(preload: true);
 
     if (filter != null) {
       setlistTracks = setlistTracks.where(filter).toList();
@@ -48,9 +50,12 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
     if (tempos == null || tempos.isEmpty) {
       TempoRepository().writeEmptyClickTrack(item.trackId!);
     } else {
-      TempoRepository().writeClickTracks(tempos: tempos, notify: (int total, double progress) {
-        // TODO(timkellypa): Create progress notifier here.
-      },);
+      TempoRepository().writeClickTracks(
+        tempos: tempos,
+        notify: (int total, double progress) {
+          // TODO(timkellypa): Create progress notifier here.
+        },
+      );
     }
     return item.id!;
   }
@@ -73,7 +78,10 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
       return;
     }
 
-    final List<SetlistTrack> setListTracksWithCurrent = await SetlistTrack().select().where("trackId = '${current.trackId}' and row__id != '$id'").toList();
+    final List<SetlistTrack> setListTracksWithCurrent = await SetlistTrack()
+        .select()
+        .where("trackId = '${current.trackId}' and row__id != '$id'")
+        .toList();
 
     if (setListTracksWithCurrent.isEmpty) {
       await (await Track().getById(id))?.delete();
@@ -103,14 +111,11 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
   }
 
   Future<void> applySpotifyAudioFeatures(List<Track> tracks,
-      {required void Function(int total, double progress) notify
-  }) async {
-    final HashMap<String, Track> idTrackMap =
-        HashMap<String, Track>();
+      {required void Function(int total, double progress) notify}) async {
+    final HashMap<String, Track> idTrackMap = HashMap<String, Track>();
     final TempoRepository tempoRepository = TempoRepository();
     final List<Tempo> temposToSave = <Tempo>[];
-    final List<Tempo> existingTempos =
-        await Tempo().select().toList();
+    final List<Tempo> existingTempos = await Tempo().select().toList();
 
     for (Track track in tracks) {
       idTrackMap[track.id.toString()] = track;
@@ -123,6 +128,11 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
         if (track.spotifyAudioFeatures != '') {
           final Map<String, dynamic> audioFeatures =
               json.decode(track.spotifyAudioFeatures!);
+
+          if (audioFeatures.isEmpty) {
+            continue;
+          }
+
           final Tempo tempo = _buildTempoFromAudioFeatures(audioFeatures);
           tempo.trackId = track.id;
 
