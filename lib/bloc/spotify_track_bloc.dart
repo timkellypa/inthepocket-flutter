@@ -116,11 +116,10 @@ class SpotifyTrackBloc
       // check to see if it already exists
       if (!spotifyIdTrackMap.containsKey(spotifyTrack.spotifyId)) {
         track = Track();
+        track.init();
         track.spotifyId = spotifyTrack.spotifyId;
         track.title = spotifyTrack.spotifyTitle;
         track.spotifyAudioFeatures = spotifyTrack.spotifyAudioFeatures;
-        final String trackId = await trackRepository.insertTrack(track);
-        track.id = trackId;
         audioFeatureTracks.add(track);
       } else {
         track = spotifyIdTrackMap[spotifyTrack.spotifyId]!;
@@ -128,7 +127,7 @@ class SpotifyTrackBloc
 
       final SetlistTrack setlistTrack = SetlistTrack();
 
-      setlistTrack.trackId = track.id;
+      setlistTrack.plTrack = track;
       setlistTrack.setlistId = targetSetlist.id;
       await trackRepository.insert(setlistTrack);
     }
