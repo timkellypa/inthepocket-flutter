@@ -112,7 +112,7 @@ class SpotifyProvider {
       result = await read(
           Uri.https('api.spotify.com', '/v1/audio-features/$trackId'));
     } on ClientException {
-      result = jsonEncode(<String, String>{});
+      result = '';
     }
 
     return result;

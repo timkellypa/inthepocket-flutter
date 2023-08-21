@@ -129,10 +129,6 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
           final Map<String, dynamic> audioFeatures =
               json.decode(track.spotifyAudioFeatures!);
 
-          if (audioFeatures.isEmpty) {
-            continue;
-          }
-
           final Tempo tempo = _buildTempoFromAudioFeatures(audioFeatures);
           tempo.trackId = track.id;
 
