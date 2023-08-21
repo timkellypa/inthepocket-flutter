@@ -83,8 +83,10 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
         .where("trackId = '${current.trackId}' and row__id != '$id'")
         .toList();
 
+    Track? trackToDelete;
+
     if (setListTracksWithCurrent.isEmpty) {
-      await (await Track().getById(current.trackId))?.delete();
+      trackToDelete = await Track().getById(current.trackId);
       final TempoRepository tempoRepository = TempoRepository();
       final List<Tempo> tempos = await tempoRepository.fetch(
           whereClause: 'trackId == ?', whereParameter: current.trackId);
@@ -94,6 +96,9 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
       await tempoRepository.deleteClickTrack(current.trackId!);
     }
     await current.delete();
+
+    // delete track last to not break foreign keys with tempo or set list track.
+    await trackToDelete?.delete();
   }
 
   Future<Track> getTrackById(String id) async {
