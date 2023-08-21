@@ -96,7 +96,7 @@ class SpotifyProvider {
         ..id = id
         ..sortOrder = index
         ..spotifyTitle = item['track']['name']
-        ..spotifyId = id
+        ..spotifyId = item['track']['id']
         ..spotifyAudioFeatures = audioFeatures;
 
       ret.add(track);

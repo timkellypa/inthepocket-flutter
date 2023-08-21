@@ -11,8 +11,6 @@ class SpotifyPlaylistBloc
 
   final Setlist? importTargetSetlist;
 
-  bool firstFetch = true;
-
   @override
   SpotifyPlaylistRepository get repository {
     return SpotifyPlaylistRepository();

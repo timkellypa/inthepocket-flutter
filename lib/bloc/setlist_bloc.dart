@@ -10,8 +10,6 @@ class SetlistBloc extends ModelBlocBase<Setlist, SetListRepository> {
 
   final Setlist? importTargetSetlist;
 
-  bool firstFetch = true;
-
   @override
   String get listTitle {
     return 'Setlists';
@@ -20,13 +18,11 @@ class SetlistBloc extends ModelBlocBase<Setlist, SetListRepository> {
   @override
   Future<List<Setlist>> fetch() async {
     final List<Setlist> setlists = await getItemList();
-    if (firstFetch) {
-      firstFetch = false;
 
-      for (Setlist setlist in setlists) {
-        if (setlist.id == importTargetSetlist?.id) {
-          selectItem(setlist, SelectionType.disabled);
-        }
+    for (Setlist setlist in setlists) {
+      if (setlist.id == importTargetSetlist?.id) {
+        selectItem(setlist, SelectionType.disabled,
+            allowMultiSelect: true, allowSelectionToggle: false);
       }
     }
 
@@ -48,7 +44,7 @@ class SetlistBloc extends ModelBlocBase<Setlist, SetListRepository> {
   Future<void> delete(Setlist item) async {
     await repository.delete(item.id!);
   }
-  
+
   @override
   SetListRepository get repository => SetListRepository();
 }

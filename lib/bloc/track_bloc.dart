@@ -51,8 +51,6 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
 
   final AudioHandler _audioHandler = getIt<AudioHandler>();
 
-  bool firstFetch = true;
-
   /// Forward AudioService playback state
   Stream<PlaybackState> get audioPlaybackStream {
     return _audioHandler.playbackState;
@@ -97,21 +95,19 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   Future<List<SetlistTrack>> fetch() async {
     final List<SetlistTrack> setlistTracks = await getItemList();
 
-    if (firstFetch) {
-      firstFetch = false;
-      final List<SetlistTrack> existingTracks =
-          await getItemList(filter: importExclusionsFilter);
+    final List<SetlistTrack> existingTracks =
+        await getItemList(filter: importExclusionsFilter);
 
-      // create reverse lookup for existing tracks
-      final HashMap<String, SetlistTrack> existingTrackMap =
-          HashMap<String, SetlistTrack>.fromEntries(existingTracks.map(
-              (SetlistTrack track) => MapEntry<String, SetlistTrack>(
-                  track.trackId.toString(), track)));
+    // create reverse lookup for existing tracks
+    final HashMap<String, SetlistTrack> existingTrackMap =
+        HashMap<String, SetlistTrack>.fromEntries(existingTracks.map(
+            (SetlistTrack track) => MapEntry<String, SetlistTrack>(
+                track.trackId.toString(), track)));
 
-      for (SetlistTrack setlistTrack in setlistTracks) {
-        if (existingTrackMap.containsKey(setlistTrack.trackId.toString())) {
-          selectItem(setlistTrack, SelectionType.disabled, doSync: false);
-        }
+    for (SetlistTrack setlistTrack in setlistTracks) {
+      if (existingTrackMap.containsKey(setlistTrack.trackId.toString())) {
+        selectItem(setlistTrack, SelectionType.disabled,
+            doSync: false, allowMultiSelect: true, allowSelectionToggle: false);
       }
     }
 
@@ -124,7 +120,11 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   @override
   Future<void> syncList(List<SetlistTrack> newItemList) async {
     super.syncList(newItemList);
-    loadMediaItems(newItemList);
+
+    // Don't load up media if we are importing.
+    if (importTargetSetlist == null) {
+      loadMediaItems(newItemList);
+    }
   }
 
   @override
@@ -186,9 +186,12 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   Future<void> selectItem(SetlistTrack? model, int selectionTypes,
       {bool doSync = true,
       bool pushToAudioService = true,
-      bool allowMultiSelect = false}) async {
+      bool allowMultiSelect = false,
+      bool allowSelectionToggle = true}) async {
     super.selectItem(model, selectionTypes,
-        doSync: doSync, allowMultiSelect: allowMultiSelect);
+        doSync: doSync,
+        allowMultiSelect: allowMultiSelect,
+        allowSelectionToggle: allowSelectionToggle);
 
     if (pushToAudioService &&
         selectionTypes & SelectionType.selected > 0 &&

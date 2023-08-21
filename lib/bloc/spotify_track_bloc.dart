@@ -21,8 +21,6 @@ class SpotifyTrackBloc
   final SpotifyPlaylist? spotifyPlaylist;
   final String importMessage = 'Importing tracks, please wait...';
 
-  bool firstFetch = true;
-
   @override
   SpotifyTrackRepository get repository {
     return SpotifyTrackRepository(spotifyPlaylist: spotifyPlaylist);
@@ -36,27 +34,32 @@ class SpotifyTrackBloc
   @override
   Future<List<SpotifyTrack>> fetch() async {
     final List<SpotifyTrack> spotifyTracks = await getItemList();
-    if (firstFetch) {
-      firstFetch = false;
+    final TrackBloc trackBloc = TrackBloc(importTargetSetlist);
 
-      final TrackBloc trackBloc = TrackBloc(importTargetSetlist);
+    final List<SetlistTrack> setlistTracks = await trackBloc.getItemList();
 
-      final List<SetlistTrack> setlistTracks = await trackBloc.getItemList();
+    final HashMap<String, SetlistTrack> spotifyIdSetlistTrackMap =
+        HashMap<String, SetlistTrack>();
 
-      final HashMap<String, SetlistTrack> spotifyIdSetlistTrackMap =
-          HashMap<String, SetlistTrack>();
-
-      for (SetlistTrack setlistTrack in setlistTracks) {
-        if (setlistTrack.plTrack?.spotifyId != null) {
-          spotifyIdSetlistTrackMap[setlistTrack.plTrack!.spotifyId!] =
-              setlistTrack;
-        }
+    for (SetlistTrack setlistTrack in setlistTracks) {
+      if (setlistTrack.plTrack?.spotifyId != null) {
+        spotifyIdSetlistTrackMap[setlistTrack.plTrack!.spotifyId!] =
+            setlistTrack;
+      } else {
+        spotifyIdSetlistTrackMap[setlistTrack.plTrack!.title!] = setlistTrack;
       }
+    }
 
-      for (SpotifyTrack spotifyTrack in spotifyTracks) {
-        if (spotifyIdSetlistTrackMap.containsKey(spotifyTrack.spotifyId)) {
-          selectItem(spotifyTrack, SelectionType.disabled);
-        }
+    for (SpotifyTrack spotifyTrack in spotifyTracks) {
+      if (spotifyIdSetlistTrackMap.containsKey(spotifyTrack.spotifyId)) {
+        // disable if spotify ID is contained in the list.
+        selectItem(spotifyTrack, SelectionType.disabled,
+            allowMultiSelect: true, allowSelectionToggle: false);
+      } else if (spotifyTrack.spotifyId == null &&
+          spotifyIdSetlistTrackMap.containsKey(spotifyTrack.spotifyTitle)) {
+        // if spotify ID is null, disable if title is in this list.
+        selectItem(spotifyTrack, SelectionType.disabled,
+            allowMultiSelect: true, allowSelectionToggle: false);
       }
     }
 

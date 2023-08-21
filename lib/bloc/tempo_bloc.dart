@@ -9,8 +9,6 @@ class TempoBloc extends ModelBlocBase<Tempo, TempoRepository> {
 
   final Track track;
 
-  bool firstFetch = true;
-
   @override
   TempoRepository get repository {
     return TempoRepository();
@@ -34,15 +32,15 @@ class TempoBloc extends ModelBlocBase<Tempo, TempoRepository> {
     // Do not write out click tracks until track is at least saved
     // for the first time
     if (updateTempoFile) {
-
       if (tempos.isEmpty) {
         await repository.writeEmptyClickTrack(track.id!);
         return tempos;
       }
 
-      await repository.writeClickTracks(tempos: tempos, notify: (int total, double progress) {
-        
-      },);
+      await repository.writeClickTracks(
+        tempos: tempos,
+        notify: (int total, double progress) {},
+      );
     }
 
     return tempos;

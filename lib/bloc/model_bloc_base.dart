@@ -57,12 +57,15 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
   }
 
   void selectItem(ModelType? model, int selectionTypes,
-      {bool doSync = true, bool allowMultiSelect = false}) {
+      {bool doSync = true,
+      bool allowMultiSelect = false,
+      bool allowSelectionToggle = true}) {
     final String guid = model?.id ?? '';
 
     // unselect if all our selection types are currently active.
     if ((itemSelectionMap[guid]?.selectionType ?? 0) & selectionTypes ==
-        selectionTypes) {
+            selectionTypes &&
+        allowSelectionToggle) {
       unSelectItem(model, selectionTypes);
       if (doSync) {
         syncSelections();
@@ -175,5 +178,6 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
 
   void reset() {
     unSelectAll(SelectionType.all);
+    fetch();
   }
 }
