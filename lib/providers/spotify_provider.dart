@@ -8,6 +8,7 @@ import 'package:in_the_pocket/model/spotify_track.dart';
 import 'package:in_the_pocket/oauth/authorization_code_grant_helper.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class SpotifyProvider {
   Uri get authorizationEndpoint =>
@@ -62,8 +63,8 @@ class SpotifyProvider {
 
     for (Map<String, dynamic> item in items) {
       final SpotifyPlaylist list = SpotifyPlaylist();
-      list.spotifyId = item['id'];
-      list.id = item['id'];
+      list.spotifyId = item['id'] ?? const Uuid().v4();
+      list.id = list.spotifyId;
       list.sortOrder = index;
       list.spotifyTitle = item['name'];
       ret.add(list);
@@ -102,10 +103,8 @@ class SpotifyProvider {
   }
 
   Future<String> getAudioFeaturesJSON(String trackId) async {
-    final oauth2.Client client = await login();
-
-    final String result = await client
-        .read(Uri.https('api.spotify.com', '/v1/audio-features/$trackId'));
+    final String result =
+        await read(Uri.https('api.spotify.com', '/v1/audio-features/$trackId'));
 
     return result;
   }

@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 
 class Loading extends StatelessWidget {
+  const Loading({String text = 'Loading...'}) : _text = text;
+
+  final String _text;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            CircularProgressIndicator(),
-            Text('Loading...',
-                style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500))
+            const CircularProgressIndicator(),
+            Text(_text,
+                style:
+                    const TextStyle(fontSize: 19, fontWeight: FontWeight.w500))
           ],
         ),
       ),

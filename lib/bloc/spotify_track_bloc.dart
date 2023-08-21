@@ -12,13 +12,6 @@ import 'package:in_the_pocket/repository/track_repository.dart';
 
 import 'model_bloc_base.dart';
 
-class SaveStatus {
-  SaveStatus(this.total, this.progress);
-
-  final int total;
-  final double progress;
-}
-
 class SpotifyTrackBloc
     extends ModelBlocBase<SpotifyTrack, SpotifyTrackRepository> {
   SpotifyTrackBloc(this.spotifyPlaylist, {required this.importTargetSetlist})
@@ -26,6 +19,7 @@ class SpotifyTrackBloc
 
   final Setlist? importTargetSetlist;
   final SpotifyPlaylist? spotifyPlaylist;
+  final String importMessage = 'Importing tracks, please wait...';
 
   bool firstFetch = true;
 
@@ -91,7 +85,7 @@ class SpotifyTrackBloc
     // Start progress indicator immediately at 0.
     //  Will only start progressing after click tracks are being written,
     //  Since that is the most time-consuming part of the save.
-    updateSaveStatus(1, 0.0);
+    updateSaveStatus(1, 0.0, importMessage);
     final List<SpotifyTrack> entries = itemList
         .where((SpotifyTrack spotifyTrack) =>
             selectedItemMap.containsKey(spotifyTrack.id) &&
@@ -111,7 +105,7 @@ class SpotifyTrackBloc
     final HashMap<String, Track> spotifyIdTrackMap = HashMap<String, Track>();
 
     for (Track track in trackList) {
-      spotifyIdTrackMap[track.spotifyId!] = track;
+      spotifyIdTrackMap[track.spotifyId ?? ''] = track;
     }
 
     for (SpotifyTrack spotifyTrack in entries) {
@@ -136,7 +130,8 @@ class SpotifyTrackBloc
       await trackRepository.insert(setlistTrack);
     }
     await trackRepository.applySpotifyAudioFeatures(audioFeatureTracks,
-        notify: updateSaveStatus);
-    updateSaveStatus(0, 0);
+        notify: (int total, double progress) =>
+            updateSaveStatus(total, progress, importMessage));
+    updateSaveStatus(0, 0, '');
   }
 }

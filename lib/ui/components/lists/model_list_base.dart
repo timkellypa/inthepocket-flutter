@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/model_bloc_base.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
+import 'package:in_the_pocket/classes/save_status.dart';
 import 'package:in_the_pocket/model/model_base.dart';
 
 import '../loading.dart';
@@ -25,25 +26,33 @@ abstract class ModelListBase<ModelType extends ModelBase,
       color: Colors.white,
       padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
       child: Container(
-        child: StreamBuilder<List<ModelType>>(
-            stream: modelBloc.items,
-            builder: (BuildContext context,
-                AsyncSnapshot<List<ModelType>> itemList) {
-              return StreamBuilder<HashMap<String, ItemSelection>>(
-                stream: modelBloc.selectedItems,
-                initialData: HashMap<String, ItemSelection>(),
-                builder: (
-                  BuildContext innerContext,
-                  AsyncSnapshot<HashMap<String, ItemSelection>> selectedItemMap,
-                ) =>
-                    getCardWidgets(
-                  modelBloc,
-                  itemList,
-                  selectedItemMap,
-                ),
-              );
-            }),
-      ),
+          child: StreamBuilder<SaveStatus>(
+              stream: modelBloc.saveStatusStream,
+              builder:
+                  (BuildContext context, AsyncSnapshot<SaveStatus> saveStatus) {
+                if (saveStatus.hasData && saveStatus.data!.total > 0) {
+                  return Loading(text: saveStatus.data!.message);
+                }
+                return StreamBuilder<List<ModelType>>(
+                    stream: modelBloc.items,
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<ModelType>> itemList) {
+                      return StreamBuilder<HashMap<String, ItemSelection>>(
+                        stream: modelBloc.selectedItems,
+                        initialData: HashMap<String, ItemSelection>(),
+                        builder: (
+                          BuildContext innerContext,
+                          AsyncSnapshot<HashMap<String, ItemSelection>>
+                              selectedItemMap,
+                        ) =>
+                            getCardWidgets(
+                          modelBloc,
+                          itemList,
+                          selectedItemMap,
+                        ),
+                      );
+                    });
+              })),
     );
   }
 
@@ -96,7 +105,8 @@ abstract class ModelListBase<ModelType extends ModelBase,
 
             toIndex = iterator == -1 ? toIndex - 1 : toIndex;
 
-            final int mobileSortOrder = itemListStream.data![toIndex].sortOrder!;
+            final int mobileSortOrder =
+                itemListStream.data![toIndex].sortOrder!;
 
             int i = toIndex;
 
@@ -113,7 +123,8 @@ abstract class ModelListBase<ModelType extends ModelBase,
             modelBloc.update(itemListStream.data![fromIndex]);
 
             // perform an array sort for the UI layer to update quickly.
-            itemListStream.data!.sort((ModelType a, ModelType b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+            itemListStream.data!.sort((ModelType a, ModelType b) =>
+                (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
             // sync the list immediately, don't wait for round trip from DB.
             modelBloc.syncList(itemListStream.data!);
@@ -131,7 +142,7 @@ abstract class ModelListBase<ModelType extends ModelBase,
         ));
       }
     } else {
-      return Center(
+      return const Center(
         child: Loading(),
       );
     }
