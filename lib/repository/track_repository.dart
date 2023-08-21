@@ -84,7 +84,7 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
         .toList();
 
     if (setListTracksWithCurrent.isEmpty) {
-      await (await Track().getById(id))?.delete();
+      await (await Track().getById(current.trackId))?.delete();
       final TempoRepository tempoRepository = TempoRepository();
       final List<Tempo> tempos = await tempoRepository.fetch(
           whereClause: 'trackId == ?', whereParameter: current.trackId);
