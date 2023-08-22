@@ -16,38 +16,44 @@ class SpotifyProvider {
       Uri.parse('https://accounts.spotify.com/authorize');
   Uri get tokenEndpoint => Uri.parse('https://accounts.spotify.com/api/token');
 
+  Future<File> get credentialsFile async {
+    final String localPath = (await getApplicationDocumentsDirectory()).path;
+    final String credentialsFilePath =
+        '/$localPath/credentials/spotify-credentials.json';
+    return File(credentialsFilePath);
+  }
+
   Future<oauth2.Client> login() async {
     final Secret secret =
         await SecretLoader(secretPath: 'api_secrets.json').load();
-    final String localPath = (await getApplicationDocumentsDirectory()).path;
 
     return await AuthorizationCodeGrantHelper.getClient(secret.spotifyClientId,
         secret.spotifyClientSecret, authorizationEndpoint, tokenEndpoint,
-        credentialsFile:
-            File('/$localPath/credentials/spotify-credentials.json'));
+        credentialsFile: await credentialsFile);
   }
 
   Future<oauth2.Client> reLogin() async {
-    final String localPath = (await getApplicationDocumentsDirectory()).path;
-    final File credentialsFile =
-        File('/$localPath/credentials/spotify-credentials.json');
+    final File file = await credentialsFile;
 
-    await credentialsFile.delete();
+    if (file.existsSync()) {
+      await file.delete();
+    }
+
     return await login();
   }
 
   /// Wrapper for client.read.
   /// Logs in and tries to read URI.
-  /// On authorization exception, releases credentilas file
+  /// On authorization exception, removes credentials file
   /// and calls "login" again.
   Future<String> read(Uri uri) async {
-    final oauth2.Client client = await login();
+    oauth2.Client client = await login();
     String result;
 
     try {
       result = await client.read(uri);
     } on oauth2.AuthorizationException {
-      await reLogin();
+      client = await reLogin();
       result = await client.read(uri);
     }
     return result;

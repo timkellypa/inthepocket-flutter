@@ -128,7 +128,7 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
         idTrackMap[track.id.toString()] = track;
         track.spotifyAudioFeatures =
             await SpotifyProvider().getAudioFeaturesJSON(track.spotifyId!);
-        await Track().save();
+        await track.save();
 
         if (track.spotifyAudioFeatures != '') {
           final Map<String, dynamic> audioFeatures =
