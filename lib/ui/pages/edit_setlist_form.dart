@@ -3,7 +3,7 @@ import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/classes/setlist_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/controls/date_time.dart';
-import 'package:intl/src/intl/date_format.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class EditSetlistForm extends StatefulWidget {
