@@ -178,6 +178,5 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
 
   void reset() {
     unSelectAll(SelectionType.all);
-    fetch();
   }
 }

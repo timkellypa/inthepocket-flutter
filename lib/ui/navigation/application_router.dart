@@ -135,6 +135,8 @@ class ApplicationRouter {
           final TrackImportSpotifyTrackArguments args =
               settings.arguments as TrackImportSpotifyTrackArguments;
 
+          // Fetching concurrently from spotify API causes big OAuth issues.
+          // Syncing selections should be enough here.
           args.spotifyPlaylistBloc.reset();
 
           return Provider<SpotifyPlaylistBloc>(
