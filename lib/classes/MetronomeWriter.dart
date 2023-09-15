@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:wave_builder/wave_builder.dart';
 
 const int DEFAULT_TEMPO_FILE_LENGTH_MINUTES = 3;
@@ -28,7 +29,7 @@ class MetronomeWriter extends WaveBuilder {
     for (int bar = 0; bar < numberOfBars; ++bar) {
       for (int beat = 1; beat <= tempo.beatsPerBar!; ++beat) {
         // check to see if we are using primary or secondary
-        if ((beat - 1) % (tempo.beatsPerBar! / tempo.accentBeatsPerBar!) == 0) {
+        if (TempoRepository.isCountPrimary(tempo, beat)) {
           appendFileContents(await primaryBytes, findDataChunk: false);
         } else {
           appendFileContents(await secondaryBytes, findDataChunk: false);

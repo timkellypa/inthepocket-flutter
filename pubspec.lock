@@ -65,6 +65,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.16"
+  audio_waveforms:
+    dependency: "direct main"
+    description:
+      name: audio_waveforms
+      sha256: f2f81e256c5c03b64e2861e0323a77e1b6790c256c73393b671214c9846260fc
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
   boolean_selector:
     dependency: transitive
     description:
@@ -411,6 +419,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.8"
+  led_bulb_indicator:
+    dependency: "direct main"
+    description:
+      name: led_bulb_indicator
+      sha256: "0ef433ad245ad5bc5440636d725619ec4dfd9c9a3ceeef70dfcc26ed1820d471"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   logging:
     dependency: transitive
     description:

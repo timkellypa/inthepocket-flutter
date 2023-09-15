@@ -2,10 +2,12 @@ import 'dart:collection';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:in_the_pocket/bloc/metronome_indicator_state_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:led_bulb_indicator/led_bulb_indicator.dart';
 import 'package:provider/provider.dart';
 
 class TrackPlayer extends StatefulWidget {
@@ -60,6 +62,44 @@ class TrackPlayerState extends State<TrackPlayer> {
                     Text(selectedSetlistTrack.notes ?? '',
                         style: const TextStyle(fontSize: 16),
                         overflow: TextOverflow.ellipsis),
+                    StreamBuilder<ClickState>(
+                        stream: trackBloc.indicatorStateBloc.clickStateStream,
+                        initialData: ClickState(count: 0),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<ClickState> clickState) {
+                          const LedBulbColors inactiveColor = LedBulbColors.off,
+                              accentColor = LedBulbColors.green,
+                              clickColor = LedBulbColors.red;
+                          const double size = 30;
+                          final ClickState state = clickState.data!;
+                          final List<Widget> indicators =
+                              List<Widget>.empty(growable: true);
+
+                          for (int i = 1; i <= state.beatsPerBar; ++i) {
+                            LedBulbColors color = inactiveColor;
+                            bool glow = false;
+                            if (i == state.count) {
+                              glow = true;
+                              if (state.accent) {
+                                color = accentColor;
+                              } else {
+                                color = clickColor;
+                              }
+                            }
+                            indicators.add(LedBulbIndicator(
+                                size: size, initialState: color, glow: glow));
+                          }
+
+                          return Padding(
+                              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                              child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  key: const Key('ClickIndicatorRow'),
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: indicators));
+                        }),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[

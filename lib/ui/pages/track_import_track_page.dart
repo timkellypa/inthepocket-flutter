@@ -35,7 +35,8 @@ class TrackImportTrackPageState extends State<TrackImportTrackPage> {
 
   @override
   void initState() {
-    trackBloc = TrackBloc(setlist, importTargetSetlist: _targetSetlist);
+    trackBloc = TrackBloc(setlist,
+        importTargetSetlist: _targetSetlist, preloadTempos: false);
     super.initState();
   }
 
@@ -58,19 +59,20 @@ class TrackImportTrackPageState extends State<TrackImportTrackPage> {
                     final List<SetlistTrack?> entries =
                         trackBloc.getMatchingSelections(SelectionType.selected);
                     entries.sort((SetlistTrack? a, SetlistTrack? b) =>
-                        (a == null || b == null) ? 0 : a.sortOrder!.compareTo(b.sortOrder!));
+                        (a == null || b == null)
+                            ? 0
+                            : a.sortOrder!.compareTo(b.sortOrder!));
                     for (SetlistTrack? setlistTrack in entries) {
                       if (setlistTrack == null) {
                         continue;
                       }
-                      final SetlistTrack newSetlistTrack =
-                          SetlistTrack();
+                      final SetlistTrack newSetlistTrack = SetlistTrack();
                       newSetlistTrack.setlistId = _targetSetlist!.id;
                       newSetlistTrack.trackId = setlistTrack.trackId;
                       newSetlistTrack.notes = setlistTrack.notes;
                       await trackBloc.insert(newSetlistTrack);
                     }
-                    
+
                     Navigator.popUntil(context, (Route<dynamic> route) {
                       return route.settings.name ==
                           ApplicationRouter.ROUTE_TRACK_LIST;

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:just_audio/just_audio.dart';
 
 // https://suragch.medium.com/background-audio-in-flutter-with-audio-service-and-just-audio-3cce17b4a7d
@@ -25,6 +26,41 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
     _listenForDurationChanges();
     _listenForCurrentSongIndexChanges();
     _listenForSequenceStateChanges();
+  }
+
+  static SetlistTrack? decodeExtras(Map<String, dynamic>? extras) {
+    if (extras == null) {
+      return null;
+    }
+
+    final SetlistTrack currentTrack = SetlistTrack.fromMap(extras);
+
+    final Map<String, dynamic>? trackMap = extras['plTrack'];
+    final List<Map<String, dynamic>>? temposMap = extras['plTrack']['plTempos'];
+
+    if (trackMap != null) {
+      currentTrack.plTrack = Track.fromMap(trackMap);
+    }
+
+    if (temposMap != null) {
+      currentTrack.plTrack?.plTempos = temposMap
+          .map((Map<String, dynamic> tempoMap) => Tempo.fromMap(tempoMap))
+          .toList();
+    }
+
+    return currentTrack;
+  }
+
+  /// Prepare extras (SetlistTrack) into a map to store in MediaItem extras.
+  static Map<String, dynamic> encodeExtras(SetlistTrack setlistTrack) {
+    final Map<String, dynamic> extras = setlistTrack.toMap();
+
+    extras['plTrack'] = setlistTrack.plTrack?.toMap();
+    extras['plTrack']?['plTempos'] = setlistTrack.plTrack?.plTempos
+        ?.map((Tempo tempo) => tempo.toMap())
+        .toList();
+
+    return extras;
   }
 
   final AudioPlayer _player = AudioPlayer();

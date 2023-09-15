@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:audio_service/audio_service.dart';
+import 'package:in_the_pocket/audio/setlist_audio_handler.dart';
+import 'package:in_the_pocket/bloc/metronome_indicator_state_bloc.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
@@ -41,15 +43,23 @@ MediaControl stopControl = const MediaControl(
 );
 
 class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
-  TrackBloc(this.setlist, {this.importTargetSetlist}) : super() {
-    audioQueueItemState.listen(mediaItemChanged);
+  TrackBloc(this.setlist, {this.importTargetSetlist, this.preloadTempos = true})
+      : super() {
+    audioQueueItemListener = audioQueueItemState.listen(mediaItemChanged);
   }
+
+  late StreamSubscription<MediaItem?> audioQueueItemListener;
 
   final Setlist? setlist;
 
   final Setlist? importTargetSetlist;
 
+  final bool preloadTempos;
+
   final AudioHandler _audioHandler = getIt<AudioHandler>();
+
+  final MetronomeIndicatorStateBloc indicatorStateBloc =
+      MetronomeIndicatorStateBloc();
 
   /// Forward AudioService playback state
   Stream<PlaybackState> get audioPlaybackStream {
@@ -91,6 +101,37 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
         : null;
   }
 
+  /// Load all tempos in bulk from db, and put into appropriate track list.
+  /// Should be faster than querying the list individually per track
+  Future<void> loadTempos(List<SetlistTrack> setlistTracks) async {
+    // create reverse lookup for set list tracks based on track ID.
+    final HashMap<String, SetlistTrack> trackMap =
+        HashMap<String, SetlistTrack>.fromEntries(setlistTracks.map(
+            (SetlistTrack setlistTrack) => MapEntry<String, SetlistTrack>(
+                setlistTrack.trackId.toString(), setlistTrack)));
+
+    final List<String> setlistTrackIds = setlistTracks
+        .map((SetlistTrack setlistTrack) => setlistTrack.plTrack?.id ?? '')
+        .toList();
+
+    final List<Tempo> tempos = await Tempo()
+        .select()
+        .trackId
+        .inValues(setlistTrackIds)
+        .orderBy('row__sortOrder')
+        .toList();
+
+    for (Tempo tempo in tempos) {
+      final SetlistTrack? track = trackMap[tempo.trackId];
+      if (track == null) {
+        continue;
+      }
+
+      track.plTrack?.plTempos ??= List<Tempo>.empty(growable: true);
+      track.plTrack?.plTempos?.add(tempo);
+    }
+  }
+
   @override
   Future<List<SetlistTrack>> fetch() async {
     final List<SetlistTrack> setlistTracks = await getItemList();
@@ -109,6 +150,10 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
         selectItem(setlistTrack, SelectionType.disabled,
             doSync: false, allowMultiSelect: true, allowSelectionToggle: false);
       }
+    }
+
+    if (preloadTempos) {
+      await loadTempos(setlistTracks);
     }
 
     syncSelections();
@@ -168,9 +213,8 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   }
 
   void mediaItemChanged(MediaItem? mediaItem) {
-    final SetlistTrack? currentTrack = itemList
-        .where((SetlistTrack element) => element.id == mediaItem?.extras?['id'])
-        .firstOrNull;
+    final SetlistTrack? currentTrack =
+        SetlistAudioHandler.decodeExtras(mediaItem?.extras);
 
     // if no track or is already selected, return without doing anything.
     if (currentTrack == null ||
@@ -205,11 +249,14 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     await _audioHandler.customAction('clear');
 
     for (SetlistTrack setlistTrack in setlistTracks) {
+      final Map<String, dynamic> extras =
+          SetlistAudioHandler.encodeExtras(setlistTrack);
+
       await _audioHandler.addQueueItem(MediaItem(
           id: await TempoRepository().getClickTrackPath(setlistTrack.trackId!),
           album: setlist?.description ?? '',
           title: setlistTrack.plTrack?.title ?? '',
-          extras: <String, dynamic>{'id': setlistTrack.id},
+          extras: extras,
           artist: setlist?.location ?? ''));
     }
     await _audioHandler.prepare();
@@ -241,5 +288,7 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   Future<void> dispose() async {
     await _audioHandler.stop();
     await _audioHandler.customAction('clear');
+    audioQueueItemListener.cancel();
+    indicatorStateBloc.dispose();
   }
 }

@@ -28,18 +28,19 @@ class TempoRepository extends RepositoryBase<Tempo> {
   }
 
   @override
-  Future<List<Tempo>> fetch({
-    bool Function(Tempo)? filter, 
-    String? whereClause,
-    String? whereParameter
-  }) async {
+  Future<List<Tempo>> fetch(
+      {bool Function(Tempo)? filter,
+      String? whereClause,
+      String? whereParameter}) async {
     TempoFilterBuilder tempoQuery = Tempo().select();
-    
+
     if (whereClause != null) {
-      tempoQuery = tempoQuery.where(whereClause, parameterValue: whereParameter);
+      tempoQuery =
+          tempoQuery.where(whereClause, parameterValue: whereParameter);
     }
-    
-    List<Tempo> tempos = await tempoQuery.orderBy(TableBase.SORT_ORDER_COLUMN).toList();
+
+    List<Tempo> tempos =
+        await tempoQuery.orderBy(TableBase.SORT_ORDER_COLUMN).toList();
 
     if (filter != null) {
       tempos = tempos.where(filter).toList();
@@ -125,5 +126,14 @@ class TempoRepository extends RepositoryBase<Tempo> {
   /// but I don't have that kind of access to the generated model.
   String getTempoDisplayText(Tempo tempo) {
     return '${tempo.bpm} BPM (${tempo.beatsPerBar}/${tempo.beatUnit})';
+  }
+
+  static bool isCountPrimary(Tempo tempo, int count) {
+    if (tempo.beatsPerBar == null ||
+        tempo.accentBeatsPerBar == null ||
+        count == 0) {
+      return false;
+    }
+    return ((count - 1) % (tempo.beatsPerBar! / tempo.accentBeatsPerBar!)) == 0;
   }
 }
