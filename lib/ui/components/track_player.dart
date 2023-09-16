@@ -7,6 +7,7 @@ import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:in_the_pocket/ui/haptics/MetronomeBuzzer.dart';
 import 'package:led_bulb_indicator/led_bulb_indicator.dart';
 import 'package:provider/provider.dart';
 
@@ -23,9 +24,16 @@ class TrackPlayerState extends State<TrackPlayer> {
     super.didChangeDependencies();
   }
 
+  MetronomeBuzzer? buzzer;
+
   @override
   Widget build(BuildContext context) {
     final TrackBloc trackBloc = Provider.of<TrackBloc>(context);
+
+    buzzer?.stopListening();
+    buzzer = MetronomeBuzzer(bloc: trackBloc.indicatorStateBloc);
+    buzzer!.listen();
+
     return Container(
       child: StreamBuilder<List<SetlistTrack>>(
         stream: trackBloc.items,
@@ -152,5 +160,11 @@ class TrackPlayerState extends State<TrackPlayer> {
         },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    buzzer?.stopListening();
   }
 }
