@@ -136,4 +136,28 @@ class TempoRepository extends RepositoryBase<Tempo> {
     }
     return ((count - 1) % (tempo.beatsPerBar! / tempo.accentBeatsPerBar!)) == 0;
   }
+
+  static double? getMillisecondsPerBeat(Tempo tempo) {
+    if (tempo.bpm == null) {
+      return null;
+    }
+    return 60 / tempo.bpm! * 1000;
+  }
+
+  static double? getTempoDurationMilliseconds(Tempo tempo) {
+    if (tempo.numberOfBars == null ||
+        tempo.numberOfBars == 0 ||
+        tempo.bpm == null) {
+      return null;
+    }
+    return tempo.numberOfBars! * tempo.beatsPerBar! / tempo.bpm! * 60 * 1000;
+  }
+
+  static bool isPositionInRange(Tempo tempo, double positionMilliseconds) {
+    final int? tempoDurationMilliseconds =
+        getTempoDurationMilliseconds(tempo)?.floor();
+
+    return tempoDurationMilliseconds == null ||
+        tempoDurationMilliseconds > positionMilliseconds;
+  }
 }

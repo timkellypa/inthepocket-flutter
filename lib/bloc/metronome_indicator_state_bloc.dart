@@ -8,18 +8,12 @@ import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:in_the_pocket/services/service_locator.dart';
 
 class ClickInfo {
-  ClickInfo(
-      {required this.positionFromNow,
-      required this.count,
-      this.tempo,
-      int? duration}) {
-    _duration = duration;
-  }
+  ClickInfo({required this.duration, required this.count, this.tempo});
 
-  double positionFromNow;
+  static const int SILENCE_COUNT = -1;
 
-  bool get isInRange {
-    return count != 0;
+  bool get silence {
+    return count == SILENCE_COUNT;
   }
 
   bool get accent {
@@ -29,14 +23,10 @@ class ClickInfo {
     return TempoRepository.isCountPrimary(tempo!, count);
   }
 
-  int get duration {
-    return _duration ?? getClickDurationForTempo(tempo);
-  }
-
   /// Note, count of 0 means we are out of range.
   int count;
   Tempo? tempo;
-  int? _duration;
+  double duration;
 
   static int getClickDurationForTempo(Tempo? tempo) {
     if (tempo == null || tempo.bpm == null) {
@@ -50,7 +40,7 @@ class ClickState {
   ClickState({required this.count, this.accent = false, this.beatsPerBar = 4});
 
   bool isClicking() {
-    return count != 0;
+    return count != ClickInfo.SILENCE_COUNT;
   }
 
   bool accent;
@@ -78,7 +68,9 @@ class MetronomeIndicatorStateBloc {
 
   Stream<ClickState> get clickStateStream => _clickStateController.stream;
 
-  Timer? nextClickTimer;
+  Timer? clickTimer;
+
+  bool isClicking = false;
 
   void adjustAnchorTime(Duration position) {
     anchorTime = DateTime.now().subtract(position);
@@ -88,76 +80,77 @@ class MetronomeIndicatorStateBloc {
     setlistTrack = SetlistAudioHandler.decodeExtras(extras);
   }
 
-  double? getTempoDurationMilliseconds(Tempo tempo) {
-    if (tempo.numberOfBars == null || tempo.numberOfBars == 0) {
+  ClickInfo? getClickInfo(Tempo tempo, double positionMilliseconds) {
+    final double? millisecondsPerBeat =
+        TempoRepository.getMillisecondsPerBeat(tempo);
+
+    if (millisecondsPerBeat == null) {
       return null;
     }
-    return tempo.numberOfBars! * tempo.beatsPerBar! / tempo.bpm! * 60 * 1000;
-  }
 
-  ClickInfo getNextClickInfo(Tempo tempo, double positionMilliseconds) {
-    final double? tempoDurationMilliseconds =
-        getTempoDurationMilliseconds(tempo);
-
-    final double perCountMilliseconds = 60 / tempo.bpm! * 1000;
-
-    // count is 1 indexed, and 0th position of file is first count
-    int numBeats = (positionMilliseconds / perCountMilliseconds).floor();
+    int numBeats = (positionMilliseconds / millisecondsPerBeat).floor();
     final int clickDurationForTempo = ClickInfo.getClickDurationForTempo(tempo);
-    final int millisecondsAfterLastClick =
-        positionMilliseconds.round() % perCountMilliseconds.round();
-    if (millisecondsAfterLastClick < clickDurationForTempo) {
+    final double millisecondsAfterLastClick =
+        positionMilliseconds - (numBeats * millisecondsPerBeat);
+
+    if (!TempoRepository.isPositionInRange(tempo, positionMilliseconds)) {
+      return null;
+    }
+
+    if (positionMilliseconds < 0) {
+      // We haven't yet started this tempo.  Click silence until that happens.
+      return ClickInfo(
+          count: ClickInfo.SILENCE_COUNT,
+          tempo: tempo,
+          duration: -positionMilliseconds);
+    }
+
+    if (millisecondsAfterLastClick <= clickDurationForTempo) {
       // we are inside a click.  Indicate the remainder of it, but adjust the click
       // duration for the part that we missed, so it doesn't go too long.
-      const double positionFromNow = 0;
       final int count = numBeats % tempo.beatsPerBar! + 1;
-      final int clickDuration =
+      final double clickDuration =
           clickDurationForTempo - millisecondsAfterLastClick;
 
-      return ClickInfo(
-          count: count,
-          positionFromNow: positionFromNow,
-          tempo: tempo,
-          duration: clickDuration);
+      return ClickInfo(count: count, tempo: tempo, duration: clickDuration);
     }
 
-    // We are calculating the next click.
+    // We are calculating the next click for silence length.
+    // First check if the tempo is out of range.
     numBeats++;
-
-    final double beatPosition = numBeats * perCountMilliseconds,
+    final double beatPosition = numBeats * millisecondsPerBeat,
         positionFromNow = beatPosition - positionMilliseconds;
 
-    if (tempoDurationMilliseconds != null &&
-        tempoDurationMilliseconds.round() <= beatPosition.round()) {
-      // Return special ClickInfo object, that indicates the position is out of range (count=0)
-      // and returns duration of tempo in "position" attribute.
-      return ClickInfo(
-          count: 0, positionFromNow: tempoDurationMilliseconds, tempo: tempo);
+    if (!TempoRepository.isPositionInRange(tempo, beatPosition)) {
+      // Return null, that indicates the position is out of range for this tempo.
+      // Tempo iterator will check the next one.
+      return null;
     }
 
-    final int count = numBeats % tempo.beatsPerBar! + 1;
-
+    // Return ClickInfo object that indicates we need silence for the positionFromNow duration.
     return ClickInfo(
-        count: count, positionFromNow: positionFromNow, tempo: tempo);
+        count: ClickInfo.SILENCE_COUNT,
+        duration: positionFromNow,
+        tempo: tempo);
   }
 
   Future<void> click(ClickInfo clickInfo) async {
     final Completer<void> completer = Completer<void>();
 
+    // Do a click.  Sometimes these are silent.
     _clickStateController.sink.add(ClickState(
         count: clickInfo.count,
         accent: clickInfo.accent,
         beatsPerBar: clickInfo.tempo?.beatsPerBar ?? 4));
 
-    Timer(Duration(milliseconds: clickInfo.duration), () {
-      _clickStateController.sink.add(
-          ClickState(count: 0, beatsPerBar: clickInfo.tempo?.beatsPerBar ?? 4));
+    clickTimer?.cancel();
+    clickTimer = Timer(Duration(milliseconds: clickInfo.duration.ceil()), () {
       completer.complete();
     });
     return completer.future;
   }
 
-  ClickInfo calculateNextClick() {
+  ClickInfo? calculateClick() {
     final int millisecondsFromAnchor = DateTime.now().millisecondsSinceEpoch -
         anchorTime.millisecondsSinceEpoch;
 
@@ -166,63 +159,66 @@ class MetronomeIndicatorStateBloc {
     double position = millisecondsFromAnchor.toDouble();
 
     for (Tempo tempo in setlistTrack!.plTrack!.plTempos!) {
-      final ClickInfo clickInfo = getNextClickInfo(tempo, position);
+      final ClickInfo? clickInfo = getClickInfo(tempo, position.toDouble());
 
-      if (clickInfo.isInRange) {
+      if (clickInfo != null) {
         return clickInfo;
       }
 
-      // Shift position by this click's duration offset.
-      position -= clickInfo.positionFromNow;
+      // Shift position by this tempo's duration, so the next tempo will start at 0.
+      position -= TempoRepository.getTempoDurationMilliseconds(tempo) ?? 0;
     }
 
-    // return out of range clickinfo.  This should not happen.
-    return ClickInfo(count: 0, positionFromNow: position, tempo: null);
+    // return null.  This will only happen if it is still playing the same track after all tempos are finished.
+    return null;
   }
 
-  void setupNextClick() {
+  Future<void> setupNextClick() async {
     // If no setlist track or tempos, exit.
     if (setlistTrack == null ||
         (setlistTrack?.plTrack?.plTempos ?? <Tempo>[]).isEmpty) {
       return;
     }
-    final ClickInfo clickInfo = calculateNextClick();
+    final ClickInfo? clickInfo = calculateClick();
 
     // If the final tempo is not in range, exit without setting up a timeout for click duration.
     // No more clicks.
-    if (!clickInfo.isInRange) {
+    if (clickInfo == null || !isClicking) {
+      _clickStateController.sink.add(ClickState(
+          count: ClickInfo.SILENCE_COUNT,
+          beatsPerBar:
+              setlistTrack!.plTrack?.plTempos?.firstOrNull?.beatsPerBar ?? 4));
+
       return;
     }
 
-    nextClickTimer = Timer(
-        Duration(milliseconds: clickInfo.positionFromNow.round()), () async {
-      /**
-       * Inactive timer will still get here, so stop it (like canceling an interval)
-       * We don't use an interval for two reasons.
-       * 1. We have an anchor time equaling the playback start time to be as accurate as possible.
-       * 2. Tempos can change within a single mediaItem.  This calculation is done with setupNextClick().
-       */
-      if (nextClickTimer != null) {
-        await click(clickInfo);
+    // click will update the click state to either clicking or silence.
+    await click(clickInfo);
 
-        // Could have become null during the click.
-        if (nextClickTimer != null) {
-          setupNextClick();
-        }
-      }
-    });
+    if (!isClicking) {
+      return;
+    }
+
+    setupNextClick();
   }
 
   void stopClick() {
-    nextClickTimer?.cancel();
-    nextClickTimer = null;
+    isClicking = false;
+    clickTimer?.cancel();
+    clickTimer = null;
+  }
+
+  void startClick() {
+    isClicking = true;
+    clickTimer?.cancel();
+    setupNextClick();
   }
 
   void syncState(PlaybackState state) {
     if (state.playing) {
       adjustAnchorTime(state.position);
-      if (nextClickTimer == null) {
-        setupNextClick();
+      if (!isClicking) {
+        startClick();
       }
     } else {
       stopClick();
@@ -234,6 +230,9 @@ class MetronomeIndicatorStateBloc {
     setlistTrack = null;
     anchorTime = DateTime.now();
     stopClick();
+
+    _clickStateController.sink
+        .add(ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: 0));
   }
 
   void setupStateListener(MediaItem? mediaItem) {
@@ -257,6 +256,11 @@ class MetronomeIndicatorStateBloc {
     }
 
     loadSetlistTrackFromExtras(mediaItem.extras);
+
+    _clickStateController.sink.add(ClickState(
+        count: ClickInfo.SILENCE_COUNT,
+        beatsPerBar:
+            setlistTrack!.plTrack?.plTempos?.firstOrNull?.beatsPerBar ?? 4));
   }
 
   void startListening() {
