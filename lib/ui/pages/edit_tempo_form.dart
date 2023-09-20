@@ -28,12 +28,18 @@ class EditTempoFormState extends State<EditTempoForm> {
 
   @override
   void initState() {
-    _accentBeatsPerBarController.text = tempo?.accentBeatsPerBar.toString() ?? '1';
+    _accentBeatsPerBarController.text =
+        tempo?.accentBeatsPerBar.toString() ?? '1';
     _beatsPerBarController.text = tempo?.beatsPerBar.toString() ?? '4';
     _beatUnitController.text = tempo?.beatUnit.toString() ?? '4';
     _bpmController.text = tempo?.bpm.toString() ?? '';
     _dottedQuarterAccent = tempo?.dottedQuarterAccent ?? false;
-    _numberofBarsController.text = tempo?.numberOfBars.toString() ?? '';
+
+    if (tempo?.numberOfBars == 0 || tempo?.numberOfBars == null) {
+      _numberofBarsController.text = '';
+    } else {
+      _numberofBarsController.text = tempo?.numberOfBars.toString() ?? '';
+    }
     super.initState();
   }
 
@@ -76,47 +82,46 @@ class EditTempoFormState extends State<EditTempoForm> {
         )
       ]),
       body: SafeArea(
-        child: Container(
-          color: Colors.white,
-          child: Column(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.title),
-                title: TextField(controller: _bpmController),
-                subtitle: const Text('BPM'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.description),
-                title: TextField(controller: _beatsPerBarController),
-                subtitle: const Text('Beats Per Bar'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.title),
-                title: TextField(controller: _beatUnitController),
-                subtitle: const Text('Beat Unit'),
-              ),
-              CheckboxListTile(
-                controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('Dotted Quarter Accent'),
-                value: _dottedQuarterAccent,
-                onChanged: (bool? check) {
-                  setState(() => _dottedQuarterAccent = check ?? false);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.title),
-                title: TextField(controller: _accentBeatsPerBarController),
-                subtitle: const Text('Accent Beats Per Bar'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.title),
-                title: TextField(controller: _numberofBarsController),
-                subtitle: const Text('Number of Bars'),
-              ),
-            ],
-          ),
+          child: Container(
+        color: Colors.white,
+        child: ListView(
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(Icons.title),
+              title: TextField(controller: _bpmController),
+              subtitle: const Text('BPM'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.description),
+              title: TextField(controller: _beatsPerBarController),
+              subtitle: const Text('Beats Per Bar'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.title),
+              title: TextField(controller: _beatUnitController),
+              subtitle: const Text('Beat Unit'),
+            ),
+            CheckboxListTile(
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text('Dotted Quarter Accent'),
+              value: _dottedQuarterAccent,
+              onChanged: (bool? check) {
+                setState(() => _dottedQuarterAccent = check ?? false);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.title),
+              title: TextField(controller: _accentBeatsPerBarController),
+              subtitle: const Text('Accent Beats Per Bar'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.title),
+              title: TextField(controller: _numberofBarsController),
+              subtitle: const Text('Number of Bars'),
+            ),
+          ],
         ),
-      ),
+      )),
     );
   }
 }

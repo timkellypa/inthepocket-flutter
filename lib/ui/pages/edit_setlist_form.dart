@@ -81,7 +81,7 @@ class EditSetlistFormState extends State<EditSetlistForm> {
       body: SafeArea(
         child: Container(
           color: Colors.white,
-          child: Column(
+          child: ListView(
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.description),
