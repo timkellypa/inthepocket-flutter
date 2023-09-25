@@ -29,7 +29,7 @@ const tableSetlist = SqfEntityTable(
     ]);
 
 const tableTrack = SqfEntityTable(
-  tableName: 'Track',
+    tableName: 'Track',
     primaryKeyName: 'row__id',
     primaryKeyType: PrimaryKeyType.text,
     fields: [
@@ -39,7 +39,6 @@ const tableTrack = SqfEntityTable(
       SqfEntityField('row__sortOrder', DbType.integer, defaultValue: 1),
       SqfEntityField('spotifyId', DbType.text),
       SqfEntityField('spotifyAudioFeatures', DbType.text),
-
     ]);
 
 const tableSetlistTrack = SqfEntityTable(
@@ -56,10 +55,10 @@ const tableSetlistTrack = SqfEntityTable(
           isPrimaryKeyField: false),
       SqfEntityField('setlistType', DbType.integer),
       SqfEntityFieldRelationship(
-        parentTable: tableTrack,
-        deleteRule: DeleteRule.NO_ACTION,
-        fieldName: 'trackId',
-        isPrimaryKeyField: false),
+          parentTable: tableTrack,
+          deleteRule: DeleteRule.NO_ACTION,
+          fieldName: 'trackId',
+          isPrimaryKeyField: false),
     ]);
 
 const tableTempo = SqfEntityTable(
@@ -75,10 +74,18 @@ const tableTempo = SqfEntityTable(
       SqfEntityField('accentBeatsPerBar', DbType.integer, defaultValue: 1),
       SqfEntityField('numberOfBars', DbType.real, defaultValue: 1000),
       SqfEntityFieldRelationship(
-        parentTable: tableTrack,
-        deleteRule: DeleteRule.NO_ACTION,
-        fieldName: 'trackId',
-        isPrimaryKeyField: false),
+          parentTable: tableTrack,
+          deleteRule: DeleteRule.NO_ACTION,
+          fieldName: 'trackId',
+          isPrimaryKeyField: false),
+    ]);
+
+const tableCodeVerifier = SqfEntityTable(
+    tableName: 'CodeVerifier',
+    primaryKeyName: 'row__id',
+    primaryKeyType: PrimaryKeyType.text,
+    fields: [
+      SqfEntityField('verifier', DbType.text),
     ]);
 
 // END TABLES
@@ -92,7 +99,7 @@ const setlistdb = SqfEntityModel(
       tableSetlist,
       tableSetlistTrack,
       tableTrack,
-      tableTempo
-    ]
-);
+      tableTempo,
+      tableCodeVerifier
+    ]);
 // END setlistdb.db MODEL

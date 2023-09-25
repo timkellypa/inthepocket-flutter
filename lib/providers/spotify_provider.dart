@@ -27,8 +27,8 @@ class SpotifyProvider {
     final Secret secret =
         await SecretLoader(secretPath: 'api_secrets.json').load();
 
-    return await AuthorizationCodeGrantHelper.getClient(secret.spotifyClientId,
-        secret.spotifyClientSecret, authorizationEndpoint, tokenEndpoint,
+    return await AuthorizationCodeGrantHelper.getClient(
+        secret.spotifyClientId, authorizationEndpoint, tokenEndpoint,
         credentialsFile: await credentialsFile);
   }
 

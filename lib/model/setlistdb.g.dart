@@ -134,6 +134,28 @@ class TableTempo extends SqfEntityTableBase {
     return _instance = _instance ?? TableTempo();
   }
 }
+
+// CodeVerifier TABLE
+class TableCodeVerifier extends SqfEntityTableBase {
+  TableCodeVerifier() {
+    // declare properties of EntityTable
+    tableName = 'CodeVerifier';
+    primaryKeyName = 'row__id';
+    primaryKeyType = PrimaryKeyType.text;
+    useSoftDeleting = false;
+    // when useSoftDeleting is true, creates a field named 'isDeleted' on the table, and set to '1' this field when item deleted (does not hard delete)
+
+    // declare fields
+    fields = [
+      SqfEntityFieldBase('verifier', DbType.text),
+    ];
+    super.init();
+  }
+  static SqfEntityTableBase? _instance;
+  static SqfEntityTableBase get getInstance {
+    return _instance = _instance ?? TableCodeVerifier();
+  }
+}
 // END TABLES
 
 // BEGIN DATABASE MODEL
@@ -149,6 +171,7 @@ class Setlistdb extends SqfEntityModelProvider {
       TableSetlistTrack.getInstance,
       TableTrack.getInstance,
       TableTempo.getInstance,
+      TableCodeVerifier.getInstance,
     ];
 
     bundledDatabasePath = setlistdb
@@ -4048,6 +4071,744 @@ class TempoManager extends SqfEntityProvider {
 }
 
 //endregion TempoManager
+// region CodeVerifier
+class CodeVerifier extends TableBase {
+  CodeVerifier({this.row__id, this.verifier}) {
+    _setDefaultValues();
+    softDeleteActivated = false;
+  }
+  CodeVerifier.withFields(this.row__id, this.verifier) {
+    _setDefaultValues();
+  }
+  CodeVerifier.withId(this.row__id, this.verifier) {
+    _setDefaultValues();
+  }
+  // fromMap v2.0
+  CodeVerifier.fromMap(Map<String, dynamic> o, {bool setDefaultValues = true}) {
+    if (setDefaultValues) {
+      _setDefaultValues();
+    }
+    row__id = o['row__id'].toString();
+    if (o['verifier'] != null) {
+      verifier = o['verifier'].toString();
+    }
+
+    isSaved = true;
+  }
+  // FIELDS (CodeVerifier)
+  String? row__id;
+  String? verifier;
+  bool? isSaved;
+  // end FIELDS (CodeVerifier)
+
+  static const bool _softDeleteActivated = false;
+  CodeVerifierManager? __mnCodeVerifier;
+
+  CodeVerifierManager get _mnCodeVerifier {
+    return __mnCodeVerifier = __mnCodeVerifier ?? CodeVerifierManager();
+  }
+
+  // METHODS
+  @override
+  Map<String, dynamic> toMap(
+      {bool forQuery = false, bool forJson = false, bool forView = false}) {
+    final map = <String, dynamic>{};
+    map['row__id'] = row__id;
+    if (verifier != null || !forView) {
+      map['verifier'] = verifier;
+    }
+
+    return map;
+  }
+
+  @override
+  Future<Map<String, dynamic>> toMapWithChildren(
+      [bool forQuery = false,
+      bool forJson = false,
+      bool forView = false]) async {
+    final map = <String, dynamic>{};
+    map['row__id'] = row__id;
+    if (verifier != null || !forView) {
+      map['verifier'] = verifier;
+    }
+
+    return map;
+  }
+
+  /// This method returns Json String [CodeVerifier]
+  @override
+  String toJson() {
+    return json.encode(toMap(forJson: true));
+  }
+
+  /// This method returns Json String [CodeVerifier]
+  @override
+  Future<String> toJsonWithChilds() async {
+    return json.encode(await toMapWithChildren(false, true));
+  }
+
+  @override
+  List<dynamic> toArgs() {
+    return [row__id, verifier];
+  }
+
+  @override
+  List<dynamic> toArgsWithIds() {
+    return [row__id, verifier];
+  }
+
+  static Future<List<CodeVerifier>?> fromWebUrl(Uri uri,
+      {Map<String, String>? headers}) async {
+    try {
+      final response = await http.get(uri, headers: headers);
+      return await fromJson(response.body);
+    } catch (e) {
+      debugPrint(
+          'SQFENTITY ERROR CodeVerifier.fromWebUrl: ErrorMessage: ${e.toString()}');
+      return null;
+    }
+  }
+
+  Future<http.Response> postUrl(Uri uri, {Map<String, String>? headers}) {
+    return http.post(uri, headers: headers, body: toJson());
+  }
+
+  static Future<List<CodeVerifier>> fromJson(String jsonBody) async {
+    final Iterable list = await json.decode(jsonBody) as Iterable;
+    var objList = <CodeVerifier>[];
+    try {
+      objList = list
+          .map((codeverifier) =>
+              CodeVerifier.fromMap(codeverifier as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint(
+          'SQFENTITY ERROR CodeVerifier.fromJson: ErrorMessage: ${e.toString()}');
+    }
+    return objList;
+  }
+
+  static Future<List<CodeVerifier>> fromMapList(List<dynamic> data,
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields,
+      bool setDefaultValues = true}) async {
+    final List<CodeVerifier> objList = <CodeVerifier>[];
+    loadedFields = loadedFields ?? [];
+    for (final map in data) {
+      final obj = CodeVerifier.fromMap(map as Map<String, dynamic>,
+          setDefaultValues: setDefaultValues);
+
+      objList.add(obj);
+    }
+    return objList;
+  }
+
+  /// returns CodeVerifier by ID if exist, otherwise returns null
+  /// Primary Keys: String? row__id
+  /// bool preload: if true, loads all related child objects (Set preload to true if you want to load all fields related to child or parent)
+  /// ex: getById(preload:true) -> Loads all related objects
+  /// List<String> preloadFields: specify the fields you want to preload (preload parameter's value should also be "true")
+  /// ex: getById(preload:true, preloadFields:['plField1','plField2'... etc])  -> Loads only certain fields what you specified
+  /// bool loadParents: if true, loads all parent objects until the object has no parent
+
+  /// <returns>returns [CodeVerifier] if exist, otherwise returns null
+  Future<CodeVerifier?> getById(String? row__id,
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields}) async {
+    if (row__id == null) {
+      return null;
+    }
+    CodeVerifier? obj;
+    final data = await _mnCodeVerifier.getById([row__id]);
+    if (data.length != 0) {
+      obj = CodeVerifier.fromMap(data[0] as Map<String, dynamic>);
+    } else {
+      obj = null;
+    }
+    return obj;
+  }
+
+  /// Saves the (CodeVerifier) object. If the Primary Key (row__id) field is null, returns Error.
+  /// INSERTS (If not exist) OR REPLACES (If exist) data while Primary Key is not null.
+  /// Call the saveAs() method if you do not want to save it when there is another row with the same row__id
+  /// <returns>Returns BoolResult
+  @override
+  Future<BoolResult> save({bool ignoreBatch = true}) async {
+    final result = BoolResult(success: false);
+    try {
+      await _mnCodeVerifier.rawInsert(
+          'INSERT ${isSaved! ? 'OR REPLACE' : ''} INTO CodeVerifier (row__id, verifier)  VALUES (?,?)',
+          toArgsWithIds(),
+          ignoreBatch);
+      result.success = true;
+      isSaved = true;
+    } catch (e) {
+      result.errorMessage = e.toString();
+    }
+
+    saveResult = result;
+    return result;
+  }
+
+  /// saveAll method saves the sent List<CodeVerifier> as a bulk in one transaction
+  /// Returns a <List<BoolResult>>
+  static Future<List<dynamic>> saveAll(List<CodeVerifier> codeverifiers,
+      {bool? exclusive, bool? noResult, bool? continueOnError}) async {
+    List<dynamic>? result = [];
+    // If there is no open transaction, start one
+    final isStartedBatch = await Setlistdb().batchStart();
+    for (final obj in codeverifiers) {
+      await obj.save();
+    }
+    if (!isStartedBatch) {
+      result = await Setlistdb().batchCommit(
+          exclusive: exclusive,
+          noResult: noResult,
+          continueOnError: continueOnError);
+    }
+    return result!;
+  }
+
+  /// Updates if the record exists, otherwise adds a new row
+  /// <returns>Returns 1
+  @override
+  Future<int?> upsert({bool ignoreBatch = true}) async {
+    try {
+      final result = await _mnCodeVerifier.rawInsert(
+          'INSERT OR REPLACE INTO CodeVerifier (row__id, verifier)  VALUES (?,?)',
+          [row__id, verifier],
+          ignoreBatch);
+      if (result! > 0) {
+        saveResult = BoolResult(
+            success: true,
+            successMessage:
+                'CodeVerifier row__id=$row__id updated successfully');
+      } else {
+        saveResult = BoolResult(
+            success: false,
+            errorMessage: 'CodeVerifier row__id=$row__id did not update');
+      }
+      return 1;
+    } catch (e) {
+      saveResult = BoolResult(
+          success: false,
+          errorMessage: 'CodeVerifier Save failed. Error: ${e.toString()}');
+      return null;
+    }
+  }
+
+  /// Deletes CodeVerifier
+
+  /// <returns>BoolResult res.success= true (Deleted), false (Could not be deleted)
+  @override
+  Future<BoolResult> delete([bool hardDelete = false]) async {
+    debugPrint('SQFENTITIY: delete CodeVerifier invoked (row__id=$row__id)');
+    if (!_softDeleteActivated || hardDelete) {
+      return _mnCodeVerifier.delete(
+          QueryParams(whereString: 'row__id=?', whereArguments: [row__id]));
+    } else {
+      return _mnCodeVerifier.updateBatch(
+          QueryParams(whereString: 'row__id=?', whereArguments: [row__id]),
+          {'isDeleted': 1});
+    }
+  }
+
+  @override
+  Future<BoolResult> recover([bool recoverChilds = true]) {
+    // not implemented because:
+    final msg =
+        'set useSoftDeleting:true in the table definition of [CodeVerifier] to use this feature';
+    throw UnimplementedError(msg);
+  }
+
+  @override
+  CodeVerifierFilterBuilder select(
+      {List<String>? columnsToSelect, bool? getIsDeleted}) {
+    return CodeVerifierFilterBuilder(this, getIsDeleted)
+      ..qparams.selectColumns = columnsToSelect;
+  }
+
+  @override
+  CodeVerifierFilterBuilder distinct(
+      {List<String>? columnsToSelect, bool? getIsDeleted}) {
+    return CodeVerifierFilterBuilder(this, getIsDeleted)
+      ..qparams.selectColumns = columnsToSelect
+      ..qparams.distinct = true;
+  }
+
+  void _setDefaultValues() {
+    isSaved = false;
+  }
+
+  @override
+  void rollbackPk() {
+    if (isInsert == true) {
+      row__id = null;
+    }
+  }
+
+  // END METHODS
+  // BEGIN CUSTOM CODE
+  /*
+      you can define customCode property of your SqfEntityTable constant. For example:
+      const tablePerson = SqfEntityTable(
+      tableName: 'person',
+      primaryKeyName: 'id',
+      primaryKeyType: PrimaryKeyType.integer_auto_incremental,
+      fields: [
+        SqfEntityField('firstName', DbType.text),
+        SqfEntityField('lastName', DbType.text),
+      ],
+      customCode: '''
+       String fullName()
+       { 
+         return '$firstName $lastName';
+       }
+      ''');
+     */
+  // END CUSTOM CODE
+}
+// endregion codeverifier
+
+// region CodeVerifierField
+class CodeVerifierField extends FilterBase {
+  CodeVerifierField(CodeVerifierFilterBuilder codeverifierFB)
+      : super(codeverifierFB);
+
+  @override
+  CodeVerifierFilterBuilder equals(dynamic pValue) {
+    return super.equals(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder equalsOrNull(dynamic pValue) {
+    return super.equalsOrNull(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder isNull() {
+    return super.isNull() as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder contains(dynamic pValue) {
+    return super.contains(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder startsWith(dynamic pValue) {
+    return super.startsWith(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder endsWith(dynamic pValue) {
+    return super.endsWith(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder between(dynamic pFirst, dynamic pLast) {
+    return super.between(pFirst, pLast) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder greaterThan(dynamic pValue) {
+    return super.greaterThan(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder lessThan(dynamic pValue) {
+    return super.lessThan(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder greaterThanOrEquals(dynamic pValue) {
+    return super.greaterThanOrEquals(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder lessThanOrEquals(dynamic pValue) {
+    return super.lessThanOrEquals(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierFilterBuilder inValues(dynamic pValue) {
+    return super.inValues(pValue) as CodeVerifierFilterBuilder;
+  }
+
+  @override
+  CodeVerifierField get not {
+    return super.not as CodeVerifierField;
+  }
+}
+// endregion CodeVerifierField
+
+// region CodeVerifierFilterBuilder
+class CodeVerifierFilterBuilder extends ConjunctionBase {
+  CodeVerifierFilterBuilder(CodeVerifier obj, bool? getIsDeleted)
+      : super(obj, getIsDeleted) {
+    _mnCodeVerifier = obj._mnCodeVerifier;
+    _softDeleteActivated = obj.softDeleteActivated;
+  }
+
+  bool _softDeleteActivated = false;
+  CodeVerifierManager? _mnCodeVerifier;
+
+  /// put the sql keyword 'AND'
+  @override
+  CodeVerifierFilterBuilder get and {
+    super.and;
+    return this;
+  }
+
+  /// put the sql keyword 'OR'
+  @override
+  CodeVerifierFilterBuilder get or {
+    super.or;
+    return this;
+  }
+
+  /// open parentheses
+  @override
+  CodeVerifierFilterBuilder get startBlock {
+    super.startBlock;
+    return this;
+  }
+
+  /// String whereCriteria, write raw query without 'where' keyword. Like this: 'field1 like 'test%' and field2 = 3'
+  @override
+  CodeVerifierFilterBuilder where(String? whereCriteria,
+      {dynamic parameterValue}) {
+    super.where(whereCriteria, parameterValue: parameterValue);
+    return this;
+  }
+
+  /// page = page number,
+  /// pagesize = row(s) per page
+  @override
+  CodeVerifierFilterBuilder page(int page, int pagesize) {
+    super.page(page, pagesize);
+    return this;
+  }
+
+  /// int count = LIMIT
+  @override
+  CodeVerifierFilterBuilder top(int count) {
+    super.top(count);
+    return this;
+  }
+
+  /// close parentheses
+  @override
+  CodeVerifierFilterBuilder get endBlock {
+    super.endBlock;
+    return this;
+  }
+
+  /// argFields might be String or List<String>.
+  /// Example 1: argFields='name, date'
+  /// Example 2: argFields = ['name', 'date']
+  @override
+  CodeVerifierFilterBuilder orderBy(dynamic argFields) {
+    super.orderBy(argFields);
+    return this;
+  }
+
+  /// argFields might be String or List<String>.
+  /// Example 1: argFields='field1, field2'
+  /// Example 2: argFields = ['field1', 'field2']
+  @override
+  CodeVerifierFilterBuilder orderByDesc(dynamic argFields) {
+    super.orderByDesc(argFields);
+    return this;
+  }
+
+  /// argFields might be String or List<String>.
+  /// Example 1: argFields='field1, field2'
+  /// Example 2: argFields = ['field1', 'field2']
+  @override
+  CodeVerifierFilterBuilder groupBy(dynamic argFields) {
+    super.groupBy(argFields);
+    return this;
+  }
+
+  /// argFields might be String or List<String>.
+  /// Example 1: argFields='name, date'
+  /// Example 2: argFields = ['name', 'date']
+  @override
+  CodeVerifierFilterBuilder having(dynamic argFields) {
+    super.having(argFields);
+    return this;
+  }
+
+  CodeVerifierField _setField(
+      CodeVerifierField? field, String colName, DbType dbtype) {
+    return CodeVerifierField(this)
+      ..param = DbParameter(
+          dbType: dbtype, columnName: colName, wStartBlock: openedBlock);
+  }
+
+  CodeVerifierField? _row__id;
+  CodeVerifierField get row__id {
+    return _row__id = _setField(_row__id, 'row__id', DbType.integer);
+  }
+
+  CodeVerifierField? _verifier;
+  CodeVerifierField get verifier {
+    return _verifier = _setField(_verifier, 'verifier', DbType.text);
+  }
+
+  /// Deletes List<CodeVerifier> bulk by query
+  ///
+  /// <returns>BoolResult res.success= true (Deleted), false (Could not be deleted)
+  @override
+  Future<BoolResult> delete([bool hardDelete = false]) async {
+    buildParameters();
+    var r = BoolResult(success: false);
+
+    if (_softDeleteActivated && !hardDelete) {
+      r = await _mnCodeVerifier!.updateBatch(qparams, {'isDeleted': 1});
+    } else {
+      r = await _mnCodeVerifier!.delete(qparams);
+    }
+    return r;
+  }
+
+  /// using:
+  /// update({'fieldName': Value})
+  /// fieldName must be String. Value is dynamic, it can be any of the (int, bool, String.. )
+  @override
+  Future<BoolResult> update(Map<String, dynamic> values) {
+    buildParameters();
+    if (qparams.limit! > 0 || qparams.offset! > 0) {
+      qparams.whereString =
+          'row__id IN (SELECT row__id from CodeVerifier ${qparams.whereString!.isNotEmpty ? 'WHERE ${qparams.whereString}' : ''}${qparams.limit! > 0 ? ' LIMIT ${qparams.limit}' : ''}${qparams.offset! > 0 ? ' OFFSET ${qparams.offset}' : ''})';
+    }
+    return _mnCodeVerifier!.updateBatch(qparams, values);
+  }
+
+  /// This method always returns [CodeVerifier] Obj if exist, otherwise returns null
+  /// bool preload: if true, loads all related child objects (Set preload to true if you want to load all fields related to child or parent)
+  /// ex: toSingle(preload:true) -> Loads all related objects
+  /// List<String> preloadFields: specify the fields you want to preload (preload parameter's value should also be "true")
+  /// ex: toSingle(preload:true, preloadFields:['plField1','plField2'... etc])  -> Loads only certain fields what you specified
+  /// bool loadParents: if true, loads all parent objects until the object has no parent
+
+  /// <returns> CodeVerifier?
+  @override
+  Future<CodeVerifier?> toSingle(
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields}) async {
+    buildParameters(pSize: 1);
+    final objFuture = _mnCodeVerifier!.toList(qparams);
+    final data = await objFuture;
+    CodeVerifier? obj;
+    if (data.isNotEmpty) {
+      obj = CodeVerifier.fromMap(data[0] as Map<String, dynamic>);
+    } else {
+      obj = null;
+    }
+    return obj;
+  }
+
+  /// This method always returns [CodeVerifier]
+  /// bool preload: if true, loads all related child objects (Set preload to true if you want to load all fields related to child or parent)
+  /// ex: toSingle(preload:true) -> Loads all related objects
+  /// List<String> preloadFields: specify the fields you want to preload (preload parameter's value should also be "true")
+  /// ex: toSingle(preload:true, preloadFields:['plField1','plField2'... etc])  -> Loads only certain fields what you specified
+  /// bool loadParents: if true, loads all parent objects until the object has no parent
+
+  /// <returns> CodeVerifier?
+  @override
+  Future<CodeVerifier> toSingleOrDefault(
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields}) async {
+    return await toSingle(
+            preload: preload,
+            preloadFields: preloadFields,
+            loadParents: loadParents,
+            loadedFields: loadedFields) ??
+        CodeVerifier();
+  }
+
+  /// This method returns int. [CodeVerifier]
+  /// <returns>int
+  @override
+  Future<int> toCount([VoidCallback Function(int c)? codeverifierCount]) async {
+    buildParameters();
+    qparams.selectColumns = ['COUNT(1) AS CNT'];
+    final codeverifiersFuture = await _mnCodeVerifier!.toList(qparams);
+    final int count = codeverifiersFuture[0]['CNT'] as int;
+    if (codeverifierCount != null) {
+      codeverifierCount(count);
+    }
+    return count;
+  }
+
+  /// This method returns List<CodeVerifier> [CodeVerifier]
+  /// bool preload: if true, loads all related child objects (Set preload to true if you want to load all fields related to child or parent)
+  /// ex: toList(preload:true) -> Loads all related objects
+  /// List<String> preloadFields: specify the fields you want to preload (preload parameter's value should also be "true")
+  /// ex: toList(preload:true, preloadFields:['plField1','plField2'... etc])  -> Loads only certain fields what you specified
+  /// bool loadParents: if true, loads all parent objects until the object has no parent
+
+  /// <returns>List<CodeVerifier>
+  @override
+  Future<List<CodeVerifier>> toList(
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields}) async {
+    final data = await toMapList();
+    final List<CodeVerifier> codeverifiersData = await CodeVerifier.fromMapList(
+        data,
+        preload: preload,
+        preloadFields: preloadFields,
+        loadParents: loadParents,
+        loadedFields: loadedFields,
+        setDefaultValues: qparams.selectColumns == null);
+    return codeverifiersData;
+  }
+
+  /// This method returns Json String [CodeVerifier]
+  @override
+  Future<String> toJson() async {
+    final list = <dynamic>[];
+    final data = await toList();
+    for (var o in data) {
+      list.add(o.toMap(forJson: true));
+    }
+    return json.encode(list);
+  }
+
+  /// This method returns Json String. [CodeVerifier]
+  @override
+  Future<String> toJsonWithChilds() async {
+    final list = <dynamic>[];
+    final data = await toList();
+    for (var o in data) {
+      list.add(await o.toMapWithChildren(false, true));
+    }
+    return json.encode(list);
+  }
+
+  /// This method returns List<dynamic>. [CodeVerifier]
+  /// <returns>List<dynamic>
+  @override
+  Future<List<dynamic>> toMapList() async {
+    buildParameters();
+    return await _mnCodeVerifier!.toList(qparams);
+  }
+
+  /// This method returns Primary Key List SQL and Parameters retVal = Map<String,dynamic>. [CodeVerifier]
+  /// retVal['sql'] = SQL statement string, retVal['args'] = whereArguments List<dynamic>;
+  /// <returns>List<String>
+  @override
+  Map<String, dynamic> toListPrimaryKeySQL([bool buildParams = true]) {
+    final Map<String, dynamic> _retVal = <String, dynamic>{};
+    if (buildParams) {
+      buildParameters();
+    }
+    _retVal['sql'] =
+        'SELECT `row__id` FROM CodeVerifier WHERE ${qparams.whereString}';
+    _retVal['args'] = qparams.whereArguments;
+    return _retVal;
+  }
+
+  /// This method returns Primary Key List<String>.
+  /// <returns>List<String>
+  @override
+  Future<List<String>> toListPrimaryKey([bool buildParams = true]) async {
+    if (buildParams) {
+      buildParameters();
+    }
+    final List<String> row__idData = <String>[];
+    qparams.selectColumns = ['row__id'];
+    final row__idFuture = await _mnCodeVerifier!.toList(qparams);
+
+    final int count = row__idFuture.length;
+    for (int i = 0; i < count; i++) {
+      row__idData.add(row__idFuture[i]['row__id'] as String);
+    }
+    return row__idData;
+  }
+
+  /// Returns List<dynamic> for selected columns. Use this method for 'groupBy' with min,max,avg..  [CodeVerifier]
+  /// Sample usage: (see EXAMPLE 4.2 at https://github.com/hhtokpinar/sqfEntity#group-by)
+  @override
+  Future<List<dynamic>> toListObject() async {
+    buildParameters();
+
+    final objectFuture = _mnCodeVerifier!.toList(qparams);
+
+    final List<dynamic> objectsData = <dynamic>[];
+    final data = await objectFuture;
+    final int count = data.length;
+    for (int i = 0; i < count; i++) {
+      objectsData.add(data[i]);
+    }
+    return objectsData;
+  }
+
+  /// Returns List<String> for selected first column
+  /// Sample usage: await CodeVerifier.select(columnsToSelect: ['columnName']).toListString()
+  @override
+  Future<List<String>> toListString(
+      [VoidCallback Function(List<String> o)? listString]) async {
+    buildParameters();
+
+    final objectFuture = _mnCodeVerifier!.toList(qparams);
+
+    final List<String> objectsData = <String>[];
+    final data = await objectFuture;
+    final int count = data.length;
+    for (int i = 0; i < count; i++) {
+      objectsData.add(data[i][qparams.selectColumns![0]].toString());
+    }
+    if (listString != null) {
+      listString(objectsData);
+    }
+    return objectsData;
+  }
+}
+// endregion CodeVerifierFilterBuilder
+
+// region CodeVerifierFields
+class CodeVerifierFields {
+  static TableField? _fRow__id;
+  static TableField get row__id {
+    return _fRow__id =
+        _fRow__id ?? SqlSyntax.setField(_fRow__id, 'row__id', DbType.integer);
+  }
+
+  static TableField? _fVerifier;
+  static TableField get verifier {
+    return _fVerifier =
+        _fVerifier ?? SqlSyntax.setField(_fVerifier, 'verifier', DbType.text);
+  }
+}
+// endregion CodeVerifierFields
+
+//region CodeVerifierManager
+class CodeVerifierManager extends SqfEntityProvider {
+  CodeVerifierManager()
+      : super(Setlistdb(),
+            tableName: _tableName,
+            primaryKeyList: _primaryKeyList,
+            whereStr: _whereStr);
+  static const String _tableName = 'CodeVerifier';
+  static const List<String> _primaryKeyList = ['row__id'];
+  static const String _whereStr = 'row__id=?';
+}
+
+//endregion CodeVerifierManager
 class SetlistdbSequenceManager extends SqfEntityProvider {
   SetlistdbSequenceManager() : super(Setlistdb());
 }
