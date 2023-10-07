@@ -24,3 +24,7 @@ The metronome in this app is programmed specifically for each track, so you will
 ## Privacy Policy
 
 Please read my privacy policy, posted [here](privacy.md).  Simply stated, I do not, and do not want to, track any personal user information, and with that being the case, there is no server-side component to this application.
+
+## Support
+
+Please see my [support page](support.md).  Basically for problems, please enter an issue into the github [issue tracker](https://github.com/timkellypa/inthepocket-flutter/issues).
