@@ -1,3 +1,4 @@
+# In the Pocket
 Thank you for using In the Pocket.  This application is designed to make sure your gigs go smoothly.
 
 ## What this application does
