@@ -45,7 +45,11 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
     await item.upsert();
     await item.plTrack?.upsert();
 
-    final List<Tempo>? tempos = item.plTrack?.plTempos;
+    final List<Tempo>? tempos = item.plTrack?.plTempos ??
+        await Tempo()
+            .select()
+            .where("trackId = '${item.plTrack?.id}'")
+            .toList();
 
     if (tempos == null || tempos.isEmpty) {
       TempoRepository().writeEmptyClickTrack(item.trackId!);
