@@ -2,13 +2,15 @@
 Thank you for using In the Pocket.  This application is designed to make sure your gigs go smoothly.
 
 ## What this application does
-This application can store the setlist for your musical gigs, and includes the ability to program a click track for each track.
+This application can store the setlist for your musical gigs, and includes the ability to program a click track for each song.
 
 ### Spotify Integration
-Grab songs for your setlists from any of your Spotify playlists.  As songs are pulled in, Spotify's metadata will automatically generate a click track for your song.
+Grab songs for your setlists from any of your Spotify playlists.
 
 ### Click Track
-The click track is auto-generated using Spotify song metadata, or can be manually entered (or altered).  For songs with time signature or tempo changes, you can simply add a duration to each click track and create multiple.
+Click tracks are auto-generated using the BPM provided by [GetSongBPM](https://getsongbpm.com).
+
+They can also be manually entered (or altered).  For songs with time signature or tempo changes, you can simply add a duration to each click track and create multiple.
 
 The click track creates a .wav file that plays like a normal media file on your device.  This way you can minimize or leave the app and still hear the click.
 
