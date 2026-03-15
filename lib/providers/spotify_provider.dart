@@ -117,7 +117,8 @@ class SpotifyProvider {
     try {
       result = await read(
           Uri.https('api.spotify.com', '/v1/audio-features/$trackId'));
-    } on ClientException {
+    } catch (e) {
+      print('Error fetching audio features for track $trackId: $e');
       result = '';
     }
 

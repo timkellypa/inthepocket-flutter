@@ -64,13 +64,12 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   }
 
   final AudioPlayer _player = AudioPlayer();
-  final ConcatenatingAudioSource _playlist =
-      ConcatenatingAudioSource(children: <AudioSource>[]);
+  final List<UriAudioSource> _audioSources = <UriAudioSource>[];
 
   Future<void> _loadPlaylist() async {
     try {
       // When called from constructor, playlist is empty, but it doesn't have to be.
-      await _player.setAudioSource(_playlist);
+      await _player.setAudioSources(_audioSources);
     } catch (e) {
       print('Error: $e');
     }
@@ -122,7 +121,7 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
         return;
       }
       if (_player.shuffleModeEnabled) {
-        index = _player.shuffleIndices!.indexOf(index);
+        index = _player.shuffleIndices.indexOf(index);
       }
       final MediaItem oldMediaItem = newQueue[index];
       final MediaItem newMediaItem = oldMediaItem.copyWith(duration: duration);
@@ -139,7 +138,7 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
         return;
       }
       if (_player.shuffleModeEnabled) {
-        index = _player.shuffleIndices!.indexOf(index);
+        index = _player.shuffleIndices.indexOf(index);
       }
       mediaItem.add(playlist[index]);
     });
@@ -163,7 +162,8 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
     // manage Just Audio
     final Iterable<UriAudioSource> audioSource =
         mediaItems.map(_createAudioSource);
-    _playlist.addAll(audioSource.toList());
+    _audioSources.addAll(audioSource.toList());
+    await _player.setAudioSources(_audioSources);
 
     // notify system
     final List<MediaItem> newQueue = queue.value..addAll(mediaItems);
@@ -174,7 +174,8 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   Future<void> addQueueItem(MediaItem mediaItem) async {
     // manage Just Audio
     final UriAudioSource audioSource = _createAudioSource(mediaItem);
-    _playlist.add(audioSource);
+    _audioSources.add(audioSource);
+    await _player.setAudioSources(_audioSources);
 
     // notify system
     final List<MediaItem> newQueue = queue.value..add(mediaItem);
@@ -191,7 +192,8 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   @override
   Future<void> removeQueueItemAt(int index) async {
     // manage Just Audio
-    _playlist.removeAt(index);
+    _audioSources.removeAt(index);
+    await _player.setAudioSources(_audioSources);
 
     // notify system
     final List<MediaItem> newQueue = queue.value..removeAt(index);
@@ -213,7 +215,7 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
       return;
     }
     if (_player.shuffleModeEnabled) {
-      index = _player.shuffleIndices![index];
+      index = _player.shuffleIndices[index];
     }
     _player.seek(Duration.zero, index: index);
   }
@@ -257,7 +259,7 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   @override
   Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
     if (name == 'clear') {
-      _playlist.clear();
+      _audioSources.clear();
       queue.add(<MediaItem>[]);
       await _loadPlaylist();
     }

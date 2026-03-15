@@ -1,3 +1,8 @@
+## 2.0.2
+Bug Fixes:
+- Fix Spotify redirect URL.
+Update flutter/dart and many dependencies.
+
 ## 2.0.1
 Bug Fixes:
 - Fix bug where you cannot delete a setlist with tracks.
