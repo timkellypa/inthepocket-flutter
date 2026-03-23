@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:http/http.dart';
 import 'package:in_the_pocket/classes/secret.dart';
 import 'package:in_the_pocket/classes/secret_loader.dart';
 import 'package:in_the_pocket/model/spotify_playlist.dart';
@@ -91,36 +90,18 @@ class SpotifyProvider {
     final List<dynamic> items = json.decode(result)['items'];
 
     for (Map<String, dynamic> item in items) {
-      String audioFeatures = '';
-      if (cascade) {
-        audioFeatures = await getAudioFeaturesJSON(item['track']['id']);
-      }
-
       final String id = item['track']['id'] ?? const Uuid().v4();
 
       final SpotifyTrack track = SpotifyTrack()
         ..id = id
         ..sortOrder = index
         ..spotifyTitle = item['track']['name']
-        ..spotifyId = item['track']['id']
-        ..spotifyAudioFeatures = audioFeatures;
+        ..spotifyArtist = item['track']['artists']?.first?['name']
+        ..spotifyId = item['track']['id'];
 
       ret.add(track);
       index++;
     }
     return ret;
-  }
-
-  Future<String> getAudioFeaturesJSON(String trackId) async {
-    String result;
-
-    try {
-      result = await read(
-          Uri.https('api.spotify.com', '/v1/audio-features/$trackId'));
-    } on ClientException {
-      result = '';
-    }
-
-    return result;
   }
 }

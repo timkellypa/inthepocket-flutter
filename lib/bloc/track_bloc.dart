@@ -93,6 +93,14 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     return setlist?.description ?? '';
   }
 
+  bool get isFirstSelected {
+    return isSelected(itemList.firstOrNull, SelectionType.selected);
+  }
+
+  bool get isLastSelected {
+    return isSelected(itemList.lastOrNull, SelectionType.selected);
+  }
+
   SetlistTrack? get selectedSetlistTrack {
     final List<SetlistTrack?> selectedSetlistTracks =
         getMatchingSelections(SelectionType.selected);
@@ -187,17 +195,6 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     await repository.delete(item.id!);
   }
 
-  Future<void> applySpotifyAudioFeatures(
-      List<SetlistTrack> setlistTracks) async {
-    final List<Track> tracks =
-        setlistTracks.map((SetlistTrack setlistTrack) => setlistTrack.plTrack)
-            as List<Track>;
-    await repository.applySpotifyAudioFeatures(
-      tracks,
-      notify: (int total, double progress) {},
-    );
-  }
-
   void changeTrack(TrackDirection direction) {
     int targetIndex;
     if (selectedSetlistTrack == null) {
@@ -271,14 +268,14 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   }
 
   void skipToNext() {
-    if (isSelected(itemList.lastOrNull, SelectionType.selected)) {
+    if (isLastSelected) {
       return;
     }
     _audioHandler.skipToNext();
   }
 
   void skipToPrevious() {
-    if (isSelected(itemList.firstOrNull, SelectionType.selected)) {
+    if (isFirstSelected) {
       return;
     }
     _audioHandler.skipToPrevious();

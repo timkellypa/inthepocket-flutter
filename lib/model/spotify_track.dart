@@ -4,6 +4,5 @@ class SpotifyTrack extends ModelBase {
   String? spotifyId;
 
   late String spotifyTitle;
-
-  late String spotifyAudioFeatures;
+  late String spotifyArtist;
 }

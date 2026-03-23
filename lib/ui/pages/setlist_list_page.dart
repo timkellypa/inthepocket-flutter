@@ -38,7 +38,8 @@ class SetlistListPageState extends State<SetlistListPage> {
     super.initState();
   }
 
-  Future<void> itemSelectionsChanged(HashMap<String, ItemSelection> itemSelectionMap) async {
+  Future<void> itemSelectionsChanged(
+      HashMap<String, ItemSelection> itemSelectionMap) async {
     final List<Setlist?> selectedItems = setlistBloc.getMatchingSelections(
         SelectionType.add + SelectionType.editing + SelectionType.selected);
 
@@ -82,7 +83,7 @@ class SetlistListPageState extends State<SetlistListPage> {
       appBar: AppBar(title: const Text('In the Pocket')),
       body: SafeArea(
         child: Container(
-          color: Colors.white,
+          color: Theme.of(context).scaffoldBackgroundColor,
           padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
           child: Container(
             //This is where the magic starts
@@ -92,11 +93,10 @@ class SetlistListPageState extends State<SetlistListPage> {
                   (Setlist a, HashMap<String, ItemSelection> b) =>
                       SetlistCardSUD(a, b)),
               dispose: (BuildContext context, SetlistBloc value) {
-                  value.unSelectAll(
-                    SelectionType.selected,
-                  );
+                value.unSelectAll(
+                  SelectionType.selected,
+                );
               },
-
             ),
           ),
         ),

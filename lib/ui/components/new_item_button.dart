@@ -28,7 +28,6 @@ class NewItemButton<ModelType extends ModelBase> extends StatelessWidget {
                 onPressed: () {
                   modelBloc.selectItem(null, SelectionType.add);
                 },
-                backgroundColor: Colors.white,
                 child: const Icon(
                   Icons.add,
                   size: 32,

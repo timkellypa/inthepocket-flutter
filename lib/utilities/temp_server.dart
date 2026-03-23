@@ -7,7 +7,7 @@ class TempServer {
 
   final String port;
 
-  Uri get uri => Uri.parse('http://localhost:$port');
+  Uri get uri => Uri.parse('http://127.0.0.1:$port');
 
   static HashMap<String, HttpServer> portServerMap =
       HashMap<String, HttpServer>();

@@ -6,11 +6,10 @@ class CommonBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return const SizedBox.shrink();
 
-
     // In case the bottom nav bar becomes necessary.
     /*
     return BottomAppBar(
-      color: Colors.white,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: Container(
         decoration: BoxDecoration(
             border: Border(

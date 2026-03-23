@@ -23,7 +23,8 @@ abstract class ModelListBase<ModelType extends ModelBase,
   Widget build(BuildContext context) {
     final ModelBlocBase<ModelType, dynamic> modelBloc = getBloc(context);
     return Container(
-      color: Colors.white,
+      // Color should be white in light mode, but in dark mode we want to use the default scaffold background color so that the list blends in with the rest of the app.
+      color: Theme.of(context).scaffoldBackgroundColor,
       padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
       child: Container(
           child: StreamBuilder<SaveStatus>(

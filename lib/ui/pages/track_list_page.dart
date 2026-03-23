@@ -109,7 +109,7 @@ class TrackListPageState extends State<TrackListPage> {
           title: const Text('Track List'),
           actions: <Widget>[
             IconButton(
-                icon: const Icon(FontAwesomeIcons.spotify),
+                icon: Icon(FontAwesomeIcons.spotify.data),
                 tooltip: 'import from Spotify',
                 onPressed: () {
                   spotifyPressed(context);
@@ -118,7 +118,7 @@ class TrackListPageState extends State<TrackListPage> {
               onPressed: () {
                 importPressed(context);
               },
-              icon: const Icon(FontAwesomeIcons.fileImport),
+              icon: Icon(FontAwesomeIcons.fileImport.data),
               tooltip: 'import',
             )
           ],
@@ -127,7 +127,7 @@ class TrackListPageState extends State<TrackListPage> {
           child: Stack(
             children: <Widget>[
               Container(
-                color: Colors.white,
+                color: Theme.of(context).scaffoldBackgroundColor,
                 padding:
                     const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
                 child: Container(

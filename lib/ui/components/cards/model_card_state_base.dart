@@ -20,9 +20,7 @@ abstract class ModelCardStateBase<WidgetType extends StatefulWidget,
     return null;
   }
 
-  void tapAction({bool allowMultiSelect = false}) {
-
-  }
+  void tapAction({bool allowMultiSelect = false}) {}
 
   Widget getListTile(String title) {
     return ListTile(
@@ -46,7 +44,7 @@ abstract class ModelCardStateBase<WidgetType extends StatefulWidget,
         SelectionType.add + SelectionType.editing + SelectionType.selected;
     return itemSelectionType & positiveSelectionTypes > 0
         ? Colors.blueAccent
-        : Colors.white;
+        : Theme.of(context).cardColor;
   }
 
   ModelBlocBase<ModelType, dynamic> getBloc(BuildContext context);

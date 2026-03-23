@@ -80,7 +80,7 @@ class EditSetlistFormState extends State<EditSetlistForm> {
       ]),
       body: SafeArea(
         child: Container(
-          color: Colors.white,
+          color: Theme.of(context).scaffoldBackgroundColor,
           child: ListView(
             children: <Widget>[
               ListTile(

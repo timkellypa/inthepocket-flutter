@@ -67,56 +67,81 @@ class TrackPlayerState extends State<TrackPlayer> {
                     Text(selectedSetlistTrack.plTrack!.title!,
                         style: const TextStyle(fontSize: 26),
                         overflow: TextOverflow.ellipsis),
-                    Text(selectedSetlistTrack.notes ?? '',
-                        style: const TextStyle(fontSize: 16),
-                        overflow: TextOverflow.ellipsis),
-                    StreamBuilder<ClickState>(
-                        stream: trackBloc.indicatorStateBloc.clickStateStream,
-                        initialData: ClickState(count: 0),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<ClickState> clickState) {
-                          const LedBulbColors inactiveColor = LedBulbColors.off,
-                              accentColor = LedBulbColors.green,
-                              clickColor = LedBulbColors.red;
-                          const double size = 30;
-                          final ClickState state = clickState.data!;
-                          final List<Widget> indicators =
-                              List<Widget>.empty(growable: true);
+                    if (selectedSetlistTrack.plTrack!.artist != null &&
+                        selectedSetlistTrack.plTrack!.artist!.isNotEmpty)
+                      Text(selectedSetlistTrack.plTrack!.artist ?? '',
+                          style: const TextStyle(
+                              fontSize: 16, fontStyle: FontStyle.italic),
+                          overflow: TextOverflow.ellipsis),
+                    if (selectedSetlistTrack.notes != null &&
+                        selectedSetlistTrack.notes!.isNotEmpty)
+                      Text(selectedSetlistTrack.notes ?? '',
+                          style: const TextStyle(fontSize: 16),
+                          overflow: TextOverflow.ellipsis),
+                    if (selectedSetlistTrack.plTrack!.plTempos?.isNotEmpty ??
+                        false)
+                      StreamBuilder<ClickState>(
+                          stream: trackBloc.indicatorStateBloc.clickStateStream,
+                          initialData: ClickState(count: 0),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<ClickState> clickState) {
+                            const LedBulbColors inactiveColor =
+                                    LedBulbColors.off,
+                                accentColor = LedBulbColors.green,
+                                clickColor = LedBulbColors.red;
+                            const double size = 30;
+                            final ClickState state = clickState.data!;
+                            final List<Widget> indicators =
+                                List<Widget>.empty(growable: true);
 
-                          for (int i = 1; i <= state.beatsPerBar; ++i) {
-                            LedBulbColors color = inactiveColor;
-                            bool glow = false;
-                            if (i == state.count) {
-                              glow = true;
-                              if (state.accent) {
-                                color = accentColor;
-                              } else {
-                                color = clickColor;
+                            for (int i = 1; i <= state.beatsPerBar; ++i) {
+                              LedBulbColors color = inactiveColor;
+                              bool glow = false;
+                              if (i == state.count) {
+                                glow = true;
+                                if (state.accent) {
+                                  color = accentColor;
+                                } else {
+                                  color = clickColor;
+                                }
                               }
+                              indicators.add(LedBulbIndicator(
+                                  size: size, initialState: color, glow: glow));
                             }
-                            indicators.add(LedBulbIndicator(
-                                size: size, initialState: color, glow: glow));
-                          }
 
-                          return Padding(
-                              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                              child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  key: const Key('ClickIndicatorRow'),
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: indicators));
-                        }),
+                            return Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    key: const Key('ClickIndicatorRow'),
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: indicators));
+                          })
+                    else
+                      Center(
+                          child: TextButton.icon(
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Add tempos to enable click track'),
+                        onPressed: () {
+                          trackBloc.selectItem(
+                              selectedSetlistTrack, SelectionType.editing);
+                        },
+                      )),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         IconButton(
                           iconSize: 90,
                           icon: const Icon(Icons.skip_previous),
-                          onPressed: () {
-                            trackBloc.skipToPrevious();
-                          },
+                          onPressed: trackBloc.isFirstSelected
+                              ? null
+                              : () {
+                                  trackBloc.skipToPrevious();
+                                },
                         ),
                         StreamBuilder<PlaybackState>(
                           stream: trackBloc.audioPlaybackStream,
@@ -134,21 +159,32 @@ class TrackPlayerState extends State<TrackPlayer> {
                               toggleIcon = const Icon(Icons.headset);
                             }
 
+                            bool disabled = false;
+                            if (selectedSetlistTrack.plTrack!.plTempos ==
+                                    null ||
+                                selectedSetlistTrack
+                                    .plTrack!.plTempos!.isEmpty) {
+                              disabled = true;
+                            }
+
                             return IconButton(
-                              iconSize: 90,
-                              icon: toggleIcon,
-                              onPressed: () {
-                                trackBloc.audioClick();
-                              },
-                            );
+                                iconSize: 90,
+                                icon: toggleIcon,
+                                onPressed: disabled
+                                    ? null
+                                    : () {
+                                        trackBloc.audioClick();
+                                      });
                           },
                         ),
                         IconButton(
                           iconSize: 90,
                           icon: const Icon(Icons.skip_next),
-                          onPressed: () {
-                            trackBloc.skipToNext();
-                          },
+                          onPressed: trackBloc.isLastSelected
+                              ? null
+                              : () {
+                                  trackBloc.skipToNext();
+                                },
                         ),
                       ],
                     ),
