@@ -32,6 +32,7 @@ class EditSetlistFormState extends State<EditTrackForm> {
   SetlistTrack? setlistTrack;
   late TempoBloc tempoBloc;
   final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _artistController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   @override
@@ -39,6 +40,7 @@ class EditSetlistFormState extends State<EditTrackForm> {
     setlistTrack ??= SetlistTrack();
     setlistTrack!.plTrack ??= Track();
     _titleController.text = setlistTrack!.plTrack!.title ?? '';
+    _artistController.text = setlistTrack!.plTrack!.artist ?? '';
     _notesController.text = setlistTrack!.notes ?? '';
     tempoBloc = TempoBloc(setlistTrack!.plTrack!);
 
@@ -57,7 +59,8 @@ class EditSetlistFormState extends State<EditTrackForm> {
 
     final Tempo? selectedTempo = selectedItems.first;
     final int selectionType =
-        itemSelectionMap[selectedTempo?.id ?? '']?.selectionType ?? SelectionType.add;
+        itemSelectionMap[selectedTempo?.id ?? '']?.selectionType ??
+            SelectionType.add;
     if (selectionType & (SelectionType.editing + SelectionType.add) > 0) {
       Navigator.pushNamed(
         context,
@@ -89,6 +92,8 @@ class EditSetlistFormState extends State<EditTrackForm> {
 
             setlistTrackToSave.plTrack!.title = _titleController.value.text;
 
+            setlistTrackToSave.plTrack!.artist = _artistController.value.text;
+
             setlistTrackToSave.notes = _notesController.value.text;
 
             if (setlistTrackToSave.plTrack!.title!.isNotEmpty) {
@@ -105,13 +110,18 @@ class EditSetlistFormState extends State<EditTrackForm> {
       ]),
       body: SafeArea(
         child: Container(
-          color: Colors.white,
+          color: Theme.of(context).scaffoldBackgroundColor,
           child: Column(
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.title),
                 title: TextField(controller: _titleController),
                 subtitle: const Text('Title'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: TextField(controller: _artistController),
+                subtitle: const Text('Artist'),
               ),
               ListTile(
                 leading: const Icon(Icons.description),
@@ -132,8 +142,7 @@ class EditSetlistFormState extends State<EditTrackForm> {
       child: Provider<TempoBloc>(
         create: (BuildContext context) => tempoBloc,
         child: TempoList<TempoCardSUD>(
-            (Tempo a, HashMap<String, ItemSelection> b) =>
-                TempoCardSUD(a, b)),
+            (Tempo a, HashMap<String, ItemSelection> b) => TempoCardSUD(a, b)),
       ),
     );
   }

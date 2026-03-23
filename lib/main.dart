@@ -17,6 +17,15 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'In the Pocket',
         theme: ThemeData(
-            primarySwatch: Colors.indigo, canvasColor: Colors.transparent));
+          brightness: Brightness.light,
+          // Other light mode properties
+        ),
+        // Define the dark theme
+        darkTheme: ThemeData(
+          brightness: Brightness.dark,
+          // Other dark mode properties
+        ),
+        // Use the system's theme preference
+        themeMode: ThemeMode.system);
   }
 }

@@ -87,7 +87,7 @@ class TrackImportTrackPageState extends State<TrackImportTrackPage> {
       ),
       body: SafeArea(
         child: Container(
-          color: Colors.white,
+          color: Theme.of(context).scaffoldBackgroundColor,
           padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
           child: Container(
             //This is where the magic starts

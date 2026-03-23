@@ -83,7 +83,7 @@ class EditTempoFormState extends State<EditTempoForm> {
       ]),
       body: SafeArea(
           child: Container(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         child: ListView(
           children: <Widget>[
             ListTile(

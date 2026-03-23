@@ -96,7 +96,6 @@ class SpotifyTrackBloc
                     SelectionType.selected >
                 0)
         .toList();
-    final List<Track> audioFeatureTracks = <Track>[];
 
     entries.sort((SpotifyTrack a, SpotifyTrack b) =>
         a.sortOrder!.compareTo(b.sortOrder!));
@@ -119,10 +118,15 @@ class SpotifyTrackBloc
         track.init();
         track.spotifyId = spotifyTrack.spotifyId;
         track.title = spotifyTrack.spotifyTitle;
-        track.spotifyAudioFeatures = spotifyTrack.spotifyAudioFeatures;
-        audioFeatureTracks.add(track);
+        track.artist = spotifyTrack.spotifyArtist;
       } else {
         track = spotifyIdTrackMap[spotifyTrack.spotifyId]!;
+
+        // If the track already exists but has no artist (previous app versions didn't save artist),
+        // update it with the spotify artist.
+        if (track.artist == null || track.artist!.isEmpty) {
+          track.artist = spotifyTrack.spotifyArtist;
+        }
       }
 
       final SetlistTrack setlistTrack = SetlistTrack();
@@ -131,9 +135,5 @@ class SpotifyTrackBloc
       setlistTrack.setlistId = targetSetlist.id;
       await trackRepository.insert(setlistTrack);
     }
-    await trackRepository.applySpotifyAudioFeatures(audioFeatureTracks,
-        notify: (int total, double progress) =>
-            updateSaveStatus(total, progress, importMessage));
-    updateSaveStatus(0, 0, '');
   }
 }

@@ -91,9 +91,9 @@ class TableTrack extends SqfEntityTableBase {
     // declare fields
     fields = [
       SqfEntityFieldBase('title', DbType.text),
+      SqfEntityFieldBase('artist', DbType.text),
       SqfEntityFieldBase('row__sortOrder', DbType.integer, defaultValue: 1),
       SqfEntityFieldBase('spotifyId', DbType.text),
-      SqfEntityFieldBase('spotifyAudioFeatures', DbType.text),
     ];
     super.init();
   }
@@ -2090,18 +2090,18 @@ class Track extends TableBase {
   Track(
       {this.row__id,
       this.title,
+      this.artist,
       this.row__sortOrder,
-      this.spotifyId,
-      this.spotifyAudioFeatures}) {
+      this.spotifyId}) {
     _setDefaultValues();
     softDeleteActivated = false;
   }
-  Track.withFields(this.row__id, this.title, this.row__sortOrder,
-      this.spotifyId, this.spotifyAudioFeatures) {
+  Track.withFields(this.row__id, this.title, this.artist, this.row__sortOrder,
+      this.spotifyId) {
     _setDefaultValues();
   }
-  Track.withId(this.row__id, this.title, this.row__sortOrder, this.spotifyId,
-      this.spotifyAudioFeatures) {
+  Track.withId(this.row__id, this.title, this.artist, this.row__sortOrder,
+      this.spotifyId) {
     _setDefaultValues();
   }
   // fromMap v2.0
@@ -2113,14 +2113,14 @@ class Track extends TableBase {
     if (o['title'] != null) {
       title = o['title'].toString();
     }
+    if (o['artist'] != null) {
+      artist = o['artist'].toString();
+    }
     if (o['row__sortOrder'] != null) {
       row__sortOrder = int.tryParse(o['row__sortOrder'].toString());
     }
     if (o['spotifyId'] != null) {
       spotifyId = o['spotifyId'].toString();
-    }
-    if (o['spotifyAudioFeatures'] != null) {
-      spotifyAudioFeatures = o['spotifyAudioFeatures'].toString();
     }
 
     isSaved = true;
@@ -2128,9 +2128,9 @@ class Track extends TableBase {
   // FIELDS (Track)
   String? row__id;
   String? title;
+  String? artist;
   int? row__sortOrder;
   String? spotifyId;
-  String? spotifyAudioFeatures;
   bool? isSaved;
   // end FIELDS (Track)
 
@@ -2187,14 +2187,14 @@ class Track extends TableBase {
     if (title != null || !forView) {
       map['title'] = title;
     }
+    if (artist != null || !forView) {
+      map['artist'] = artist;
+    }
     if (row__sortOrder != null || !forView) {
       map['row__sortOrder'] = row__sortOrder;
     }
     if (spotifyId != null || !forView) {
       map['spotifyId'] = spotifyId;
-    }
-    if (spotifyAudioFeatures != null || !forView) {
-      map['spotifyAudioFeatures'] = spotifyAudioFeatures;
     }
 
     return map;
@@ -2210,14 +2210,14 @@ class Track extends TableBase {
     if (title != null || !forView) {
       map['title'] = title;
     }
+    if (artist != null || !forView) {
+      map['artist'] = artist;
+    }
     if (row__sortOrder != null || !forView) {
       map['row__sortOrder'] = row__sortOrder;
     }
     if (spotifyId != null || !forView) {
       map['spotifyId'] = spotifyId;
-    }
-    if (spotifyAudioFeatures != null || !forView) {
-      map['spotifyAudioFeatures'] = spotifyAudioFeatures;
     }
 
 // COLLECTIONS (Track)
@@ -2246,12 +2246,12 @@ class Track extends TableBase {
 
   @override
   List<dynamic> toArgs() {
-    return [row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures];
+    return [row__id, title, artist, row__sortOrder, spotifyId];
   }
 
   @override
   List<dynamic> toArgsWithIds() {
-    return [row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures];
+    return [row__id, title, artist, row__sortOrder, spotifyId];
   }
 
   static Future<List<Track>?> fromWebUrl(Uri uri,
@@ -2390,7 +2390,7 @@ class Track extends TableBase {
     final result = BoolResult(success: false);
     try {
       await _mnTrack.rawInsert(
-          'INSERT ${isSaved! ? 'OR REPLACE' : ''} INTO Track (row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures)  VALUES (?,?,?,?,?)',
+          'INSERT ${isSaved! ? 'OR REPLACE' : ''} INTO Track (row__id, title, artist, row__sortOrder, spotifyId)  VALUES (?,?,?,?,?)',
           toArgsWithIds(),
           ignoreBatch);
       result.success = true;
@@ -2428,8 +2428,8 @@ class Track extends TableBase {
   Future<int?> upsert({bool ignoreBatch = true}) async {
     try {
       final result = await _mnTrack.rawInsert(
-          'INSERT OR REPLACE INTO Track (row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures)  VALUES (?,?,?,?,?)',
-          [row__id, title, row__sortOrder, spotifyId, spotifyAudioFeatures],
+          'INSERT OR REPLACE INTO Track (row__id, title, artist, row__sortOrder, spotifyId)  VALUES (?,?,?,?,?)',
+          [row__id, title, artist, row__sortOrder, spotifyId],
           ignoreBatch);
       if (result! > 0) {
         saveResult = BoolResult(
@@ -2719,6 +2719,11 @@ class TrackFilterBuilder extends ConjunctionBase {
     return _title = _setField(_title, 'title', DbType.text);
   }
 
+  TrackField? _artist;
+  TrackField get artist {
+    return _artist = _setField(_artist, 'artist', DbType.text);
+  }
+
   TrackField? _row__sortOrder;
   TrackField get row__sortOrder {
     return _row__sortOrder =
@@ -2728,12 +2733,6 @@ class TrackFilterBuilder extends ConjunctionBase {
   TrackField? _spotifyId;
   TrackField get spotifyId {
     return _spotifyId = _setField(_spotifyId, 'spotifyId', DbType.text);
-  }
-
-  TrackField? _spotifyAudioFeatures;
-  TrackField get spotifyAudioFeatures {
-    return _spotifyAudioFeatures =
-        _setField(_spotifyAudioFeatures, 'spotifyAudioFeatures', DbType.text);
   }
 
   /// Deletes List<Track> bulk by query
@@ -3021,6 +3020,12 @@ class TrackFields {
         _fTitle ?? SqlSyntax.setField(_fTitle, 'title', DbType.text);
   }
 
+  static TableField? _fArtist;
+  static TableField get artist {
+    return _fArtist =
+        _fArtist ?? SqlSyntax.setField(_fArtist, 'artist', DbType.text);
+  }
+
   static TableField? _fRow__sortOrder;
   static TableField get row__sortOrder {
     return _fRow__sortOrder = _fRow__sortOrder ??
@@ -3031,13 +3036,6 @@ class TrackFields {
   static TableField get spotifyId {
     return _fSpotifyId = _fSpotifyId ??
         SqlSyntax.setField(_fSpotifyId, 'spotifyId', DbType.text);
-  }
-
-  static TableField? _fSpotifyAudioFeatures;
-  static TableField get spotifyAudioFeatures {
-    return _fSpotifyAudioFeatures = _fSpotifyAudioFeatures ??
-        SqlSyntax.setField(
-            _fSpotifyAudioFeatures, 'spotifyAudioFeatures', DbType.text);
   }
 }
 // endregion TrackFields

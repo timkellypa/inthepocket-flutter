@@ -36,7 +36,8 @@ class TrackImportSpotifyPlaylistPageState
 
   late TrackBloc trackBloc;
   late SpotifyPlaylistBloc spotifyPlaylistBloc;
-  late StreamSubscription<HashMap<String, ItemSelection>> selectedItemSubscription;
+  late StreamSubscription<HashMap<String, ItemSelection>>
+      selectedItemSubscription;
 
   @override
   void initState() {
@@ -77,7 +78,7 @@ class TrackImportSpotifyPlaylistPageState
       appBar: AppBar(title: Text('Import to ${_targetSetlist?.description}')),
       body: SafeArea(
         child: Container(
-          color: Colors.white,
+          color: Theme.of(context).scaffoldBackgroundColor,
           padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
           child: Container(
             //This is where the magic starts

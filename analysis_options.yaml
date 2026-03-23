@@ -19,7 +19,6 @@
 # Android Studio, and the `flutter analyze` command.
 
 analyzer:
-  strong-mode:
   errors:
     # treat missing required parameters as a warning (not a hint)
     missing_required_param: warning
@@ -27,10 +26,6 @@ analyzer:
     missing_return: warning
     # allow having TODOs in the code
     todo: ignore
-    # Ignore analyzer hints for updating pubspecs when using Future or
-    # Stream and not importing dart:async
-    # Please see https://github.com/flutter/flutter/pull/24528 for details.
-    sdk_version_async_exported_from_core: ignore
   exclude:
     - "bin/cache/**"
     # the following two are relative to the stocks example and the flutter package respectively
@@ -50,8 +45,6 @@ linter:
     - always_require_non_null_named_parameters
     - always_specify_types
     - annotate_overrides
-    # - avoid_annotating_with_dynamic # conflicts with always_specify_types
-    - avoid_as
     - avoid_bool_literals_in_conditional_expressions
     # - avoid_catches_without_on_clauses # we do this commonly
     # - avoid_catching_errors # we do this commonly
