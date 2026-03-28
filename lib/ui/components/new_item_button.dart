@@ -25,13 +25,17 @@ class NewItemButton<ModelType extends ModelBase> extends StatelessWidget {
               child: FloatingActionButton(
                 elevation: 5.0,
                 heroTag: 'add_item',
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.8),
                 onPressed: () {
                   modelBloc.selectItem(null, SelectionType.add);
                 },
-                child: const Icon(
+                child: Icon(
                   Icons.add,
                   size: 32,
-                  color: Colors.indigoAccent,
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ));
         });

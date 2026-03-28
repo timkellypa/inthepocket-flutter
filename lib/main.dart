@@ -18,12 +18,22 @@ class MyApp extends StatelessWidget {
         title: 'In the Pocket',
         theme: ThemeData(
           brightness: Brightness.light,
-          // Other light mode properties
+          colorScheme: ColorScheme.light(
+            primary: const Color(0xFF0148fe),
+            onPrimary: Colors.white,
+            primaryContainer: const Color(0xFF0148fe),
+            onPrimaryContainer: Colors.white,
+          ),
         ),
         // Define the dark theme
         darkTheme: ThemeData(
           brightness: Brightness.dark,
-          // Other dark mode properties
+          colorScheme: ColorScheme.dark(
+            primary: const Color(0xFF0148fe),
+            onPrimary: Colors.white,
+            primaryContainer: const Color(0xFF0148fe),
+            onPrimaryContainer: Colors.white,
+          ),
         ),
         // Use the system's theme preference
         themeMode: ThemeMode.system);

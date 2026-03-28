@@ -47,6 +47,7 @@ abstract class ModelListBase<ModelType extends ModelBase,
                               selectedItemMap,
                         ) =>
                             getCardWidgets(
+                          context,
                           modelBloc,
                           itemList,
                           selectedItemMap,
@@ -58,6 +59,8 @@ abstract class ModelListBase<ModelType extends ModelBase,
   }
 
   String get addItemText;
+  Icon? get addItemIcon => null;
+  Function(BuildContext)? get addItemAction => null;
 
   CardType createCard(
       ModelType item, HashMap<String, ItemSelection> selectedItemMap) {
@@ -67,6 +70,7 @@ abstract class ModelListBase<ModelType extends ModelBase,
   ModelBlocBase<ModelType, dynamic> getBloc(BuildContext context);
 
   Widget getCardWidgets(
+    BuildContext context,
     ModelBlocBase<dynamic, dynamic> modelBloc,
     AsyncSnapshot<List<ModelType>> itemListStream,
     AsyncSnapshot<HashMap<String, ItemSelection>> selectedItemMap,
@@ -135,10 +139,22 @@ abstract class ModelListBase<ModelType extends ModelBase,
         return Container(
             child: Center(
           child: Container(
-            child: Text(
-              addItemText,
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w500),
-            ),
+            child: addItemAction != null
+                ? ElevatedButton.icon(
+                    onPressed: () {
+                      addItemAction!(context);
+                    },
+                    icon: addItemIcon ?? const Icon(Icons.add),
+                    label: Text(
+                      addItemText,
+                      style: const TextStyle(
+                          fontSize: 19, fontWeight: FontWeight.w500),
+                    ))
+                : Text(
+                    addItemText,
+                    style: const TextStyle(
+                        fontSize: 19, fontWeight: FontWeight.w500),
+                  ),
           ),
         ));
       }

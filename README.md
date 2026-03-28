@@ -27,7 +27,10 @@ If you are locally testing spotify integration, you need to create an api_secret
 ```
 {
     "spotify_client_id": "{Your Spotify Client ID here}"
+    "getsongbpm_api_key": "{Your GetSongBPM API Key here}"
 }
 ```
 
 To get a spotify API client ID, please go to the Spotify Developer Dashboard, and create an app:  https://developer.spotify.com/dashboard
+
+To get a GetSongBPM API key, please go here: https://getsongbpm.com/api

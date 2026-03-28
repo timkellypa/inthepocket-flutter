@@ -6,7 +6,8 @@
 set -eu
 
 echo "==> 1. Clean Flutter project files"
-cd /Users/timkelly/development/github/inthepocket-flutter
+# cd to this executable's directory to ensure relative paths work
+cd "$(dirname "$0")"
 flutter clean
 rm -rf .dart_tool build
 
@@ -24,7 +25,6 @@ sudo gem install cocoapods
 pod --version
 
 echo "==> 4. Rebuild Flutter pub packages"
-cd /Users/timkelly/development/github/inthepocket-flutter
 flutter pub get
 
 echo "==> 5. Reinstall iOS pods"

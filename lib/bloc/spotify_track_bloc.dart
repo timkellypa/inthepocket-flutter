@@ -7,6 +7,7 @@ import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/model/spotify_playlist.dart';
 import 'package:in_the_pocket/model/spotify_track.dart';
+import 'package:in_the_pocket/providers/get_song_bpm_provider.dart';
 import 'package:in_the_pocket/repository/spotify_track_repository.dart';
 import 'package:in_the_pocket/repository/track_repository.dart';
 
@@ -101,7 +102,8 @@ class SpotifyTrackBloc
         a.sortOrder!.compareTo(b.sortOrder!));
 
     final TrackRepository trackRepository = TrackRepository();
-    final List<Track> trackList = await trackRepository.getTracks();
+    final List<Track> trackList = await trackRepository
+        .getTracks(preload: true, preloadFields: <String>['plTempos']);
 
     // generate a reverse lookup tracklist by spotify id
     final HashMap<String, Track> spotifyIdTrackMap = HashMap<String, Track>();
@@ -129,10 +131,20 @@ class SpotifyTrackBloc
         }
       }
 
+      if (track.plTempos == null || track.plTempos!.isEmpty) {
+        final Tempo? tempo = await GetSongBpmProvider().getSongTempo(track);
+
+        if (tempo != null) {
+          track.plTempos = <Tempo>[tempo];
+        }
+      }
+
       final SetlistTrack setlistTrack = SetlistTrack();
 
       setlistTrack.plTrack = track;
       setlistTrack.setlistId = targetSetlist.id;
+
+      // Repository.insert() will handle saving track and nested tempos
       await trackRepository.insert(setlistTrack);
     }
   }

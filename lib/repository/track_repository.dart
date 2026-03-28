@@ -36,6 +36,14 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
     item.plTrack ??= (await Track().getById(item.trackId)) ?? Track();
     item.plTrack!.init();
 
+    // Save any nested tempos that were provided
+    if (item.plTrack?.plTempos != null && item.plTrack!.plTempos!.isNotEmpty) {
+      for (Tempo tempo in item.plTrack!.plTempos!) {
+        tempo.trackId = item.plTrack!.id;
+        await tempo.upsert();
+      }
+    }
+
     item.trackId = item.plTrack!.id;
     item.sortOrder = await SetlistTrack().select().toCount() + 1;
     await item.upsert();
@@ -105,8 +113,16 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
     return await Track().getById(id) as Track;
   }
 
-  Future<List<Track>> getTracks() async {
-    return await Track().select().toList();
+  Future<List<Track>> getTracks(
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields}) async {
+    return await Track().select().toList(
+        preload: preload,
+        preloadFields: preloadFields,
+        loadParents: loadParents,
+        loadedFields: loadedFields);
   }
 
   Future<String> insertTrack(Track track) async {

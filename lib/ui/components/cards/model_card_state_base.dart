@@ -23,17 +23,22 @@ abstract class ModelCardStateBase<WidgetType extends StatefulWidget,
   void tapAction({bool allowMultiSelect = false}) {}
 
   Widget getListTile(String title) {
+    const int positiveSelectionTypes =
+        SelectionType.add + SelectionType.editing + SelectionType.selected;
+    final bool isSelected = itemSelectionType & positiveSelectionTypes > 0;
+    
     return ListTile(
       enabled: !(itemSelectionType & SelectionType.disabled > 0),
       onTap: tapAction,
       leading: getLeading(),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16.5,
           fontFamily: 'RobotoMono',
           fontWeight: FontWeight.w500,
           decoration: TextDecoration.none,
+          color: isSelected ? Theme.of(context).colorScheme.onPrimary : null,
         ),
       ),
     );
@@ -43,7 +48,7 @@ abstract class ModelCardStateBase<WidgetType extends StatefulWidget,
     const int positiveSelectionTypes =
         SelectionType.add + SelectionType.editing + SelectionType.selected;
     return itemSelectionType & positiveSelectionTypes > 0
-        ? Colors.blueAccent
+        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.65)
         : Theme.of(context).cardColor;
   }
 

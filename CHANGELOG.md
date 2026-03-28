@@ -7,6 +7,8 @@
    - Metronome shows link to edit song if no tempos exist.
    - Back/next are disabled appropriately for first/last track.
 - Detect dark mode on device and allow dark mode theme.
+- Use getSongBPM for song BPM's and fix some UI around BPM importing.
+- UI refresh, along with dark mode.
 
 ## 2.0.1
 Bug Fixes:
