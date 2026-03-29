@@ -40,6 +40,7 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
     if (item.plTrack?.plTempos != null && item.plTrack!.plTempos!.isNotEmpty) {
       for (Tempo tempo in item.plTrack!.plTempos!) {
         tempo.trackId = item.plTrack!.id;
+        tempo.init();
         await tempo.upsert();
       }
     }

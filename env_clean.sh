@@ -17,6 +17,7 @@ rm -rf Pods Podfile.lock
 pod cache clean --all || true
 pod deintegrate || true
 rm -rf ~/Library/Developer/Xcode/DerivedData/*
+cd ../
 
 echo "==> 3. Reinstall CocoaPods (Homebrew ruby path)"
 # If you're using system ruby, adjust path accordingly; avoid mismatch
@@ -39,5 +40,3 @@ if [ -d "/Applications/Xcode.app" ]; then
 fi
 
 echo "==> COMPLETED: environment reset finished"
-
-echo "Now run: flutter run -v"
