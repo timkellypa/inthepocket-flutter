@@ -36,6 +36,9 @@ class GetSongBpmProvider {
     tempo.numberOfBars = 0;
     tempo.trackId = track.id;
 
+    // Assign an ID here, to ensure it's not null when saved.
+    tempo.init();
+
     return tempo;
   }
 
