@@ -4,7 +4,6 @@ import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:in_the_pocket/ui/components/click_state_display.dart';
 import 'package:in_the_pocket/ui/haptics/MetronomeBuzzer.dart';
 import 'package:in_the_pocket/ui/listeners/MetronomeClickPlayer.dart';
-import 'package:led_bulb_indicator/led_bulb_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:wheel_picker/wheel_picker.dart';
 
@@ -117,7 +116,6 @@ class MetronomeControlState extends State<MetronomeControl> {
                   height: 200,
                   width: 100,
                   child: WheelPicker(
-                      key: Key(metronomeBloc.bpmIndex.toString()),
                       builder: (BuildContext context, int index) => Text(
                           '${index + 20}',
                           style: const TextStyle(fontSize: 30)),
