@@ -14,6 +14,8 @@ PODS:
   - just_audio (0.0.1):
     - Flutter
     - FlutterMacOS
+  - soundpool (0.0.1):
+    - Flutter
   - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
@@ -38,6 +40,7 @@ DEPENDENCIES:
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
   - just_audio (from `.symlinks/plugins/just_audio/darwin`)
+  - soundpool (from `.symlinks/plugins/soundpool/ios`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
   - sqflite_sqlcipher (from `.symlinks/plugins/sqflite_sqlcipher/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
@@ -61,6 +64,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   just_audio:
     :path: ".symlinks/plugins/just_audio/darwin"
+  soundpool:
+    :path: ".symlinks/plugins/soundpool/ios"
   sqflite_darwin:
     :path: ".symlinks/plugins/sqflite_darwin/darwin"
   sqflite_sqlcipher:
@@ -78,6 +83,7 @@ SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   FMDB: 57486c1117fd8e0e6b947b2f54c3f42bf8e57a4e
   just_audio: a42c63806f16995daf5b219ae1d679deb76e6a79
+  soundpool: c7f4422ca206e77f8900ed3c4ee6a6ff5a0e38a9
   sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
   sqflite_sqlcipher: 2f7e72fbda46fe3255493ba3f21ebe232ff9a243
   SQLCipher: 905b145f65f349f26da9e60a19901ad24adcd381

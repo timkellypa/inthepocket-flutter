@@ -1,7 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:in_the_pocket/classes/click_info.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:soundpool/soundpool.dart';
 
 /// Plays a metronome click when appropriate by listening to the click state stream.
 /// This is only for standalone metronome implementations, because the track player
@@ -9,36 +10,37 @@ import 'package:just_audio/just_audio.dart';
 /// to allow for media controls and reduce possibilities of latency.
 class MetronomeClickPlayer {
   MetronomeClickPlayer({required this.clickStateStream}) {
-    Future.wait(<Future<void>>[
-      primaryAudioPlayer.setAudioSource(primaryClickSource),
-      secondaryAudioPlayer.setAudioSource(secondaryClickSource)
-    ]).then((_) => <bool>{audioIsSetup = true});
+    Future<void>.microtask(() async {
+      if (primarySoundId != null && secondarySoundId != null) {
+        return;
+      }
+      final ByteData primaryAsset = await rootBundle.load('sounds/primary.wav');
+      final ByteData secondaryAsset =
+          await rootBundle.load('sounds/secondary.wav');
+      primarySoundId = await soundpool.load(primaryAsset);
+      secondarySoundId = await soundpool.load(secondaryAsset);
+    });
   }
 
-  AudioSource primaryClickSource = AudioSource.asset('sounds/primary.wav');
-  AudioSource secondaryClickSource = AudioSource.asset('sounds/secondary.wav');
-  AudioPlayer primaryAudioPlayer = AudioPlayer();
-  AudioPlayer secondaryAudioPlayer = AudioPlayer();
-  bool audioIsSetup = false;
+  static Soundpool soundpool =
+      Soundpool.fromOptions(options: const SoundpoolOptions(maxStreams: 15));
 
   Stream<ClickState> clickStateStream;
 
   StreamSubscription<ClickState>? clickSubscription;
+
+  static int? primarySoundId;
+  static int? secondarySoundId;
 
   ClickState? previousState;
 
   void listen() {
     clickSubscription = clickStateStream.listen((ClickState clickState) {
       if (clickState.isClicking() && !(previousState?.isClicking() ?? false)) {
-        if (!audioIsSetup) {
-          return;
-        }
-        if (clickState.accent) {
-          primaryAudioPlayer.seek(Duration.zero);
-          primaryAudioPlayer.play();
-        } else {
-          secondaryAudioPlayer.seek(Duration.zero);
-          secondaryAudioPlayer.play();
+        if (clickState.accent && primarySoundId != null) {
+          soundpool.play(primarySoundId!);
+        } else if (secondarySoundId != null) {
+          soundpool.play(secondarySoundId!);
         }
       }
       previousState = clickState;
@@ -51,8 +53,6 @@ class MetronomeClickPlayer {
 
   void dispose() {
     stopListening();
-    primaryAudioPlayer.dispose();
-    secondaryAudioPlayer.dispose();
     clickSubscription?.cancel();
   }
 }

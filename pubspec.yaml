@@ -39,6 +39,7 @@ dependencies:
   percent_indicator: ^4.2.5
   provider: ^6.1.2
   rxdart: ^0.28.0
+  soundpool: ^2.4.1
   sqfentity: ^2.4.0
   sqflite_sqlcipher: ^2.1.1
   url_launcher: ^6.3.2

@@ -7,7 +7,7 @@ import 'package:wheel_picker/wheel_picker.dart';
 class StandaloneMetronomeBloc {
   StandaloneMetronomeBloc() {
     bpmController =
-        WheelPickerController(initialIndex: bpmIndex, itemCount: 280);
+        WheelPickerController(initialIndex: bpmIndex, itemCount: 281);
     _clickStateController.sink.add(
         ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
   }
