@@ -119,14 +119,13 @@ class MetronomeControlState extends State<MetronomeControl> {
                       builder: (BuildContext context, int index) => Text(
                           '${index + 20}',
                           style: const TextStyle(fontSize: 30)),
-                      itemCount: 280,
+                      controller: metronomeBloc.bpmController,
                       onIndexChanged:
                           (int index, WheelPickerInteractionType type) {
                         setState(() {
                           metronomeBloc.bpmIndex = index;
                         });
                       },
-                      initialIndex: metronomeBloc.bpmIndex,
                       looping: false,
                       style: const WheelPickerStyle(
                         itemExtent: 40, // Text height

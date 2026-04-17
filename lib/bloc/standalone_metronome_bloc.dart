@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:wheel_picker/wheel_picker.dart';
 
 class StandaloneMetronomeBloc {
   StandaloneMetronomeBloc() {
+    bpmController =
+        WheelPickerController(initialIndex: bpmIndex, itemCount: 280);
     _clickStateController.sink.add(
         ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
   }
@@ -13,6 +16,8 @@ class StandaloneMetronomeBloc {
       StreamController<ClickState>.broadcast();
 
   Stream<ClickState> get clickStateStream => _clickStateController.stream;
+
+  late WheelPickerController bpmController;
 
   int get beatsPerBar {
     return _beatsPerBar;
@@ -54,6 +59,7 @@ class StandaloneMetronomeBloc {
       final int thirdLastTapTime = tapTimes[tapTimes.length - 3];
       final int averageTimeBetweenTaps = (lastTapTime - thirdLastTapTime) ~/ 2;
       bpm = (60000 / averageTimeBetweenTaps).round();
+      bpmController.shiftTo(bpmIndex);
       performClick(fromTap: true);
     }
   }
@@ -133,5 +139,6 @@ class StandaloneMetronomeBloc {
     isClicking = false;
     clickTimer?.cancel();
     clickDurationTimer?.cancel();
+    bpmController.dispose();
   }
 }
