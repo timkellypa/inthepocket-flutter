@@ -17,6 +17,7 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
+  audio_session: ^0.2.3
   audio_service: ^0.18.18
   audio_waveforms: ^2.0.2
   # The following adds the Cupertino Icons font to your application.

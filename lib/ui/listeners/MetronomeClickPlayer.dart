@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/services.dart';
 import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:soundpool/soundpool.dart';
@@ -9,21 +10,34 @@ import 'package:soundpool/soundpool.dart';
 /// uses a dedicated .wav file generated for each track,
 /// to allow for media controls and reduce possibilities of latency.
 class MetronomeClickPlayer {
-  MetronomeClickPlayer({required this.clickStateStream}) {
-    Future<void>.microtask(() async {
-      if (primarySoundId != null && secondarySoundId != null) {
-        return;
-      }
-      final ByteData primaryAsset = await rootBundle.load('sounds/primary.wav');
-      final ByteData secondaryAsset =
-          await rootBundle.load('sounds/secondary.wav');
-      primarySoundId = await soundpool.load(primaryAsset);
-      secondarySoundId = await soundpool.load(secondaryAsset);
-    });
+  MetronomeClickPlayer({required this.clickStateStream});
+
+  static Future<void> setup() async {
+    final ByteData primaryAsset = await rootBundle.load('sounds/primary.wav');
+    final ByteData secondaryAsset =
+        await rootBundle.load('sounds/secondary.wav');
+    primarySoundId = await soundpool.load(primaryAsset);
+    secondarySoundId = await soundpool.load(secondaryAsset);
+
+    // also setup audio session to allow soundpool to play sound.
+    final AudioSession session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playback,
+      avAudioSessionCategoryOptions:
+          AVAudioSessionCategoryOptions.mixWithOthers,
+      avAudioSessionMode: AVAudioSessionMode.defaultMode,
+      avAudioSessionRouteSharingPolicy:
+          AVAudioSessionRouteSharingPolicy.defaultPolicy,
+      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+    ));
+    await session.setActive(true);
   }
 
-  static Soundpool soundpool =
-      Soundpool.fromOptions(options: const SoundpoolOptions(maxStreams: 15));
+  // Use high maxStreams to allow for quick successive clicks without skipping.
+  // Use notification stream type to allow sound to play with the least latency.
+  static Soundpool soundpool = Soundpool.fromOptions(
+      options: const SoundpoolOptions(
+          maxStreams: 15, streamType: StreamType.notification));
 
   Stream<ClickState> clickStateStream;
 
