@@ -44,6 +44,12 @@ class StandaloneMetronomeBloc {
   Timer? clickTimer;
   Timer? clickDurationTimer;
 
+  /// Create new instance of wheel controller, so we have the right initial value.
+  void initializeWheelController() {
+    bpmController =
+        WheelPickerController(initialIndex: bpmIndex, itemCount: 281);
+  }
+
   void handleTap() {
     // If last tap was more than 2 seconds ago, clear taps and start over.
     final int now = DateTime.now().millisecondsSinceEpoch;

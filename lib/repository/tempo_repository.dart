@@ -131,6 +131,7 @@ class TempoRepository extends RepositoryBase<Tempo> {
   static bool isCountPrimary(Tempo tempo, int count) {
     if (tempo.beatsPerBar == null ||
         tempo.accentBeatsPerBar == null ||
+        tempo.accentBeatsPerBar == 0 ||
         count == 0) {
       return false;
     }

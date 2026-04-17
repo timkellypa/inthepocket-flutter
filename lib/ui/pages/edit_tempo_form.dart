@@ -31,7 +31,6 @@ class EditTempoFormState extends State<EditTempoForm> {
       TextEditingController();
   final TextEditingController _beatsPerBarController = TextEditingController();
   final TextEditingController _beatUnitController = TextEditingController();
-  final TextEditingController _bpmController = TextEditingController();
   final TextEditingController _numberofBarsController = TextEditingController();
 
   final List<DropdownMenuEntry<int>> beatUnitEntries =
@@ -51,7 +50,6 @@ class EditTempoFormState extends State<EditTempoForm> {
         tempo?.accentBeatsPerBar.toString() ?? '1';
     _beatsPerBarController.text = tempo?.beatsPerBar.toString() ?? '4';
     _beatUnitController.text = beatUnitValueMap[tempo?.beatUnit ?? 4] ?? '1/4';
-    _bpmController.text = tempo?.bpm.toString() ?? '';
 
     if (tempo?.numberOfBars == 0 || tempo?.numberOfBars == null) {
       _numberofBarsController.text = '';
@@ -71,6 +69,7 @@ class EditTempoFormState extends State<EditTempoForm> {
     metronomeBloc.beatsPerBar = tempo?.beatsPerBar ?? 4;
     metronomeBloc.beatUnit = tempo?.beatUnit ?? 4;
     metronomeBloc.bpm = (tempo?.bpm ?? 60).round();
+    metronomeBloc.initializeWheelController();
 
     String pageTitle = 'Tempo Info';
     if (track.title != null) {

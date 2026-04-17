@@ -86,6 +86,7 @@ class MetronomeControlState extends State<MetronomeControl> {
                       DropdownMenu<int>(
                           width: 100,
                           dropdownMenuEntries: const <DropdownMenuEntry<int>>[
+                            DropdownMenuEntry<int>(value: 0, label: '0'),
                             DropdownMenuEntry<int>(value: 1, label: '1'),
                             DropdownMenuEntry<int>(value: 2, label: '2'),
                             DropdownMenuEntry<int>(value: 3, label: '3'),
