@@ -1,52 +1,11 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:in_the_pocket/audio/setlist_audio_handler.dart';
+import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:in_the_pocket/services/service_locator.dart';
-
-class ClickInfo {
-  ClickInfo({required this.duration, required this.count, this.tempo});
-
-  static const int SILENCE_COUNT = -1;
-
-  bool get silence {
-    return count == SILENCE_COUNT;
-  }
-
-  bool get accent {
-    if (tempo == null) {
-      return false;
-    }
-    return TempoRepository.isCountPrimary(tempo!, count);
-  }
-
-  /// Note, count of 0 means we are out of range.
-  int count;
-  Tempo? tempo;
-  double duration;
-
-  static int getClickDurationForTempo(Tempo? tempo) {
-    if (tempo == null || tempo.bpm == null) {
-      return 100;
-    }
-    return min(100, (60 / tempo.bpm! * 1000 - 10).round());
-  }
-}
-
-class ClickState {
-  ClickState({required this.count, this.accent = false, this.beatsPerBar = 4});
-
-  bool isClicking() {
-    return count != ClickInfo.SILENCE_COUNT;
-  }
-
-  bool accent;
-  int count;
-  int beatsPerBar;
-}
 
 class MetronomeIndicatorStateBloc {
   MetronomeIndicatorStateBloc() {

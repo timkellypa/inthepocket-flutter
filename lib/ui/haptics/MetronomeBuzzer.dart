@@ -1,19 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:in_the_pocket/bloc/metronome_indicator_state_bloc.dart';
+import 'package:in_the_pocket/classes/click_info.dart';
 
 class MetronomeBuzzer {
-  MetronomeBuzzer({required this.bloc});
+  MetronomeBuzzer({required this.clickStateStream});
 
-  MetronomeIndicatorStateBloc bloc;
+  Stream<ClickState> clickStateStream;
 
   StreamSubscription<ClickState>? clickSubscription;
 
   ClickState? previousState;
 
   void listen() {
-    clickSubscription = bloc.clickStateStream.listen((ClickState clickState) {
+    clickSubscription = clickStateStream.listen((ClickState clickState) {
       if (clickState.isClicking() && !(previousState?.isClicking() ?? false)) {
         if (clickState.accent) {
           HapticFeedback.heavyImpact();

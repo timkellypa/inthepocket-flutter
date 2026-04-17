@@ -1,3 +1,10 @@
+## 2.0.3
+- Add a standalone metronome
+  - Add standalone metronome with wheel spinner for tempo and tap tempo support.
+  - Make a route/button for standalone metronome from home screen.
+  - Update tempo editor to use new metronome.
+  - Refactor some common utilities in both standalone and track based metronomes.
+
 ## 2.0.2
 - Bug Fixes:
   - Fix Spotify redirect URL.

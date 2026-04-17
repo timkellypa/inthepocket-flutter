@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/bloc/spotify_playlist_bloc.dart';
+import 'package:in_the_pocket/bloc/standalone_metronome_bloc.dart';
 import 'package:in_the_pocket/bloc/tempo_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
@@ -14,6 +15,7 @@ import 'package:in_the_pocket/ui/navigation/track_import_track_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_list_route_arguments.dart';
 import 'package:in_the_pocket/ui/pages/edit_tempo_form.dart';
 import 'package:in_the_pocket/ui/pages/edit_track_form.dart';
+import 'package:in_the_pocket/ui/pages/metronome_page.dart';
 import 'package:in_the_pocket/ui/pages/setlist_list_page.dart';
 import 'package:in_the_pocket/ui/pages/track_import_spotify_playlist_page.dart';
 import 'package:in_the_pocket/ui/pages/track_import_spotify_track_page.dart';
@@ -160,21 +162,34 @@ class ApplicationRouter {
         builder = (BuildContext context) {
           final EditTempoFormRouteArguments args =
               settings.arguments as EditTempoFormRouteArguments;
-          return Provider<TempoBloc>(
-            create: (BuildContext context) => args.tempoBloc,
-            dispose: (BuildContext context, TempoBloc value) =>
-                value.unSelectItem(
-              args.tempo,
-              SelectionType.editing +
-                  SelectionType.add +
-                  SelectionType.selected,
-            ),
+          return MultiProvider(
+            providers: <Provider<dynamic>>[
+              Provider<TempoBloc>(
+                create: (BuildContext context) => args.tempoBloc,
+                dispose: (BuildContext context, TempoBloc value) =>
+                    value.unSelectItem(
+                  args.tempo,
+                  SelectionType.editing +
+                      SelectionType.add +
+                      SelectionType.selected,
+                ),
+              ),
+              Provider<StandaloneMetronomeBloc>(
+                create: (BuildContext context) => StandaloneMetronomeBloc(),
+                dispose:
+                    (BuildContext context, StandaloneMetronomeBloc value) =>
+                        value.dispose(),
+              )
+            ],
             child: EditTempoForm(
               tempo: args.tempo,
             ),
           );
         };
         break;
+      case ROUTE_METRONOME:
+        fullScreenDialog = false;
+        builder = (BuildContext context) => const MetronomePage();
     }
 
     return MaterialPageRoute<dynamic>(
@@ -196,4 +211,5 @@ class ApplicationRouter {
   static const String ROUTE_TRACK_IMPORT_SPOTIFY_TRACK =
       '/track_import_spotify_track';
   static const String ROUTE_EDIT_TEMPO_FORM = '/edit_tempo_form';
+  static const String ROUTE_METRONOME = '/metronome';
 }

@@ -6,8 +6,8 @@ import 'package:in_the_pocket/bloc/setlist_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
-import 'package:in_the_pocket/ui/components/common_bottom_bar.dart';
 import 'package:in_the_pocket/ui/components/new_item_button.dart';
+import 'package:in_the_pocket/ui/components/setlist_list_bottom_bar.dart';
 import 'package:in_the_pocket/ui/navigation/application_router.dart';
 import 'package:in_the_pocket/ui/navigation/edit_setlist_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_list_route_arguments.dart';
@@ -101,7 +101,7 @@ class SetlistListPageState extends State<SetlistListPage> {
           ),
         ),
       ),
-      bottomNavigationBar: CommonBottomBar(),
+      bottomNavigationBar: SetlistListBottomBar(),
       floatingActionButton: NewItemButton<Setlist>(modelBloc: setlistBloc),
     );
   }
