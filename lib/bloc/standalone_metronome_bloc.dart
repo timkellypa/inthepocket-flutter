@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
+import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:wheel_picker/wheel_picker.dart';
 
 class StandaloneMetronomeBloc {
@@ -38,6 +39,9 @@ class StandaloneMetronomeBloc {
   int accentBeatsPerBar = 1;
   List<int> tapTimes = <int>[];
 
+  // Click start time.  When this is null, it means a click hasn't started yet.
+  int? clickStartTime;
+
   int _beatsPerBar = 4;
 
   // single instance of timer that we can cancel and restart as needed.
@@ -66,7 +70,7 @@ class StandaloneMetronomeBloc {
       final int averageTimeBetweenTaps = (lastTapTime - thirdLastTapTime) ~/ 2;
       bpm = (60000 / averageTimeBetweenTaps).round();
       bpmController.shiftTo(bpmIndex);
-      performClick(fromTap: true);
+      nextClickState(fromTap: true);
     }
   }
 
@@ -80,69 +84,93 @@ class StandaloneMetronomeBloc {
 
   void handlePlay() {
     isClicking = true;
+    clickStartTime = null;
 
     // Perform a single click immediately.  It will start an interval for the next one.
-    performClick();
+    nextClickState();
   }
 
-  void performClick({bool fromTap = false}) {
+  void nextClickState({bool fromTap = false}) {
     if (!isClicking) {
       clickTimer?.cancel();
       clickTimer = null;
       return;
     }
 
-    if (fromTap && count != lastTapCount) {
+    if (fromTap && (count != lastTapCount || clickStartTime != null)) {
       // If this click was triggered by a tap, and the count is the same as the last tap, don't perform the click.
       // It was already done.
       lastTapCount = count;
       return;
     }
 
-    count = (count % beatsPerBar) + 1;
-
     if (fromTap) {
-      lastTapCount = count;
+      clickStartTime = null;
     }
 
+    clickTimer?.cancel();
+
+    final double bpmDouble = bpm.toDouble();
+
     final Tempo tempo = Tempo(
-        bpm: bpm.toDouble(),
+        bpm: bpmDouble,
         beatsPerBar: beatsPerBar,
         beatUnit: beatUnit,
         accentBeatsPerBar: accentBeatsPerBar);
 
-    final ClickInfo clickInfo = ClickInfo(
-        count: count,
-        tempo: tempo,
-        duration: ClickInfo.getClickDurationForTempo(tempo).toDouble());
+    if (clickStartTime == null) {
+      count = (count % beatsPerBar) + 1;
 
-    _clickStateController.sink.add(ClickState(
-        count: count, accent: clickInfo.accent, beatsPerBar: beatsPerBar));
+      if (fromTap) {
+        lastTapCount = count;
+      }
 
-    clickDurationTimer?.cancel();
+      // Null click start time means that we should be performing the actual click here.
+      clickStartTime = DateTime.now().millisecondsSinceEpoch;
 
-    clickDurationTimer =
-        Timer(Duration(milliseconds: clickInfo.duration.round()), finishClick);
+      final bool isPrimary = TempoRepository.isCountPrimary(tempo, count);
+      final ClickState clickState =
+          ClickState(count: count, accent: isPrimary, beatsPerBar: beatsPerBar);
 
-    final double millisecondsPerBeat = 60000 / bpm;
-    clickTimer?.cancel();
-    clickTimer = Timer(
-        Duration(milliseconds: millisecondsPerBeat.round()), performClick);
-  }
+      _clickStateController.sink.add(clickState);
+      clickTimer = Timer(
+          Duration(milliseconds: ClickInfo.getClickDurationForBpm(bpmDouble)),
+          nextClickState);
+    } else {
+      final int now = DateTime.now().millisecondsSinceEpoch;
+      final int timerDurationOffset = now - (clickStartTime ?? now);
 
-  void finishClick() {
-    _clickStateController.sink.add(
-        ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
+      if (timerDurationOffset == 0) {
+        // a null click startTime at the last minute means a tap has interfered with this thread.
+        // Return in this state, so the tap handles everything.
+        return;
+      }
+
+      // Stop this click and schedule the next one, based on the difference between the calculated time and clickStartTime
+      _clickStateController.sink.add(
+          ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
+
+      final int timerDuration = (60000 / bpm).round() - timerDurationOffset;
+      clickStartTime = null;
+      clickTimer?.cancel();
+      clickTimer = Timer(Duration(milliseconds: timerDuration), nextClickState);
+    }
   }
 
   void handlePause() {
     count = 0;
+    clickTimer?.cancel();
+    clickTimer = null;
+    clickStartTime = null;
+    _clickStateController.sink.add(
+        ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
     isClicking = false;
   }
 
   void dispose() {
     _clickStateController.close();
     isClicking = false;
+    clickStartTime = null;
     clickTimer?.cancel();
     clickDurationTimer?.cancel();
     bpmController.dispose();

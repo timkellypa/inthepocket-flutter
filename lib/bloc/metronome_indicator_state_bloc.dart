@@ -48,7 +48,8 @@ class MetronomeIndicatorStateBloc {
     }
 
     int numBeats = (positionMilliseconds / millisecondsPerBeat).floor();
-    final int clickDurationForTempo = ClickInfo.getClickDurationForTempo(tempo);
+    final int clickDuration =
+        ClickInfo.getClickDurationForBpm(tempo.bpm ?? 60.0);
     final double millisecondsAfterLastClick =
         positionMilliseconds - (numBeats * millisecondsPerBeat);
 
@@ -64,14 +65,15 @@ class MetronomeIndicatorStateBloc {
           duration: -positionMilliseconds);
     }
 
-    if (millisecondsAfterLastClick <= clickDurationForTempo) {
+    if (millisecondsAfterLastClick <= clickDuration) {
       // we are inside a click.  Indicate the remainder of it, but adjust the click
       // duration for the part that we missed, so it doesn't go too long.
       final int count = numBeats % tempo.beatsPerBar! + 1;
-      final double clickDuration =
-          clickDurationForTempo - millisecondsAfterLastClick;
+      final double calculatedDuration =
+          clickDuration - millisecondsAfterLastClick;
 
-      return ClickInfo(count: count, tempo: tempo, duration: clickDuration);
+      return ClickInfo(
+          count: count, tempo: tempo, duration: calculatedDuration);
     }
 
     // We are calculating the next click for silence length.

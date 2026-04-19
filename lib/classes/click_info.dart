@@ -24,11 +24,8 @@ class ClickInfo {
   Tempo? tempo;
   double duration;
 
-  static int getClickDurationForTempo(Tempo? tempo) {
-    if (tempo == null || tempo.bpm == null) {
-      return 100;
-    }
-    return min(100, (60 / tempo.bpm! * 1000 - 10).round());
+  static int getClickDurationForBpm(double bpm) {
+    return min(100, (60 / bpm * 1000 - 10).round());
   }
 }
 

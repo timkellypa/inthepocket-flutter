@@ -56,6 +56,8 @@ class TrackImportTrackPageState extends State<TrackImportTrackPage> {
                 icon: const Icon(Icons.save),
                 onPressed: () async {
                   if (selectedItemMapSnapshot.hasData) {
+                    trackBloc.updateSaveStatus(
+                        1, 0.0, 'Importing tracks, please wait');
                     final List<SetlistTrack?> entries =
                         trackBloc.getMatchingSelections(SelectionType.selected);
                     entries.sort((SetlistTrack? a, SetlistTrack? b) =>

@@ -21,7 +21,7 @@ class TempoBloc extends ModelBlocBase<Tempo, TempoRepository> {
 
   @override
   String get listTitle {
-    return '${track.title} tempos';
+    return 'Tempos';
   }
 
   @override
