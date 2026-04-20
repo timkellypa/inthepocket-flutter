@@ -25,7 +25,7 @@ class ClickInfo {
   double duration;
 
   static int getClickDurationForBpm(double bpm) {
-    return min(100, (60 / bpm * 1000 - 10).round());
+    return min(200, (60 / bpm * 1000 - 25).round());
   }
 }
 

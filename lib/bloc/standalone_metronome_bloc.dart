@@ -133,9 +133,8 @@ class StandaloneMetronomeBloc {
           ClickState(count: count, accent: isPrimary, beatsPerBar: beatsPerBar);
 
       _clickStateController.sink.add(clickState);
-      clickTimer = Timer(
-          Duration(milliseconds: ClickInfo.getClickDurationForBpm(bpmDouble)),
-          nextClickState);
+      final int clickDuration = ClickInfo.getClickDurationForBpm(bpmDouble);
+      clickTimer = Timer(Duration(milliseconds: clickDuration), nextClickState);
     } else {
       final int now = DateTime.now().millisecondsSinceEpoch;
       final int timerDurationOffset = now - (clickStartTime ?? now);
