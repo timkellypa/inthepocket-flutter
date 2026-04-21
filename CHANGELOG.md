@@ -4,6 +4,10 @@
   - Make a route/button for standalone metronome from home screen.
   - Update tempo editor to use new metronome.
   - Refactor some common utilities in both standalone and track based metronomes.
+- Bug Fixes:
+  - Remove "null" track title (and track title in general) above for track tempos list.
+  - Add wait spinner when importing from other setlist.
+  - Slightly increase metronome click duration.  Makes the bulb icons more visible, especially in dark mode.
 
 ## 2.0.2
 - Bug Fixes:
@@ -23,5 +27,4 @@ Bug Fixes:
   - Delete tracks (cascade) first, with tempos, etc.
 
 ## 2.0.0
-
 Initial published release (version 1.0 in App Store)

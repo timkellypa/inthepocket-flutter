@@ -1,6 +1,6 @@
 # In The Pocket
 
-Setlist organizer with Spotify integration.  Specialized for drummers, this includes a metronome for each track, supporting multiple time signatures and tempos.
+Metronome and Setlist organizer with Spotify integration.  Specialized for drummers, this includes a standalone metronome and a metronome for each track, supporting multiple time signatures and tempos.
 
 ## Issues / Feature Requests
 
@@ -22,7 +22,7 @@ If you update models in setlistdb.dart, you need to run the following to update 
 
 #### Secrets
 
-If you are locally testing spotify integration, you need to create an api_secrets.json file.  This should contain JSON in the following format:
+If you are locally testing Spotify or GetSongBPM integration, you need to create an api_secrets.json file.  This should contain JSON in the following format:
 
 ```
 {

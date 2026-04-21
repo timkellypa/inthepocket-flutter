@@ -14,9 +14,9 @@ Grab songs for your setlists from any of your Spotify playlists.
 ### Click Track
 Click tracks are auto-generated using the BPM provided by [GetSongBPM](https://getsongbpm.com).
 
-They can also be manually entered (or altered).  For songs with time signature or tempo changes, you can simply add a duration to each click track and create multiple.
+For songs with time signature or tempo changes, you can simply add a duration to each click track and create multiple.
 
-The click track creates a .wav file that plays like a normal media file on your device.  This way you can minimize or leave the app and still hear the click.  You can also play/pause/skip tracks using your device media controls or a bluetooth device.
+The click track creates a .wav file that plays like a normal media file on your device.  This way you can minimize the app and still hear the click.  You can also play/pause/skip tracks using your device media controls or a bluetooth device.
 
 While the app is open, you can also see visual indicators of the click on the count, and the device will vibrate on each count.
 
