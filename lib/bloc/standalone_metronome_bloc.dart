@@ -42,11 +42,11 @@ class StandaloneMetronomeBloc {
   // Click start time.  When this is null, it means a click hasn't started yet.
   int? clickStartTime;
 
-  int _beatsPerBar = 4;
+  // Time when previous click started.
+  // Used for logging to verify accuracy.
+  int? previousClickStart;
 
-  // single instance of timer that we can cancel and restart as needed.
-  Timer? clickTimer;
-  Timer? clickDurationTimer;
+  int _beatsPerBar = 4;
 
   /// Create new instance of wheel controller, so we have the right initial value.
   void initializeWheelController() {
@@ -92,8 +92,6 @@ class StandaloneMetronomeBloc {
 
   void nextClickState({bool fromTap = false}) {
     if (!isClicking) {
-      clickTimer?.cancel();
-      clickTimer = null;
       return;
     }
 
@@ -107,8 +105,6 @@ class StandaloneMetronomeBloc {
     if (fromTap) {
       clickStartTime = null;
     }
-
-    clickTimer?.cancel();
 
     final double bpmDouble = bpm.toDouble();
 
@@ -126,41 +122,47 @@ class StandaloneMetronomeBloc {
       }
 
       // Null click start time means that we should be performing the actual click here.
-      clickStartTime = DateTime.now().millisecondsSinceEpoch;
+      clickStartTime = DateTime.now().microsecondsSinceEpoch;
 
       final bool isPrimary = TempoRepository.isCountPrimary(tempo, count);
       final ClickState clickState =
           ClickState(count: count, accent: isPrimary, beatsPerBar: beatsPerBar);
 
-      _clickStateController.sink.add(clickState);
-      final int clickDuration = ClickInfo.getClickDurationForBpm(bpmDouble);
-      clickTimer = Timer(Duration(milliseconds: clickDuration), nextClickState);
-    } else {
-      final int now = DateTime.now().millisecondsSinceEpoch;
-      final int timerDurationOffset = now - (clickStartTime ?? now);
-
-      if (timerDurationOffset == 0) {
-        // a null click startTime at the last minute means a tap has interfered with this thread.
-        // Return in this state, so the tap handles everything.
-        return;
+      if (previousClickStart != null) {
+        final double previousDurationSeconds =
+            (clickStartTime! - previousClickStart!) / 1000000.0;
+        final double previousClickBpm = 60.0 / previousDurationSeconds;
+        print(
+            'Previous click duration (seconds) ${previousDurationSeconds.toStringAsFixed(3)}');
+        print('Previous click BPM: ${previousClickBpm.toStringAsFixed(3)}');
       }
 
-      // Stop this click and schedule the next one, based on the difference between the calculated time and clickStartTime
+      previousClickStart = clickStartTime;
+      final int clickDuration =
+          ClickInfo.getClickDurationForBpm(bpmDouble) * 1000;
+      Future<void>.delayed(
+          Duration(microseconds: clickDuration), nextClickState);
+
+      _clickStateController.sink.add(clickState);
+    } else {
+      final int now = DateTime.now().microsecondsSinceEpoch;
+      final int timerDurationOffset = now - (clickStartTime ?? now);
+
+      final int timerDuration =
+          ((60000000 / (bpm + bpm * 1 / 120)) - timerDurationOffset).round();
+      clickStartTime = null;
+      Future<void>.delayed(
+          Duration(microseconds: timerDuration), nextClickState);
+      // Schedule next click and stop this one
       _clickStateController.sink.add(
           ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
-
-      final int timerDuration = (60000 / bpm).round() - timerDurationOffset;
-      clickStartTime = null;
-      clickTimer?.cancel();
-      clickTimer = Timer(Duration(milliseconds: timerDuration), nextClickState);
     }
   }
 
   void handlePause() {
     count = 0;
-    clickTimer?.cancel();
-    clickTimer = null;
     clickStartTime = null;
+    previousClickStart = null;
     _clickStateController.sink.add(
         ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
     isClicking = false;
@@ -170,8 +172,6 @@ class StandaloneMetronomeBloc {
     _clickStateController.close();
     isClicking = false;
     clickStartTime = null;
-    clickTimer?.cancel();
-    clickDurationTimer?.cancel();
     bpmController.dispose();
   }
 }
