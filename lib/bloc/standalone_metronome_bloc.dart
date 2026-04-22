@@ -8,10 +8,13 @@ import 'package:wheel_picker/wheel_picker.dart';
 
 class StandaloneMetronomeBloc {
   StandaloneMetronomeBloc() {
-    bpmController =
-        WheelPickerController(initialIndex: bpmIndex, itemCount: 281);
+    bpmController = WheelPickerController(
+      initialIndex: bpmIndex,
+      itemCount: 281,
+    );
     _clickStateController.sink.add(
-        ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
+      ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar),
+    );
 
     // Asynchronous, but we don't need to wait.
     // MetronomeSendPort will be available when the isolate is.  Until then,
@@ -44,7 +47,8 @@ class StandaloneMetronomeBloc {
     _beatsPerBar = value;
 
     _clickStateController.sink.add(
-        ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
+      ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar),
+    );
   }
 
   double get bpmDouble {
@@ -56,55 +60,63 @@ class StandaloneMetronomeBloc {
 
   /// Create new instance of wheel controller, so we have the right initial value.
   void initializeWheelController() {
-    bpmController =
-        WheelPickerController(initialIndex: bpmIndex, itemCount: 281);
+    bpmController = WheelPickerController(
+      initialIndex: bpmIndex,
+      itemCount: 281,
+    );
   }
 
   Future<void> registerMetronomeIsolate() async {
     final ReceivePort receivePort = ReceivePort();
 
-    _metronomeIsolateRef =
-        await Isolate.spawn(metronomeIsolate, receivePort.sendPort);
+    _metronomeIsolateRef = await Isolate.spawn(
+      metronomeIsolate,
+      receivePort.sendPort,
+    );
 
     int lastClick = 0;
     final Stopwatch clickDurationStopwatch = Stopwatch();
     clickDurationStopwatch.start();
 
-    receivePort.listen(
-      (dynamic message) {
-        if (message is SendPort) {
-          metronomeSendPort = message;
-        } else if (message == 'click') {
-          count = (count % beatsPerBar) + 1;
+    receivePort.listen((dynamic message) {
+      if (message is SendPort) {
+        metronomeSendPort = message;
+      } else if (message == 'click') {
+        count = (count % beatsPerBar) + 1;
 
-          final Tempo tempo = Tempo(
-              bpm: bpmDouble,
-              beatsPerBar: beatsPerBar,
-              beatUnit: beatUnit,
-              accentBeatsPerBar: accentBeatsPerBar);
-          final bool accent = TempoRepository.isCountPrimary(tempo, count);
-          final ClickState clickState = ClickState(
-              count: count, accent: accent, beatsPerBar: beatsPerBar);
+        final Tempo tempo = Tempo(
+          bpm: bpmDouble,
+          beatsPerBar: beatsPerBar,
+          beatUnit: beatUnit,
+          accentBeatsPerBar: accentBeatsPerBar,
+        );
+        final bool accent = TempoRepository.isCountPrimary(tempo, count);
+        final ClickState clickState = ClickState(
+          count: count,
+          accent: accent,
+          beatsPerBar: beatsPerBar,
+        );
 
-          if (lastClick != 0) {
-            final int currentClick = clickDurationStopwatch.elapsedMicroseconds;
-            // Let's do some logging to verify click accuracy.
-            final double previousDurationSeconds =
-                (currentClick - lastClick) / 1000000.0;
-            final double previousClickBpm = 60.0 / previousDurationSeconds;
-            print(
-                'Previous click duration (seconds) ${previousDurationSeconds.toStringAsFixed(3)}');
-            print('Previous click BPM: ${previousClickBpm.toStringAsFixed(3)}');
-          }
-          lastClick = clickDurationStopwatch.elapsedMicroseconds;
-
-          _clickStateController.sink.add(clickState);
-        } else if (message == 'silence') {
-          _clickStateController.sink.add(ClickState(
-              count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
+        if (lastClick != 0) {
+          final int currentClick = clickDurationStopwatch.elapsedMicroseconds;
+          // Let's do some logging to verify click accuracy.
+          final double previousDurationSeconds =
+              (currentClick - lastClick) / 1000000.0;
+          final double previousClickBpm = 60.0 / previousDurationSeconds;
+          print(
+            'Previous click duration (seconds) ${previousDurationSeconds.toStringAsFixed(3)}',
+          );
+          print('Previous click BPM: ${previousClickBpm.toStringAsFixed(3)}');
         }
-      },
-    );
+        lastClick = clickDurationStopwatch.elapsedMicroseconds;
+
+        _clickStateController.sink.add(clickState);
+      } else if (message == 'silence') {
+        _clickStateController.sink.add(
+          ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar),
+        );
+      }
+    });
   }
 
   void handleTap() {
@@ -150,8 +162,9 @@ class StandaloneMetronomeBloc {
     final Stopwatch stopwatch = Stopwatch();
 
     double currentBpm = 120.0;
-    double phaseClickDuration =
-        ClickInfo.getClickPhaseDurationForBpm(currentBpm);
+    double phaseClickDuration = ClickInfo.getClickPhaseDurationForBpm(
+      currentBpm,
+    );
     bool running = false;
 
     port.listen((dynamic message) {
@@ -171,27 +184,29 @@ class StandaloneMetronomeBloc {
     });
 
     _runClickLoop(
-        () => stopwatch,
-        () => currentBpm,
-        () => phaseClickDuration,
-        () => running,
-        () => mainSendPort.send('click'),
-        () => mainSendPort.send('silence'));
+      () => stopwatch,
+      () => currentBpm,
+      () => phaseClickDuration,
+      () => running,
+      () => mainSendPort.send('click'),
+      () => mainSendPort.send('silence'),
+    );
   }
 
   Future<void> _runClickLoop(
-      Stopwatch Function() getStopwatch,
-      double Function() getBpm,
-      double Function() getPhaseClickDuration,
-      bool Function() isRunning,
-      void Function() performClick,
-      void Function() performSilence) async {
+    Stopwatch Function() getStopwatch,
+    double Function() getBpm,
+    double Function() getPhaseClickDuration,
+    bool Function() isRunning,
+    void Function() performClick,
+    void Function() performSilence,
+  ) async {
     double beatPhase = 0.0;
     Stopwatch stopwatch = getStopwatch();
     int lastCheck = stopwatch.elapsedMicroseconds;
     bool silence = false;
     bool firstIteration = true;
-    const Duration pollingDuration = Duration(microseconds: 500);
+    const Duration pollingDuration = Duration(milliseconds: 3);
     while (true) {
       if (isRunning()) {
         stopwatch = getStopwatch();
@@ -240,7 +255,8 @@ class StandaloneMetronomeBloc {
     isClicking = false;
     metronomeSendPort?.send('stop');
     _clickStateController.sink.add(
-        ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
+      ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar),
+    );
   }
 
   void dispose() {
