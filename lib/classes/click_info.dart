@@ -24,14 +24,9 @@ class ClickInfo {
   Tempo? tempo;
   double duration;
 
+  /// Get click duration for a particular BPM.  In milliseconds.
   static int getClickDurationForBpm(double bpm) {
     return min(200, (60 / bpm * 1000 - 25).round());
-  }
-
-  // Get the proportion of the click duration (phase) that should determine the duration.
-  static double getClickPhaseDurationForBpm(double bpm) {
-    final int duration = getClickDurationForBpm(bpm);
-    return (bpm * duration) / 60000.0;
   }
 }
 

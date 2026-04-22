@@ -162,15 +162,16 @@ class StandaloneMetronomeBloc {
     final Stopwatch stopwatch = Stopwatch();
 
     double currentBpm = 120.0;
-    double phaseClickDuration = ClickInfo.getClickPhaseDurationForBpm(
-      currentBpm,
-    );
+    double clickDuration = ClickInfo.getClickDurationForBpm(
+          currentBpm,
+        ) *
+        1000;
     bool running = false;
 
     port.listen((dynamic message) {
       if (message is double) {
         currentBpm = message;
-        phaseClickDuration = ClickInfo.getClickPhaseDurationForBpm(currentBpm);
+        clickDuration = ClickInfo.getClickDurationForBpm(currentBpm) * 1000;
       } else if (message == 'start') {
         if (!running) {
           stopwatch
@@ -186,7 +187,7 @@ class StandaloneMetronomeBloc {
     _runClickLoop(
       () => stopwatch,
       () => currentBpm,
-      () => phaseClickDuration,
+      () => clickDuration,
       () => running,
       () => mainSendPort.send('click'),
       () => mainSendPort.send('silence'),
@@ -196,51 +197,49 @@ class StandaloneMetronomeBloc {
   Future<void> _runClickLoop(
     Stopwatch Function() getStopwatch,
     double Function() getBpm,
-    double Function() getPhaseClickDuration,
+    double Function() getClickDuration,
     bool Function() isRunning,
     void Function() performClick,
     void Function() performSilence,
   ) async {
-    double beatPhase = 0.0;
+    double nextClickTime = 0.0;
+    double nextSilenceTime = 0.0;
     Stopwatch stopwatch = getStopwatch();
-    int lastCheck = stopwatch.elapsedMicroseconds;
     bool silence = false;
     bool firstIteration = true;
-    const Duration pollingDuration = Duration(milliseconds: 3);
+    const Duration pollingDuration = Duration(milliseconds: 2);
     while (true) {
       if (isRunning()) {
         stopwatch = getStopwatch();
+        final double currentBpm = getBpm();
+        final int now = stopwatch.elapsedMicroseconds;
+        final double clickInterval = 60000000 / currentBpm;
+        final double clickDuration = getClickDuration();
 
         // If first iteration, sync up stopwatch, perform a click and continue the loop.
         if (firstIteration) {
-          beatPhase = 0.0;
+          nextClickTime = now + clickInterval;
+          nextSilenceTime = now + clickDuration;
           firstIteration = false;
-          lastCheck = stopwatch.elapsedMicroseconds;
           silence = false;
           performClick();
+          firstIteration = false;
         }
 
-        final double currentBpm = getBpm();
-        final double phaseClickDuration = getPhaseClickDuration();
-        final int now = stopwatch.elapsedMicroseconds;
-        final int difference = now - lastCheck;
-
-        lastCheck = now;
-
-        beatPhase += (currentBpm * difference) / 60000000;
-
-        while (beatPhase >= 1.0) {
-          beatPhase -= 1.0;
-          silence = false;
-          performClick();
-        }
-
-        if (beatPhase >= phaseClickDuration && !silence) {
+        if (now >= nextSilenceTime && !silence) {
           silence = true;
           performSilence();
         }
-        if (firstIteration) {
-          firstIteration = false;
+
+        if (now >= nextClickTime) {
+          performClick();
+          silence = false;
+
+          while (now >= nextClickTime) {
+            // Calculate next silence time from current click prior to iterating.
+            nextSilenceTime = nextClickTime + clickDuration;
+            nextClickTime += clickInterval;
+          }
         }
       } else {
         firstIteration = true;
