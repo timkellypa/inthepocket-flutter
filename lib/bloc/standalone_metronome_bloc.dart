@@ -100,8 +100,8 @@ class StandaloneMetronomeBloc {
 
           _clickStateController.sink.add(clickState);
         } else if (message == 'silence') {
-          _clickStateController.sink
-              .add(ClickState(count: ClickInfo.SILENCE_COUNT));
+          _clickStateController.sink.add(ClickState(
+              count: ClickInfo.SILENCE_COUNT, beatsPerBar: beatsPerBar));
         }
       },
     );
@@ -191,7 +191,7 @@ class StandaloneMetronomeBloc {
     int lastCheck = stopwatch.elapsedMicroseconds;
     bool silence = false;
     bool firstIteration = true;
-    const Duration pollingDuration = Duration(milliseconds: 1);
+    const Duration pollingDuration = Duration(microseconds: 500);
     while (true) {
       if (isRunning()) {
         stopwatch = getStopwatch();
