@@ -58,6 +58,7 @@ class MetronomePageState extends State<MetronomePage> {
 
   @override
   void dispose() {
+    metronomeBloc?.dispose();
     super.dispose();
   }
 }

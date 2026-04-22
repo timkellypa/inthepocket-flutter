@@ -20,7 +20,7 @@ class SetlistListBottomBar extends StatelessWidget {
             // Make this button bigger and more obvious
             MaterialButton(
               child: Column(
-                children: [
+                children: <Widget>[
                   Icon(Icons.music_note,
                       size: 28, color: Theme.of(context).colorScheme.primary),
                   const Text(
