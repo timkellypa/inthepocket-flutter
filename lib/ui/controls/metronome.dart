@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/standalone_metronome_bloc.dart';
 import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:in_the_pocket/ui/components/click_state_display.dart';
-import 'package:in_the_pocket/ui/haptics/MetronomeBuzzer.dart';
-import 'package:in_the_pocket/ui/listeners/MetronomeClickPlayer.dart';
 import 'package:provider/provider.dart';
 import 'package:wheel_picker/wheel_picker.dart';
 
@@ -17,22 +15,10 @@ class MetronomeControl extends StatefulWidget {
 }
 
 class MetronomeControlState extends State<MetronomeControl> {
-  MetronomeBuzzer? buzzer;
-  MetronomeClickPlayer? clickPlayer;
-
   @override
   Widget build(BuildContext context) {
     final StandaloneMetronomeBloc metronomeBloc =
         Provider.of<StandaloneMetronomeBloc>(context);
-
-    buzzer?.stopListening();
-    buzzer = MetronomeBuzzer(clickStateStream: metronomeBloc.clickStateStream);
-    buzzer!.listen();
-
-    clickPlayer?.stopListening();
-    clickPlayer =
-        MetronomeClickPlayer(clickStateStream: metronomeBloc.clickStateStream);
-    clickPlayer!.listen();
 
     return Center(
         child: Column(
@@ -184,7 +170,5 @@ class MetronomeControlState extends State<MetronomeControl> {
   @override
   void dispose() {
     super.dispose();
-    buzzer?.stopListening();
-    clickPlayer?.dispose();
   }
 }

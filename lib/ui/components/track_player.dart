@@ -30,11 +30,6 @@ class TrackPlayerState extends State<TrackPlayer> {
   Widget build(BuildContext context) {
     final TrackBloc trackBloc = Provider.of<TrackBloc>(context);
 
-    buzzer?.stopListening();
-    buzzer = MetronomeBuzzer(
-        clickStateStream: trackBloc.indicatorStateBloc.clickStateStream);
-    buzzer!.listen();
-
     return Container(
       child: StreamBuilder<List<SetlistTrack>>(
         stream: trackBloc.items,
@@ -169,6 +164,5 @@ class TrackPlayerState extends State<TrackPlayer> {
   @override
   void dispose() {
     super.dispose();
-    buzzer?.stopListening();
   }
 }

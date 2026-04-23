@@ -10,7 +10,7 @@ import 'package:soundpool/soundpool.dart';
 /// uses a dedicated .wav file generated for each track,
 /// to allow for media controls and reduce possibilities of latency.
 class MetronomeClickPlayer {
-  MetronomeClickPlayer({required this.clickStateStream});
+  MetronomeClickPlayer();
 
   static Future<void> setup() async {
     final ByteData primaryAsset = await rootBundle.load('sounds/primary.wav');
@@ -39,34 +39,16 @@ class MetronomeClickPlayer {
       options: const SoundpoolOptions(
           maxStreams: 15, streamType: StreamType.notification));
 
-  Stream<ClickState> clickStateStream;
-
-  StreamSubscription<ClickState>? clickSubscription;
-
   static int? primarySoundId;
   static int? secondarySoundId;
 
   ClickState? previousState;
 
-  void listen() {
-    clickSubscription = clickStateStream.listen((ClickState clickState) {
-      if (clickState.isClicking() && !(previousState?.isClicking() ?? false)) {
-        if (clickState.accent && primarySoundId != null) {
-          soundpool.play(primarySoundId!);
-        } else if (secondarySoundId != null) {
-          soundpool.play(secondarySoundId!);
-        }
-      }
-      previousState = clickState;
-    });
-  }
-
-  void stopListening() {
-    clickSubscription?.cancel();
-  }
-
-  void dispose() {
-    stopListening();
-    clickSubscription?.cancel();
+  void play(bool accent) {
+    if (accent && primarySoundId != null) {
+      soundpool.play(primarySoundId!);
+    } else if (secondarySoundId != null) {
+      soundpool.play(secondarySoundId!);
+    }
   }
 }

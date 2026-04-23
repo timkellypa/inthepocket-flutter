@@ -6,6 +6,7 @@ import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:in_the_pocket/services/service_locator.dart';
+import 'package:in_the_pocket/ui/haptics/MetronomeBuzzer.dart';
 
 class MetronomeIndicatorStateBloc {
   MetronomeIndicatorStateBloc() {
@@ -26,6 +27,8 @@ class MetronomeIndicatorStateBloc {
       StreamController<ClickState>.broadcast();
 
   Stream<ClickState> get clickStateStream => _clickStateController.stream;
+
+  MetronomeBuzzer buzzer = MetronomeBuzzer();
 
   Timer? clickTimer;
 
@@ -97,6 +100,10 @@ class MetronomeIndicatorStateBloc {
 
   Future<void> click(ClickInfo clickInfo) async {
     final Completer<void> completer = Completer<void>();
+
+    if (clickInfo.count != ClickInfo.SILENCE_COUNT) {
+      buzzer.play(clickInfo.accent);
+    }
 
     // Do a click.  Sometimes these are silent.
     _clickStateController.sink.add(ClickState(

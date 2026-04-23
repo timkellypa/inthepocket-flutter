@@ -4,6 +4,8 @@ import 'dart:isolate';
 import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
+import 'package:in_the_pocket/ui/haptics/MetronomeBuzzer.dart';
+import 'package:in_the_pocket/ui/listeners/MetronomeClickPlayer.dart';
 import 'package:wheel_picker/wheel_picker.dart';
 
 class StandaloneMetronomeBloc {
@@ -26,6 +28,8 @@ class StandaloneMetronomeBloc {
       StreamController<ClickState>.broadcast();
 
   Stream<ClickState> get clickStateStream => _clickStateController.stream;
+  MetronomeBuzzer buzzer = MetronomeBuzzer();
+  MetronomeClickPlayer player = MetronomeClickPlayer();
 
   late WheelPickerController bpmController;
 
@@ -91,6 +95,11 @@ class StandaloneMetronomeBloc {
           accentBeatsPerBar: accentBeatsPerBar,
         );
         final bool accent = TempoRepository.isCountPrimary(tempo, count);
+
+        // Fire haptic and audio right away. Don't wait for UI to process stream.
+        buzzer.play(accent);
+        player.play(accent);
+
         final ClickState clickState = ClickState(
           count: count,
           accent: accent,
