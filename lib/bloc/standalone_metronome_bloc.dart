@@ -216,7 +216,7 @@ class StandaloneMetronomeBloc {
     Stopwatch stopwatch = getStopwatch();
     bool silence = false;
     bool firstIteration = true;
-    const Duration pollingDuration = Duration(milliseconds: 2);
+    const Duration pollingDuration = Duration(milliseconds: 1);
     while (true) {
       if (isRunning()) {
         stopwatch = getStopwatch();
