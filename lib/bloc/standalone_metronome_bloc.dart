@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:math';
 
 import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:in_the_pocket/ui/haptics/MetronomeBuzzer.dart';
 import 'package:in_the_pocket/ui/listeners/MetronomeClickPlayer.dart';
+import 'package:uuid/uuid.dart';
 import 'package:wheel_picker/wheel_picker.dart';
 
 class StandaloneMetronomeBloc {
@@ -175,85 +177,94 @@ class StandaloneMetronomeBloc {
           currentBpm,
         ) *
         1000;
-    bool running = false;
+    String? activeClickLoopId;
 
     port.listen((dynamic message) {
       if (message is double) {
         currentBpm = message;
         clickDuration = ClickInfo.getClickDurationForBpm(currentBpm) * 1000;
       } else if (message == 'start') {
-        if (!running) {
+        if (activeClickLoopId == null) {
           stopwatch
             ..reset()
             ..start();
-          running = true;
+
+          activeClickLoopId = const Uuid().v4();
+
+          _runClickLoop(
+            () => stopwatch,
+            () => currentBpm,
+            () => clickDuration,
+            () => activeClickLoopId,
+            () => mainSendPort.send('click'),
+            () => mainSendPort.send('silence'),
+          );
         }
       } else if (message == 'stop') {
-        running = false;
+        activeClickLoopId = null;
       }
     });
-
-    _runClickLoop(
-      () => stopwatch,
-      () => currentBpm,
-      () => clickDuration,
-      () => running,
-      () => mainSendPort.send('click'),
-      () => mainSendPort.send('silence'),
-    );
   }
 
   Future<void> _runClickLoop(
     Stopwatch Function() getStopwatch,
     double Function() getBpm,
     double Function() getClickDuration,
-    bool Function() isRunning,
+    String? Function() getActiveClickLoopId,
     void Function() performClick,
     void Function() performSilence,
   ) async {
+    final String thisClickLoopId = getActiveClickLoopId() ?? '';
     double nextClickTime = 0.0;
     double nextSilenceTime = 0.0;
     Stopwatch stopwatch = getStopwatch();
     bool silence = false;
     bool firstIteration = true;
-    const Duration pollingDuration = Duration(milliseconds: 1);
-    while (true) {
-      if (isRunning()) {
-        stopwatch = getStopwatch();
-        final double currentBpm = getBpm();
-        final int now = stopwatch.elapsedMicroseconds;
-        final double clickInterval = 60000000 / currentBpm;
-        final double clickDuration = getClickDuration();
 
-        // If first iteration, sync up stopwatch, perform a click and continue the loop.
-        if (firstIteration) {
-          nextClickTime = now + clickInterval;
-          nextSilenceTime = now + clickDuration;
-          firstIteration = false;
-          silence = false;
-          performClick();
-          firstIteration = false;
-        }
+    // Perform this loop while our ID matches the assigned ID from start.
+    // If somebody rapidly starts this keeps it so that we only have 1 active loop.
+    while (thisClickLoopId == getActiveClickLoopId()) {
+      stopwatch = getStopwatch();
+      final double currentBpm = getBpm();
+      final int now = stopwatch.elapsedMicroseconds;
+      final double clickInterval = 60000000 / currentBpm;
+      final double clickDuration = getClickDuration();
 
-        if (now >= nextSilenceTime && !silence) {
-          silence = true;
-          performSilence();
-        }
-
-        if (now >= nextClickTime) {
-          performClick();
-          silence = false;
-
-          while (now >= nextClickTime) {
-            // Calculate next silence time from current click prior to iterating.
-            nextSilenceTime = nextClickTime + clickDuration;
-            nextClickTime += clickInterval;
-          }
-        }
-      } else {
-        firstIteration = true;
+      // If first iteration, sync up stopwatch, perform a click and continue the loop.
+      if (firstIteration) {
+        nextClickTime = now + clickInterval;
+        nextSilenceTime = now + clickDuration;
+        firstIteration = false;
+        silence = false;
+        performClick();
+        firstIteration = false;
       }
 
+      if (now >= nextSilenceTime && !silence) {
+        silence = true;
+        performSilence();
+      }
+
+      if (now >= nextClickTime) {
+        performClick();
+        silence = false;
+
+        while (now >= nextClickTime) {
+          // Calculate next silence time from current click prior to iterating.
+          nextSilenceTime = nextClickTime + clickDuration;
+          nextClickTime += clickInterval;
+        }
+      }
+
+      // Calculate a next duration time that is:
+      // - 1 ms if close to a beat
+      // - 5 ms prior to beat
+      // - 20 ms max for responsiveness
+      final double nextActionTime = min(nextSilenceTime, nextClickTime);
+      final double calculatedDuration = nextActionTime - now;
+      final int customPollAmount =
+          (calculatedDuration - 5000).floor().clamp(1000, 20000);
+      final Duration pollingDuration = Duration(microseconds: customPollAmount);
       await Future<void>.delayed(pollingDuration);
     }
   }
