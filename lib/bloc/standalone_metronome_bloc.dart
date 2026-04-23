@@ -99,8 +99,9 @@ class StandaloneMetronomeBloc {
         final bool accent = TempoRepository.isCountPrimary(tempo, count);
 
         // Fire haptic and audio right away. Don't wait for UI to process stream.
-        buzzer.play(accent);
+        // Do haptics in a microtask to allow things to move separately and not compete for main thread.
         player.play(accent);
+        Future<void>.microtask(() => buzzer.play(accent));
 
         final ClickState clickState = ClickState(
           count: count,
