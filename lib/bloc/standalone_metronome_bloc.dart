@@ -250,11 +250,11 @@ class StandaloneMetronomeBloc {
         performClick();
         silence = false;
 
-        while (now >= nextClickTime) {
-          // Calculate next silence time from current click prior to iterating.
-          nextSilenceTime = nextClickTime + clickDuration;
-          nextClickTime += clickInterval;
-        }
+        // Calculate next silence time from current click prior to iterating.
+        // Anchor to now instead of previous next click
+        // to ensure we don't try to catch up a slightly delayed beat.
+        nextSilenceTime = now + clickDuration;
+        nextClickTime = now + clickInterval;
       }
 
       // Calculate a next duration time that is:
