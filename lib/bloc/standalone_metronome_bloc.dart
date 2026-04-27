@@ -100,7 +100,9 @@ class StandaloneMetronomeBloc {
 
         // Fire haptic and audio right away. Don't wait for UI to process stream.
         // Do haptics in a microtask to allow things to move separately and not compete for main thread.
+        player.stop();
         player.play(accent);
+
         Future<void>.microtask(() => buzzer.play(accent));
 
         final ClickState clickState = ClickState(
@@ -258,13 +260,13 @@ class StandaloneMetronomeBloc {
       }
 
       // Calculate a next duration time that is:
-      // - 1 ms if close to a beat
-      // - 5 ms prior to beat
-      // - 20 ms max for responsiveness
+      // - 2 milliseconds if close to a beat
+      // - 10 ms prior to beat
+      // - 50 ms max for responsiveness to BPM changes
       final double nextActionTime = min(nextSilenceTime, nextClickTime);
       final double calculatedDuration = nextActionTime - now;
       final int customPollAmount =
-          (calculatedDuration - 5000).floor().clamp(1000, 20000);
+          (calculatedDuration - 10000).floor().clamp(2000, 50000);
       final Duration pollingDuration = Duration(microseconds: customPollAmount);
       await Future<void>.delayed(pollingDuration);
     }
