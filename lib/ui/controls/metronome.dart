@@ -20,6 +20,26 @@ class MetronomeControlState extends State<MetronomeControl> {
     final StandaloneMetronomeBloc metronomeBloc =
         Provider.of<StandaloneMetronomeBloc>(context);
 
+    final List<int> accentEntries = <int>[];
+    int accentEntryInitialSelection = -1;
+
+    for (int i = 0; i <= metronomeBloc.beatsPerBar; i++) {
+      if ((i == 0 || metronomeBloc.beatsPerBar % i == 0) &&
+          metronomeBloc.beatsPerBar != i) {
+        accentEntries.add(i);
+        if (metronomeBloc.accentBeatsPerBar == i) {
+          accentEntryInitialSelection = i;
+        }
+      }
+    }
+
+    // Default to 1 accent per bar if unset
+    if (accentEntryInitialSelection == -1) {
+      accentEntryInitialSelection = 1;
+    }
+
+    metronomeBloc.accentBeatsPerBar = accentEntryInitialSelection;
+
     return Center(
         child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -71,13 +91,10 @@ class MetronomeControlState extends State<MetronomeControl> {
                       const Text('Accents:'),
                       DropdownMenu<int>(
                           width: 100,
-                          dropdownMenuEntries: const <DropdownMenuEntry<int>>[
-                            DropdownMenuEntry<int>(value: 0, label: '0'),
-                            DropdownMenuEntry<int>(value: 1, label: '1'),
-                            DropdownMenuEntry<int>(value: 2, label: '2'),
-                            DropdownMenuEntry<int>(value: 3, label: '3'),
-                            DropdownMenuEntry<int>(value: 4, label: '4'),
-                          ],
+                          dropdownMenuEntries: accentEntries
+                              .map((int i) => DropdownMenuEntry<int>(
+                                  value: i, label: i.toString()))
+                              .toList(),
                           initialSelection: metronomeBloc.accentBeatsPerBar,
                           onSelected: (int? newValue) {
                             if (newValue != null) {
