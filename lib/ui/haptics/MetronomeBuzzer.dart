@@ -6,7 +6,17 @@ class MetronomeBuzzer {
 
   ClickState? previousState;
 
-  void play(bool accent) {
+  bool shouldBuzz(int tempo, bool accent) {
+    if (tempo > 200) {
+      return accent;
+    }
+    return true;
+  }
+
+  void play(int tempo, bool accent) {
+    if (!shouldBuzz(tempo, accent)) {
+      return;
+    }
     if (accent) {
       HapticFeedback.heavyImpact();
     } else {

@@ -102,7 +102,7 @@ class MetronomeIndicatorStateBloc {
     final Completer<void> completer = Completer<void>();
 
     if (clickInfo.count != ClickInfo.SILENCE_COUNT) {
-      buzzer.play(clickInfo.accent);
+      buzzer.play(clickInfo.tempo?.bpm?.floor() ?? 60, clickInfo.accent);
     }
 
     // Do a click.  Sometimes these are silent.

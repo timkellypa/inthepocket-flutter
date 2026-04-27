@@ -80,7 +80,6 @@ class StandaloneMetronomeBloc {
       receivePort.sendPort,
     );
 
-    int lastClick = 0;
     final Stopwatch clickDurationStopwatch = Stopwatch();
     clickDurationStopwatch.start();
 
@@ -103,26 +102,13 @@ class StandaloneMetronomeBloc {
         player.stop();
         player.play(accent);
 
-        Future<void>.microtask(() => buzzer.play(accent));
+        Future<void>.microtask(() => buzzer.play(bpm, accent));
 
         final ClickState clickState = ClickState(
           count: count,
           accent: accent,
           beatsPerBar: beatsPerBar,
         );
-
-        if (lastClick != 0) {
-          final int currentClick = clickDurationStopwatch.elapsedMicroseconds;
-          // Let's do some logging to verify click accuracy.
-          final double previousDurationSeconds =
-              (currentClick - lastClick) / 1000000.0;
-          final double previousClickBpm = 60.0 / previousDurationSeconds;
-          print(
-            'Previous click duration (seconds) ${previousDurationSeconds.toStringAsFixed(3)}',
-          );
-          print('Previous click BPM: ${previousClickBpm.toStringAsFixed(3)}');
-        }
-        lastClick = clickDurationStopwatch.elapsedMicroseconds;
 
         _clickStateController.sink.add(clickState);
       } else if (message == 'silence') {
@@ -260,13 +246,13 @@ class StandaloneMetronomeBloc {
       }
 
       // Calculate a next duration time that is:
-      // - 2 milliseconds if close to a beat
+      // - 3 milliseconds if close to a beat
       // - 10 ms prior to beat
       // - 50 ms max for responsiveness to BPM changes
       final double nextActionTime = min(nextSilenceTime, nextClickTime);
       final double calculatedDuration = nextActionTime - now;
       final int customPollAmount =
-          (calculatedDuration - 10000).floor().clamp(2000, 50000);
+          (calculatedDuration - 10000).floor().clamp(3000, 50000);
       final Duration pollingDuration = Duration(microseconds: customPollAmount);
       await Future<void>.delayed(pollingDuration);
     }
