@@ -37,7 +37,7 @@ class MetronomeClickPlayer {
   // Use notification stream type to allow sound to play with the least latency.
   static Soundpool soundpool = Soundpool.fromOptions(
       options: const SoundpoolOptions(
-          maxStreams: 5, streamType: StreamType.notification));
+          maxStreams: 10, streamType: StreamType.notification));
 
   static int? primarySoundId;
   static int? secondarySoundId;
