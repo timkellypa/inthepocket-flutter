@@ -211,12 +211,19 @@ class StandaloneMetronomeBloc {
     bool silence = false;
     bool firstIteration = true;
     double drift = 0;
+    double previousBpm = 0;
 
     // Perform this loop while our ID matches the assigned ID from start.
     // If somebody rapidly starts this keeps it so that we only have 1 active loop.
     while (thisClickLoopId == getActiveClickLoopId()) {
       stopwatch = getStopwatch();
       final double currentBpm = getBpm();
+
+      // Reset drift on BPM change.
+      if (currentBpm != previousBpm) {
+        drift = 0;
+        previousBpm = currentBpm;
+      }
       final int now = stopwatch.elapsedMicroseconds;
       final double clickInterval = 60000000 / currentBpm;
       final double clickDuration = getClickDuration();
