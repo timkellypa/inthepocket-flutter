@@ -7,7 +7,7 @@ class MetronomeBuzzer {
   ClickState? previousState;
 
   bool shouldBuzz(int tempo, bool accent) {
-    if (tempo > 200) {
+    if (tempo > 300) {
       return accent;
     }
     return true;

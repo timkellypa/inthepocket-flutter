@@ -102,7 +102,8 @@ class StandaloneMetronomeBloc {
         player.stop();
         player.play(accent);
 
-        Future<void>.microtask(() => buzzer.play(bpm, accent));
+        Future<void>.delayed(
+            const Duration(milliseconds: 10), () => buzzer.play(bpm, accent));
 
         final ClickState clickState = ClickState(
           count: count,
