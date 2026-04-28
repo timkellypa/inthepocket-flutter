@@ -254,10 +254,6 @@ class StandaloneMetronomeBloc {
         // to ensure we don't try to catch up a slightly delayed beat.
         nextSilenceTime = anchor + clickDuration;
         nextClickTime = anchor + clickInterval;
-
-        print('Original Drift: ${originalDrift.round()}');
-        print('Drift adjustment: ${driftAdjustment.round()}');
-        print('Drift: ${drift.round()}');
       }
 
       // Calculate a next duration time that is:
