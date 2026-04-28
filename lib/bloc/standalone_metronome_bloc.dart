@@ -210,6 +210,7 @@ class StandaloneMetronomeBloc {
     Stopwatch stopwatch = getStopwatch();
     bool silence = false;
     bool firstIteration = true;
+    double drift = 0;
 
     // Perform this loop while our ID matches the assigned ID from start.
     // If somebody rapidly starts this keeps it so that we only have 1 active loop.
@@ -236,14 +237,27 @@ class StandaloneMetronomeBloc {
       }
 
       if (now >= nextClickTime) {
+        drift += now - nextClickTime;
         performClick();
         silence = false;
+
+        // Consume 33% of drift each iteration to keep overall click on a grid.
+        // Min 1 ms to allow drift to stay low at a constant rate if possible.
+        final double driftAdjustment =
+            (drift * .33).clamp(min(drift, 2500), 5000);
+        final double originalDrift = drift;
+        drift -= driftAdjustment;
+        final double anchor = now + driftAdjustment;
 
         // Calculate next silence time from current click prior to iterating.
         // Anchor to now instead of previous next click
         // to ensure we don't try to catch up a slightly delayed beat.
-        nextSilenceTime = now + clickDuration;
-        nextClickTime = now + clickInterval;
+        nextSilenceTime = anchor + clickDuration;
+        nextClickTime = anchor + clickInterval;
+
+        print('Original Drift: ${originalDrift.round()}');
+        print('Drift adjustment: ${driftAdjustment.round()}');
+        print('Drift: ${drift.round()}');
       }
 
       // Calculate a next duration time that is:

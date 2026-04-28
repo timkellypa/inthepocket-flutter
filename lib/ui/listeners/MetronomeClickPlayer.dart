@@ -19,6 +19,12 @@ class MetronomeClickPlayer {
     primarySoundId = await soundpool.load(primaryAsset);
     secondarySoundId = await soundpool.load(secondaryAsset);
 
+    // Retry if we got a 0 ID.  Soundpool assigns this to the first load, but has assertions
+    // that fail if a number is 0.
+    if (primarySoundId == 0) {
+      primarySoundId = await soundpool.load(primaryAsset);
+    }
+
     // also setup audio session to allow soundpool to play sound.
     final AudioSession session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration(
