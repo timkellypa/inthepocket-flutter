@@ -1,6 +1,12 @@
+// ignore_for_file: experimental_member_use
+
 import 'dart:collection';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:in_the_pocket/bloc/tempo_bloc.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
@@ -9,6 +15,7 @@ import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/cards/tempo_card_sud.dart';
 import 'package:in_the_pocket/ui/components/lists/tempo_list.dart';
 import 'package:in_the_pocket/ui/navigation/edit_tempo_form_route_arguments.dart';
+import 'package:in_the_pocket/utilities/text_editor_utils.dart';
 import 'package:provider/provider.dart';
 
 import '../components/new_item_button.dart';
@@ -33,7 +40,11 @@ class EditSetlistFormState extends State<EditTrackForm> {
   late TempoBloc tempoBloc;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _artistController = TextEditingController();
-  final TextEditingController _notesController = TextEditingController();
+  late QuillController _notesController;
+  final Set<String> _cachedImagePaths = <String>{};
+
+  final FocusNode _editorFocusNode = FocusNode();
+  final ScrollController _editorScrollController = ScrollController();
 
   @override
   void initState() {
@@ -41,7 +52,31 @@ class EditSetlistFormState extends State<EditTrackForm> {
     setlistTrack!.plTrack ??= Track();
     _titleController.text = setlistTrack!.plTrack!.title ?? '';
     _artistController.text = setlistTrack!.plTrack!.artist ?? '';
-    _notesController.text = setlistTrack!.notes ?? '';
+
+    final Document document = getQuillDocumentFromContent(setlistTrack?.notes);
+
+    _notesController = QuillController(
+      document: document,
+      selection: const TextSelection.collapsed(offset: 0),
+      config: QuillControllerConfig(
+        clipboardConfig: QuillClipboardConfig(
+            enableExternalRichPaste: true,
+            onImagePaste: (Uint8List imageBytes) async {
+              final String path = await downloadImageAsset(imageBytes, 'png');
+              _cachedImagePaths.add(path);
+              return path;
+            },
+            onGifPaste: (Uint8List imageBytes) async {
+              final String path = await downloadImageAsset(imageBytes, 'gif');
+              _cachedImagePaths.add(path);
+              return path;
+            }),
+      ),
+    );
+
+    _cachedImagePaths
+        .addAll(getImagePathsInDocument(_notesController.document));
+
     tempoBloc = TempoBloc(setlistTrack!.plTrack!);
 
     tempoBloc.selectedItems.listen(itemSelectionsChanged);
@@ -83,6 +118,9 @@ class EditSetlistFormState extends State<EditTrackForm> {
         IconButton(
           icon: const Icon(Icons.save),
           onPressed: () async {
+            await cleanupOrphanedImagesFromDocument(
+                _notesController.document, _cachedImagePaths);
+
             final SetlistTrack setlistTrackToSave =
                 setlistTrack ?? SetlistTrack();
 
@@ -94,7 +132,8 @@ class EditSetlistFormState extends State<EditTrackForm> {
 
             setlistTrackToSave.plTrack!.artist = _artistController.value.text;
 
-            setlistTrackToSave.notes = _notesController.value.text;
+            setlistTrackToSave.notes =
+                jsonEncode(_notesController.document.toDelta().toJson());
 
             if (setlistTrackToSave.plTrack!.title!.isNotEmpty) {
               if (setlistTrack?.id != null) {
@@ -123,10 +162,43 @@ class EditSetlistFormState extends State<EditTrackForm> {
                 title: TextField(controller: _artistController),
                 subtitle: const Text('Artist'),
               ),
-              ListTile(
-                leading: const Icon(Icons.description),
-                title: TextField(controller: _notesController),
-                subtitle: const Text('Notes'),
+              QuillSimpleToolbar(
+                  controller: _notesController, config: standardToolbarConfig),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.grey.shade300,
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  padding: const EdgeInsets.all(8.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: QuillEditor(
+                      focusNode: _editorFocusNode,
+                      scrollController: _editorScrollController,
+                      controller: _notesController,
+                      config: QuillEditorConfig(
+                        placeholder: 'Notes',
+                        padding: const EdgeInsets.all(16),
+                        embedBuilders: <EmbedBuilder>[
+                          ...FlutterQuillEmbeds.editorBuilders(
+                            imageEmbedConfig: standardImageEmbedConfig,
+                            videoEmbedConfig: QuillEditorVideoEmbedConfig(
+                              customVideoBuilder:
+                                  (String videoUrl, bool readOnly) {
+                                // To load YouTube videos https://github.com/singerdmx/flutter-quill/releases/tag/v10.8.0
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
               buildTempoList()
             ],
@@ -145,5 +217,13 @@ class EditSetlistFormState extends State<EditTrackForm> {
             (Tempo a, HashMap<String, ItemSelection> b) => TempoCardSUD(a, b)),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    _artistController.dispose();
+    _titleController.dispose();
+    super.dispose();
   }
 }

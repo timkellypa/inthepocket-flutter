@@ -252,7 +252,6 @@ class StandaloneMetronomeBloc {
         // Min 1 ms to allow drift to stay low at a constant rate if possible.
         final double driftAdjustment =
             (drift * .33).clamp(min(drift, 2500), 5000);
-        final double originalDrift = drift;
         drift -= driftAdjustment;
         final double anchor = now + driftAdjustment;
 
