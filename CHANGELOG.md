@@ -4,6 +4,7 @@
   - Make a route/button for standalone metronome from home screen.
   - Update tempo editor to use new metronome.
   - Refactor some common utilities in both standalone and track based metronomes.
+- Add rich text editor for track notes.
 - Bug Fixes:
   - Remove "null" track title (and track title in general) above for track tempos list.
   - Add wait spinner when importing from other setlist.

@@ -80,5 +80,7 @@
 		<false/>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false />
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Permission is required to paste images into track notes. This app does not access your photo library.</string>
 	</dict>
 </plist>
