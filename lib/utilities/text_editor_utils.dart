@@ -8,7 +8,7 @@ import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:path/path.dart' as path;
 
 const QuillSimpleToolbarConfig standardToolbarConfig = QuillSimpleToolbarConfig(
-  multiRowsDisplay: true,
+  multiRowsDisplay: false,
   showDividers: false,
   showFontFamily: false,
   showFontSize: true,
@@ -27,8 +27,8 @@ const QuillSimpleToolbarConfig standardToolbarConfig = QuillSimpleToolbarConfig(
   showListCheck: false,
   showCodeBlock: false,
   showQuote: false,
-  showIndent: false,
-  showLink: true,
+  showIndent: true,
+  showLink: false,
   showUndo: true,
   showRedo: true,
   showDirection: false,
@@ -37,7 +37,98 @@ const QuillSimpleToolbarConfig standardToolbarConfig = QuillSimpleToolbarConfig(
   showSuperscript: false,
 );
 
-FocusNode getStandardEditorFocusNode() => FocusNode();
+/// Gets a standared editor focus node that will automatically scroll to the bottom of the editor
+/// when it gains focus.
+/// @param editorScrollContainerKey An optional key for the scroll container of the editor.  If provided,
+/// the focus node will scroll this container to the bottom when it gains focus.  If not provided, it will
+/// not scroll at all.
+FocusNode getStandardEditorFocusNode(GlobalKey? editorScrollContainerKey,
+    ScrollController? outerScrollController) {
+  final FocusNode node = FocusNode();
+  node.addListener(() {
+    if (!node.hasFocus) {
+      return;
+    }
+
+    int attemptsWithoutInset = 0;
+    int attemptsWithInset = 0;
+    const int maxAttemptsWithNoInset = 8;
+    bool offsetShrinking = false;
+
+    // As long as there's an inset, try this for a while.
+    // Refocusing off another textfield will shrink and then grow the offset.
+    const int maxAttemptsWithInset = 50;
+    double previousInset = 0;
+
+    void scrollNow() {
+      final BuildContext? context = editorScrollContainerKey != null
+          ? editorScrollContainerKey.currentContext
+          : null;
+
+      final RenderBox? box = context?.findRenderObject() as RenderBox?;
+      if (box == null || context == null || outerScrollController == null) {
+        return;
+      }
+      final double screenHeight = MediaQuery.of(context).size.height;
+      final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+
+      final double bottomY =
+          box.localToGlobal(Offset.zero).dy + box.size.height;
+
+      final double visibleBottom = screenHeight - keyboardHeight;
+
+      final double overlap = bottomY - visibleBottom;
+
+      if (overlap > 0) {
+        // Ensure editor is still focused before scrolling
+        if (!node.hasFocus) {
+          return;
+        }
+        outerScrollController.animateTo(
+          outerScrollController.offset + overlap + 20,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    }
+
+    void tryScroll() {
+      final BuildContext? context = editorScrollContainerKey != null
+          ? editorScrollContainerKey.currentContext
+          : null;
+      if (context == null || outerScrollController == null) {
+        return;
+      }
+      final double inset = MediaQuery.of(context).viewInsets.bottom;
+      final bool hasScroll = outerScrollController.hasClients &&
+          outerScrollController.position.maxScrollExtent > 0;
+
+      // Detect when inset settles (same number two frames in a row, but not while shrinking),
+      // and scroll. Avoids scrolling in the middle of the keyboard animation.
+      if (hasScroll && (inset > 0) && !offsetShrinking) {
+        attemptsWithInset++;
+        if (inset != previousInset &&
+            attemptsWithInset <= maxAttemptsWithInset) {
+          offsetShrinking = inset < previousInset;
+          previousInset = inset;
+          WidgetsBinding.instance.addPostFrameCallback((_) => tryScroll());
+          return;
+        }
+        scrollNow();
+        return;
+      }
+
+      if (attemptsWithoutInset < maxAttemptsWithNoInset) {
+        attemptsWithoutInset++;
+        WidgetsBinding.instance.addPostFrameCallback((_) => tryScroll());
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => tryScroll());
+  });
+  return node;
+}
+
 ScrollController getStandardEditorScrollController() => ScrollController();
 
 final QuillEditorImageEmbedConfig standardImageEmbedConfig =

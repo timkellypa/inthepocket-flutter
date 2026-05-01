@@ -32,9 +32,10 @@ class TrackPlayerState extends State<TrackPlayer> {
     super.didChangeDependencies();
   }
 
-  final FocusNode _focusNode = getStandardEditorFocusNode();
   final ScrollController _scrollController =
       getStandardEditorScrollController();
+
+  FocusNode get _focusNode => getStandardEditorFocusNode(null, null);
 
   MetronomeBuzzer? buzzer;
 
@@ -90,167 +91,171 @@ class TrackPlayerState extends State<TrackPlayer> {
                               fontSize: 16, fontStyle: FontStyle.italic),
                           overflow: TextOverflow.ellipsis),
                     if (!notesDocument.isEmpty())
-                      Stack(
-                        children: <Widget>[
-                          Column(
-                            children: <Widget>[
-                              LayoutBuilder(
-                                builder: (BuildContext context,
-                                    BoxConstraints constraints) {
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.grey.shade200,
-                                        width: 1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: SizedBox(
-                                        height: _notesExpanded
-                                            ? 400
-                                            : min(_notesContentHeight ?? 150,
-                                                150),
-                                        child: Stack(
-                                          children: <Widget>[
-                                            Scrollbar(
-                                              controller: _scrollController,
-                                              thumbVisibility: _notesExpanded,
-                                              child: SingleChildScrollView(
-                                                controller: _scrollController,
-                                                physics: _notesExpanded
-                                                    ? const AlwaysScrollableScrollPhysics()
-                                                    : const NeverScrollableScrollPhysics(),
-                                                child: MeasureSize(
-                                                    onChange: (Size size) {
-                                                      setState(() {
-                                                        _notesContentHeight =
-                                                            size.height;
-                                                      });
-                                                    },
-                                                    child: AbsorbPointer(
-                                                        child: QuillEditor(
-                                                      focusNode: _focusNode,
-                                                      scrollController:
-                                                          _scrollController,
-                                                      controller:
-                                                          notesController,
-                                                      config: QuillEditorConfig(
-                                                        showCursor: false,
-                                                        readOnlyMouseCursor:
-                                                            SystemMouseCursors
-                                                                .basic,
-                                                        scrollable: false,
-                                                        padding:
-                                                            EdgeInsets.only(
-                                                          left: 16,
-                                                          right: 16,
-                                                          top: 16,
-                                                          bottom: _notesExpanded
-                                                              ? 80
-                                                              : 16,
-                                                        ),
-                                                        embedBuilders: <EmbedBuilder>[
-                                                          ...FlutterQuillEmbeds
-                                                              .editorBuilders(
-                                                            imageEmbedConfig:
-                                                                standardImageEmbedConfig,
-                                                            videoEmbedConfig:
-                                                                standardVideoEmbedConfig,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ))),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
+                      Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).dividerColor,
+                              width: 0.25,
+                            ),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          if (_notesContentHeight != null &&
-                              _notesContentHeight! > 150)
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () {
-                                  if (_notesExpanded) {
-                                    _scrollController.animateTo(
-                                      0,
-                                      duration:
-                                          const Duration(milliseconds: 200),
-                                      curve: Curves.easeOut,
-                                    );
-                                  }
-                                  setState(() {
-                                    _notesExpanded = !_notesExpanded;
-                                  });
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: <Color>[
-                                        Theme.of(context)
-                                            .scaffoldBackgroundColor
-                                            .withValues(alpha: 0),
-                                        Theme.of(context)
-                                            .scaffoldBackgroundColor
-                                            .withValues(alpha: 1),
-                                      ],
-                                      stops: const <double>[0.0, 0.35],
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: <Widget>[
-                                      Divider(
-                                        height: 4,
-                                        color:
-                                            Theme.of(context).primaryColorLight,
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: <Widget>[
-                                            Text(
-                                              _notesExpanded ? 'Less' : 'More',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Theme.of(context)
-                                                    .primaryColor,
+                          margin: const EdgeInsets.all(8),
+                          child: Stack(children: <Widget>[
+                            Column(
+                              children: <Widget>[
+                                LayoutBuilder(
+                                  builder: (BuildContext context,
+                                      BoxConstraints constraints) {
+                                    return Container(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: SizedBox(
+                                          height: _notesExpanded
+                                              ? 400
+                                              : min(_notesContentHeight ?? 150,
+                                                  150),
+                                          child: Stack(
+                                            children: <Widget>[
+                                              Scrollbar(
+                                                controller: _scrollController,
+                                                thumbVisibility: _notesExpanded,
+                                                child: SingleChildScrollView(
+                                                  controller: _scrollController,
+                                                  physics: _notesExpanded
+                                                      ? const AlwaysScrollableScrollPhysics()
+                                                      : const NeverScrollableScrollPhysics(),
+                                                  child: MeasureSize(
+                                                      onChange: (Size size) {
+                                                        setState(() {
+                                                          _notesContentHeight =
+                                                              size.height;
+                                                        });
+                                                      },
+                                                      child: AbsorbPointer(
+                                                          child: QuillEditor(
+                                                        focusNode: _focusNode,
+                                                        scrollController:
+                                                            _scrollController,
+                                                        controller:
+                                                            notesController,
+                                                        config:
+                                                            QuillEditorConfig(
+                                                          showCursor: false,
+                                                          readOnlyMouseCursor:
+                                                              SystemMouseCursors
+                                                                  .basic,
+                                                          scrollable: false,
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                            left: 16,
+                                                            right: 16,
+                                                            top: 16,
+                                                            bottom:
+                                                                _notesExpanded
+                                                                    ? 80
+                                                                    : 16,
+                                                          ),
+                                                          embedBuilders: <EmbedBuilder>[
+                                                            ...FlutterQuillEmbeds
+                                                                .editorBuilders(
+                                                              imageEmbedConfig:
+                                                                  standardImageEmbedConfig,
+                                                              videoEmbedConfig:
+                                                                  standardVideoEmbedConfig,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ))),
+                                                ),
                                               ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Icon(
-                                              _notesExpanded
-                                                  ? Icons.expand_less
-                                                  : Icons.expand_more,
-                                              size: 20,
-                                              color: Theme.of(context)
-                                                  .primaryColor,
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ],
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                            if (_notesContentHeight != null &&
+                                _notesContentHeight! > 150)
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (_notesExpanded) {
+                                      _scrollController.animateTo(
+                                        0,
+                                        duration:
+                                            const Duration(milliseconds: 200),
+                                        curve: Curves.easeOut,
+                                      );
+                                    }
+                                    setState(() {
+                                      _notesExpanded = !_notesExpanded;
+                                    });
+                                  },
+                                  child: Container(
+                                    height: 44,
+                                    margin:
+                                        const EdgeInsets.fromLTRB(4, 0, 4, 0),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: <Color>[
+                                          Theme.of(context)
+                                              .scaffoldBackgroundColor
+                                              .withValues(alpha: 0),
+                                          Theme.of(context)
+                                              .scaffoldBackgroundColor
+                                              .withValues(alpha: 1),
+                                        ],
+                                        stops: const <double>[0.0, 0.35],
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: <Widget>[
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Text(
+                                                _notesExpanded
+                                                    ? 'Less'
+                                                    : 'More',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Icon(
+                                                _notesExpanded
+                                                    ? Icons.expand_less
+                                                    : Icons.expand_more,
+                                                size: 20,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
+                          ])),
                     if (selectedSetlistTrack.plTrack!.plTempos?.isNotEmpty ??
                         false)
                       StreamBuilder<ClickState>(

@@ -21,6 +21,10 @@ import 'package:provider/provider.dart';
 import '../components/new_item_button.dart';
 import '../navigation/application_router.dart';
 
+// Enough height to show 2 tempos without scrolling,
+// but leave plenty of real estate for notes.
+const double tempoListHeight = 180;
+
 class EditTrackForm extends StatefulWidget {
   const EditTrackForm(this.setlist, {this.setlistTrack});
   final SetlistTrack? setlistTrack;
@@ -43,8 +47,13 @@ class EditSetlistFormState extends State<EditTrackForm> {
   late QuillController _notesController;
   final Set<String> _cachedImagePaths = <String>{};
 
-  final FocusNode _editorFocusNode = FocusNode();
-  final ScrollController _editorScrollController = ScrollController();
+  final GlobalKey _editorContainerKey =
+      GlobalKey(debugLabel: 'editorContainer');
+
+  late ScrollController _formScrollController = ScrollController();
+
+  late ScrollController _editorScrollController;
+  late FocusNode _editorFocusNode;
 
   @override
   void initState() {
@@ -81,6 +90,11 @@ class EditSetlistFormState extends State<EditTrackForm> {
 
     tempoBloc.selectedItems.listen(itemSelectionsChanged);
 
+    _formScrollController = ScrollController();
+
+    _editorScrollController = getStandardEditorScrollController();
+    _editorFocusNode =
+        getStandardEditorFocusNode(_editorContainerKey, _formScrollController);
     super.initState();
   }
 
@@ -114,6 +128,8 @@ class EditSetlistFormState extends State<EditTrackForm> {
     final TrackBloc trackBloc = Provider.of<TrackBloc>(context);
 
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(title: const Text('Track Info'), actions: <Widget>[
         IconButton(
           icon: const Icon(Icons.save),
@@ -147,75 +163,95 @@ class EditSetlistFormState extends State<EditTrackForm> {
           },
         )
       ]),
-      body: SafeArea(
-        child: Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          child: Column(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.title),
-                title: TextField(controller: _titleController),
-                subtitle: const Text('Title'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.person),
-                title: TextField(controller: _artistController),
-                subtitle: const Text('Artist'),
-              ),
-              QuillSimpleToolbar(
-                  controller: _notesController, config: standardToolbarConfig),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.grey.shade300,
-                      width: 1.5,
-                    ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  padding: const EdgeInsets.all(8.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: QuillEditor(
-                      focusNode: _editorFocusNode,
-                      scrollController: _editorScrollController,
-                      controller: _notesController,
-                      config: QuillEditorConfig(
-                        placeholder: 'Notes',
-                        padding: const EdgeInsets.all(16),
-                        embedBuilders: <EmbedBuilder>[
-                          ...FlutterQuillEmbeds.editorBuilders(
-                            imageEmbedConfig: standardImageEmbedConfig,
-                            videoEmbedConfig: QuillEditorVideoEmbedConfig(
-                              customVideoBuilder:
-                                  (String videoUrl, bool readOnly) {
-                                // To load YouTube videos https://github.com/singerdmx/flutter-quill/releases/tag/v10.8.0
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              buildTempoList()
-            ],
-          ),
-        ),
-      ),
+      body: GestureDetector(
+          behavior: HitTestBehavior
+              .translucent, // Catches taps even on transparent areas
+          onTap: () {
+            // Removes focus from any currently focused widget
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          child: Builder(
+            builder: (BuildContext context) {
+              final double keyboardHeight =
+                  MediaQuery.of(context).viewInsets.bottom;
+
+              return LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                return SingleChildScrollView(
+                  controller: _formScrollController,
+                  physics: keyboardHeight > 0
+                      ? const AlwaysScrollableScrollPhysics()
+                      : const NeverScrollableScrollPhysics(),
+                  child: Padding(
+                      padding: EdgeInsets.only(bottom: keyboardHeight),
+                      child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                              maxHeight: constraints.maxHeight,
+                              minHeight: constraints.maxHeight),
+                          child: IntrinsicHeight(
+                              child: Column(
+                            children: <Widget>[
+                              ListTile(
+                                leading: const Icon(Icons.title),
+                                title: TextField(controller: _titleController),
+                                subtitle: const Text('Title'),
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.person),
+                                title: TextField(controller: _artistController),
+                                subtitle: const Text('Artist'),
+                              ),
+                              QuillSimpleToolbar(
+                                  controller: _notesController,
+                                  config: standardToolbarConfig),
+                              Expanded(
+                                  child: Container(
+                                key: _editorContainerKey,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Theme.of(context).dividerColor,
+                                    width: 0.25,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                margin: const EdgeInsets.all(8.0),
+                                child: QuillEditor(
+                                  focusNode: _editorFocusNode,
+                                  scrollController: _editorScrollController,
+                                  controller: _notesController,
+                                  config: QuillEditorConfig(
+                                    placeholder: 'Notes',
+                                    padding: const EdgeInsets.all(16),
+                                    embedBuilders: <EmbedBuilder>[
+                                      ...FlutterQuillEmbeds.editorBuilders(
+                                        imageEmbedConfig:
+                                            standardImageEmbedConfig,
+                                        videoEmbedConfig:
+                                            standardVideoEmbedConfig,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )),
+                              Container(
+                                height: tempoListHeight,
+                                child: buildTempoList(),
+                              ),
+                            ],
+                          )))),
+                );
+              });
+            },
+          )),
       floatingActionButton: NewItemButton<Tempo>(modelBloc: tempoBloc),
     );
   }
 
   Widget buildTempoList() {
-    return Expanded(
-      child: Provider<TempoBloc>(
-        create: (BuildContext context) => tempoBloc,
-        child: TempoList<TempoCardSUD>(
-            (Tempo a, HashMap<String, ItemSelection> b) => TempoCardSUD(a, b)),
-      ),
+    return Provider<TempoBloc>(
+      create: (BuildContext context) => tempoBloc,
+      child: TempoList<TempoCardSUD>(
+          (Tempo a, HashMap<String, ItemSelection> b) => TempoCardSUD(a, b)),
     );
   }
 
