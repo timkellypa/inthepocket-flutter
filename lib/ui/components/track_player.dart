@@ -78,6 +78,13 @@ class TrackPlayerState extends State<TrackPlayer> {
                   readOnly: true);
 
               return Card(
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(
+                    color: Theme.of(context).dividerColor,
+                    width: 0.25,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
@@ -108,7 +115,6 @@ class TrackPlayerState extends State<TrackPlayer> {
                                       BoxConstraints constraints) {
                                     return Container(
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
                                         child: SizedBox(
                                           height: _notesExpanded
                                               ? 400
