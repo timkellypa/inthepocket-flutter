@@ -35,6 +35,7 @@ const tableTrack = SqfEntityTable(
     fields: [
       SqfEntityField('title', DbType.text),
       SqfEntityField('artist', DbType.text),
+      SqfEntityField('duration', DbType.integer, defaultValue: 0),
 
       // unused, only for model base abstraction
       SqfEntityField('row__sortOrder', DbType.integer, defaultValue: 1),

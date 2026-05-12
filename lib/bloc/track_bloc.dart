@@ -4,6 +4,8 @@ import 'package:audio_service/audio_service.dart';
 import 'package:in_the_pocket/audio/setlist_audio_handler.dart';
 import 'package:in_the_pocket/bloc/metronome_indicator_state_bloc.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
+import 'package:in_the_pocket/classes/setlist_progress.dart';
+import 'package:in_the_pocket/classes/time_range.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:in_the_pocket/repository/track_repository.dart';
@@ -50,6 +52,8 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
 
   late StreamSubscription<MediaItem?> audioQueueItemListener;
 
+  SetlistProgress setlistProgress = SetlistProgress();
+
   final Setlist? setlist;
 
   final Setlist? importTargetSetlist;
@@ -60,6 +64,12 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
 
   final MetronomeIndicatorStateBloc indicatorStateBloc =
       MetronomeIndicatorStateBloc();
+
+  final StreamController<SetlistProgress> setlistProgressController =
+      StreamController<SetlistProgress>.broadcast();
+
+  Stream<SetlistProgress> get setlistProgressStream =>
+      setlistProgressController.stream;
 
   /// Forward AudioService playback state
   Stream<PlaybackState> get audioPlaybackStream {
@@ -73,6 +83,8 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   PlaybackState get audioPlaybackState {
     return _audioHandler.playbackState.value;
   }
+
+  Timer? setlistProgressTimer;
 
   bool Function(SetlistTrack) get importExclusionsFilter {
     return (SetlistTrack track) => track.setlistId == importTargetSetlist?.id;
@@ -223,6 +235,42 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
         doSync: true, pushToAudioService: false);
   }
 
+  void syncSetlistProgress() {
+    bool foundCurrent = false;
+    int index = 0;
+    int totalDuration = 0;
+    int pendingDuration = 0;
+    int currentTrackIndex = 0;
+    bool remainingTracksWithoutDurationExist = false;
+
+    for (SetlistTrack track in itemList) {
+      final int trackDuration = track.plTrack?.duration ?? 0;
+      totalDuration += trackDuration;
+      if (isSelected(track, SelectionType.selected)) {
+        foundCurrent = true;
+        currentTrackIndex = index;
+      }
+
+      if (foundCurrent) {
+        pendingDuration += trackDuration;
+        if (trackDuration == 0) {
+          remainingTracksWithoutDurationExist = true;
+        }
+      }
+
+      index++;
+    }
+
+    setlistProgress.totalDuration = totalDuration;
+    setlistProgress.remainingDuration =
+        foundCurrent ? pendingDuration : totalDuration;
+    setlistProgress.currentTrackIndex = currentTrackIndex;
+    setlistProgress.remainingTracksWithoutDurationExist =
+        remainingTracksWithoutDurationExist;
+    setlistProgress.totalTracks = index;
+    setlistProgressController.sink.add(setlistProgress);
+  }
+
   @override
   Future<void> selectItem(SetlistTrack? model, int selectionTypes,
       {bool doSync = true,
@@ -240,6 +288,8 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
       final int index = itemList.indexOf(model);
       _audioHandler.skipToQueueItem(index);
     }
+
+    syncSetlistProgress();
   }
 
   Future<void> loadMediaItems(List<SetlistTrack> setlistTracks) async {
@@ -281,11 +331,50 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     _audioHandler.skipToPrevious();
   }
 
+  void startSetList() {
+    if (setlistProgress.startTime != null) {
+      // Already started, so hopefully is paused
+      if (setlistProgress.pauseTimes.isNotEmpty &&
+          setlistProgress.pauseTimes.last.end == null) {
+        setlistProgress.pauseTimes.last.end =
+            DateTime.now().millisecondsSinceEpoch;
+      }
+      return;
+    }
+    setlistProgress.startTime = DateTime.now().millisecondsSinceEpoch;
+    syncSetlistProgress();
+
+    setlistProgressTimer?.cancel();
+    setlistProgressTimer =
+        Timer.periodic(const Duration(milliseconds: 250), (Timer timer) {
+      syncSetlistProgress();
+    });
+  }
+
+  void pauseSetList() {
+    if (setlistProgress.startTime == null) {
+      return;
+    }
+    setlistProgress.pauseTimes
+        .add(TimeRange(start: DateTime.now().millisecondsSinceEpoch));
+
+    syncSetlistProgress();
+  }
+
+  void stopSetList() {
+    setlistProgress.startTime = null;
+    setlistProgress.pauseTimes.clear();
+    setlistProgressController.sink.add(setlistProgress);
+    setlistProgressTimer?.cancel();
+  }
+
   @override
   Future<void> dispose() async {
     await _audioHandler.stop();
     await _audioHandler.customAction('clear');
     audioQueueItemListener.cancel();
     indicatorStateBloc.dispose();
+    setlistProgressTimer?.cancel();
+    setlistProgressController.close();
   }
 }

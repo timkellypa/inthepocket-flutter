@@ -2,9 +2,9 @@
 
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:in_the_pocket/bloc/tempo_bloc.dart';
@@ -14,6 +14,7 @@ import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/cards/tempo_card_sud.dart';
 import 'package:in_the_pocket/ui/components/lists/tempo_list.dart';
+import 'package:in_the_pocket/ui/controls/smart_duration_formatter.dart';
 import 'package:in_the_pocket/ui/navigation/edit_tempo_form_route_arguments.dart';
 import 'package:in_the_pocket/utilities/text_editor_utils.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +45,7 @@ class EditSetlistFormState extends State<EditTrackForm> {
   late TempoBloc tempoBloc;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _artistController = TextEditingController();
+  final TextEditingController _durationController = TextEditingController();
   late QuillController _notesController;
   final Set<String> _cachedImagePaths = <String>{};
 
@@ -61,6 +63,8 @@ class EditSetlistFormState extends State<EditTrackForm> {
     setlistTrack!.plTrack ??= Track();
     _titleController.text = setlistTrack!.plTrack!.title ?? '';
     _artistController.text = setlistTrack!.plTrack!.artist ?? '';
+    _durationController.text = SmartDurationFormatter.durationToString(
+        setlistTrack!.plTrack!.duration ?? 0);
 
     final Document document = getQuillDocumentFromContent(setlistTrack?.notes);
 
@@ -148,6 +152,10 @@ class EditSetlistFormState extends State<EditTrackForm> {
 
             setlistTrackToSave.plTrack!.artist = _artistController.value.text;
 
+            setlistTrackToSave.plTrack!.duration =
+                SmartDurationFormatter.stringToDuration(
+                    _durationController.value.text);
+
             setlistTrackToSave.notes =
                 jsonEncode(_notesController.document.toDelta().toJson());
 
@@ -200,6 +208,16 @@ class EditSetlistFormState extends State<EditTrackForm> {
                                 leading: const Icon(Icons.person),
                                 title: TextField(controller: _artistController),
                                 subtitle: const Text('Artist'),
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.timer),
+                                title: TextField(
+                                    controller: _durationController,
+                                    inputFormatters: <TextInputFormatter>[
+                                      SmartDurationFormatter()
+                                    ],
+                                    keyboardType: TextInputType.number),
+                                subtitle: const Text('Duration (mm:ss)'),
                               ),
                               QuillSimpleToolbar(
                                   controller: _notesController,

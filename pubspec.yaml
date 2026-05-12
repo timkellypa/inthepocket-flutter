@@ -36,6 +36,7 @@ dependencies:
   json_annotation: ^4.8.1
   just_audio: ^0.10.5
   led_bulb_indicator: ^0.0.1
+  linear_progress_bar: ^3.0.0
   oauth2: ^2.0.5
   path_provider: ^2.1.0
   percent_indicator: ^4.2.5

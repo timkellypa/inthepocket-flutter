@@ -6,8 +6,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
+import 'package:in_the_pocket/classes/setlist_progress.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/cards/track_card_sud.dart';
+import 'package:in_the_pocket/ui/components/setlist_progress_card.dart';
 import 'package:in_the_pocket/ui/navigation/application_router.dart';
 import 'package:in_the_pocket/ui/navigation/edit_track_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_import_setlist_arguments.dart';
@@ -99,6 +101,18 @@ class TrackListPageState extends State<TrackListPage> {
     await trackBloc.fetch();
   }
 
+  void startSetlist() {
+    setState(() => trackBloc.startSetList());
+  }
+
+  void pauseSetlist() {
+    setState(() => trackBloc.pauseSetList());
+  }
+
+  void stopSetlist() {
+    setState(() => trackBloc.stopSetList());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,6 +122,32 @@ class TrackListPageState extends State<TrackListPage> {
         appBar: AppBar(
           title: const Text('Track List'),
           actions: <Widget>[
+            if (trackBloc.setlistProgress.startTime == null ||
+                trackBloc.setlistProgress.isPaused)
+              IconButton(
+                icon: Icon(FontAwesomeIcons.play.data),
+                tooltip: 'start setlist',
+                onPressed: () {
+                  startSetlist();
+                },
+              ),
+            if (trackBloc.setlistProgress.startTime != null &&
+                !trackBloc.setlistProgress.isPaused)
+              IconButton(
+                icon: Icon(FontAwesomeIcons.pause.data),
+                tooltip: 'pause setlist',
+                onPressed: () {
+                  pauseSetlist();
+                },
+              ),
+            if (trackBloc.setlistProgress.startTime != null)
+              IconButton(
+                icon: Icon(FontAwesomeIcons.stop.data),
+                tooltip: 'stop setlist',
+                onPressed: () {
+                  stopSetlist();
+                },
+              ),
             IconButton(
                 icon: Icon(FontAwesomeIcons.spotify.data),
                 tooltip: 'import from Spotify',
@@ -134,12 +174,30 @@ class TrackListPageState extends State<TrackListPage> {
                   //This is where the magic starts
                   child: Provider<TrackBloc>.value(
                     value: trackBloc,
-                    child: TrackList<TrackCardSUD>(
-                        (SetlistTrack a, HashMap<String, ItemSelection> b) =>
-                            TrackCardSUD(a, b)),
+                    child: Column(
+                      children: <Widget>[
+                        StreamBuilder<SetlistProgress>(
+                            stream: trackBloc.setlistProgressStream,
+                            builder: (BuildContext context,
+                                AsyncSnapshot<SetlistProgress> snapshot) {
+                              final SetlistProgress? setlistProgress =
+                                  snapshot.data;
+                              if (setlistProgress == null) {
+                                return Container();
+                              }
+
+                              return SetlistProgressCard(
+                                  setlistProgress: setlistProgress);
+                            }),
+                        Expanded(
+                            child: TrackList<TrackCardSUD>((SetlistTrack a,
+                                    HashMap<String, ItemSelection> b) =>
+                                TrackCardSUD(a, b))),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              )
             ],
           ),
         ),

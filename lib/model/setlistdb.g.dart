@@ -92,6 +92,7 @@ class TableTrack extends SqfEntityTableBase {
     fields = [
       SqfEntityFieldBase('title', DbType.text),
       SqfEntityFieldBase('artist', DbType.text),
+      SqfEntityFieldBase('duration', DbType.integer, defaultValue: 0),
       SqfEntityFieldBase('row__sortOrder', DbType.integer, defaultValue: 1),
       SqfEntityFieldBase('spotifyId', DbType.text),
     ];
@@ -2091,17 +2092,18 @@ class Track extends TableBase {
       {this.row__id,
       this.title,
       this.artist,
+      this.duration,
       this.row__sortOrder,
       this.spotifyId}) {
     _setDefaultValues();
     softDeleteActivated = false;
   }
-  Track.withFields(this.row__id, this.title, this.artist, this.row__sortOrder,
-      this.spotifyId) {
+  Track.withFields(this.row__id, this.title, this.artist, this.duration,
+      this.row__sortOrder, this.spotifyId) {
     _setDefaultValues();
   }
-  Track.withId(this.row__id, this.title, this.artist, this.row__sortOrder,
-      this.spotifyId) {
+  Track.withId(this.row__id, this.title, this.artist, this.duration,
+      this.row__sortOrder, this.spotifyId) {
     _setDefaultValues();
   }
   // fromMap v2.0
@@ -2116,6 +2118,9 @@ class Track extends TableBase {
     if (o['artist'] != null) {
       artist = o['artist'].toString();
     }
+    if (o['duration'] != null) {
+      duration = int.tryParse(o['duration'].toString());
+    }
     if (o['row__sortOrder'] != null) {
       row__sortOrder = int.tryParse(o['row__sortOrder'].toString());
     }
@@ -2129,6 +2134,7 @@ class Track extends TableBase {
   String? row__id;
   String? title;
   String? artist;
+  int? duration;
   int? row__sortOrder;
   String? spotifyId;
   bool? isSaved;
@@ -2190,6 +2196,9 @@ class Track extends TableBase {
     if (artist != null || !forView) {
       map['artist'] = artist;
     }
+    if (duration != null || !forView) {
+      map['duration'] = duration;
+    }
     if (row__sortOrder != null || !forView) {
       map['row__sortOrder'] = row__sortOrder;
     }
@@ -2212,6 +2221,9 @@ class Track extends TableBase {
     }
     if (artist != null || !forView) {
       map['artist'] = artist;
+    }
+    if (duration != null || !forView) {
+      map['duration'] = duration;
     }
     if (row__sortOrder != null || !forView) {
       map['row__sortOrder'] = row__sortOrder;
@@ -2246,12 +2258,12 @@ class Track extends TableBase {
 
   @override
   List<dynamic> toArgs() {
-    return [row__id, title, artist, row__sortOrder, spotifyId];
+    return [row__id, title, artist, duration, row__sortOrder, spotifyId];
   }
 
   @override
   List<dynamic> toArgsWithIds() {
-    return [row__id, title, artist, row__sortOrder, spotifyId];
+    return [row__id, title, artist, duration, row__sortOrder, spotifyId];
   }
 
   static Future<List<Track>?> fromWebUrl(Uri uri,
@@ -2390,7 +2402,7 @@ class Track extends TableBase {
     final result = BoolResult(success: false);
     try {
       await _mnTrack.rawInsert(
-          'INSERT ${isSaved! ? 'OR REPLACE' : ''} INTO Track (row__id, title, artist, row__sortOrder, spotifyId)  VALUES (?,?,?,?,?)',
+          'INSERT ${isSaved! ? 'OR REPLACE' : ''} INTO Track (row__id, title, artist, duration, row__sortOrder, spotifyId)  VALUES (?,?,?,?,?,?)',
           toArgsWithIds(),
           ignoreBatch);
       result.success = true;
@@ -2428,8 +2440,8 @@ class Track extends TableBase {
   Future<int?> upsert({bool ignoreBatch = true}) async {
     try {
       final result = await _mnTrack.rawInsert(
-          'INSERT OR REPLACE INTO Track (row__id, title, artist, row__sortOrder, spotifyId)  VALUES (?,?,?,?,?)',
-          [row__id, title, artist, row__sortOrder, spotifyId],
+          'INSERT OR REPLACE INTO Track (row__id, title, artist, duration, row__sortOrder, spotifyId)  VALUES (?,?,?,?,?,?)',
+          [row__id, title, artist, duration, row__sortOrder, spotifyId],
           ignoreBatch);
       if (result! > 0) {
         saveResult = BoolResult(
@@ -2503,6 +2515,7 @@ class Track extends TableBase {
 
   void _setDefaultValues() {
     isSaved = false;
+    duration = duration ?? 0;
     row__sortOrder = row__sortOrder ?? 1;
   }
 
@@ -2722,6 +2735,11 @@ class TrackFilterBuilder extends ConjunctionBase {
   TrackField? _artist;
   TrackField get artist {
     return _artist = _setField(_artist, 'artist', DbType.text);
+  }
+
+  TrackField? _duration;
+  TrackField get duration {
+    return _duration = _setField(_duration, 'duration', DbType.integer);
   }
 
   TrackField? _row__sortOrder;
@@ -3024,6 +3042,12 @@ class TrackFields {
   static TableField get artist {
     return _fArtist =
         _fArtist ?? SqlSyntax.setField(_fArtist, 'artist', DbType.text);
+  }
+
+  static TableField? _fDuration;
+  static TableField get duration {
+    return _fDuration = _fDuration ??
+        SqlSyntax.setField(_fDuration, 'duration', DbType.integer);
   }
 
   static TableField? _fRow__sortOrder;
