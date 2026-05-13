@@ -18,6 +18,9 @@ class SetlistProgressCard extends StatelessWidget {
         DefaultTextStyle.of(context).style.color ?? Colors.black;
     final Color mutedTextColor = textColor.withAlpha(155);
 
+    final Color progressColor = Theme.of(context).colorScheme.primary;
+    final Color progressRemainingColor = progressColor.withAlpha(80);
+
     if ((setlistProgress.totalDuration ?? 0) > 0) {
       return Card(
         child: Padding(
@@ -55,8 +58,8 @@ class SetlistProgressCard extends StatelessWidget {
                         showHoursIfZero: false)),
                     Expanded(
                         child: LinearProgressIndicator(
-                      color: Theme.of(context).colorScheme.primary,
-                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      color: progressColor,
+                      backgroundColor: progressRemainingColor,
                       value: (setlistProgress.totalDuration! -
                               (setlistProgress.remainingDuration ?? 0)) /
                           setlistProgress.totalDuration!,
