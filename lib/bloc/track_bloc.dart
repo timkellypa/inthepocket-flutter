@@ -179,6 +179,8 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     syncSelections();
     await syncList(setlistTracks);
 
+    syncSetlistProgress();
+
     return setlistTracks;
   }
 

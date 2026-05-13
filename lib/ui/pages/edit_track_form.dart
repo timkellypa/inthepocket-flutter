@@ -213,6 +213,7 @@ class EditSetlistFormState extends State<EditTrackForm> {
                                 leading: const Icon(Icons.timer),
                                 title: TextField(
                                     controller: _durationController,
+                                    enableInteractiveSelection: false,
                                     inputFormatters: <TextInputFormatter>[
                                       SmartDurationFormatter()
                                     ],

@@ -13,6 +13,11 @@ class SetlistProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final String locale = Localizations.localeOf(context).toString();
     final DateFormat timeFormat = DateFormat.jm(locale);
+
+    final Color textColor =
+        DefaultTextStyle.of(context).style.color ?? Colors.black;
+    final Color mutedTextColor = textColor.withAlpha(155);
+
     if ((setlistProgress.totalDuration ?? 0) > 0) {
       return Card(
         child: Padding(
@@ -32,7 +37,7 @@ class SetlistProgressCard extends StatelessWidget {
                       Row(children: <Widget>[
                         const Icon(Icons.timer_outlined, size: 20),
                         Text(formatDuration(setlistProgress.elapsedDuration,
-                            showHours: false))
+                            showHoursIfZero: false))
                       ]),
                       Row(spacing: 4, children: <Widget>[
                         Text(timeFormat.format(
@@ -42,12 +47,12 @@ class SetlistProgressCard extends StatelessWidget {
                       ])
                     ],
                   ),
-                if (setlistProgress.startTime != null)
+                if ((setlistProgress.totalDuration ?? 0) > 0)
                   Row(spacing: 4.0, children: <Widget>[
                     Text(formatDuration(
                         setlistProgress.totalDuration! -
                             (setlistProgress.remainingDuration ?? 0),
-                        showHours: false)),
+                        showHoursIfZero: false)),
                     Expanded(
                         child: LinearProgressIndicator(
                       color: Theme.of(context).colorScheme.primary,
@@ -57,14 +62,37 @@ class SetlistProgressCard extends StatelessWidget {
                           setlistProgress.totalDuration!,
                     )),
                     Text(formatDuration(setlistProgress.remainingDuration ?? 0,
-                        showHours: false)),
+                        showHoursIfZero: false)),
                   ]),
                 Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: <Widget>[
-                      Text(
-                          'Total Duration: ${formatDuration(setlistProgress.totalDuration!, showHours: false)}'),
-                      Text('Total Tracks: ${setlistProgress.totalTracks}')
+                      Text.rich(TextSpan(
+                          style: TextStyle(color: mutedTextColor),
+                          text: 'Total Duration: ',
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: formatDuration(
+                                  setlistProgress.totalDuration ?? 0,
+                                  showHoursIfZero: false),
+                              style: TextStyle(
+                                color: textColor, // Adaptive dark/light color
+                              ),
+                            ),
+                          ])),
+                      Text.rich(TextSpan(
+                          style: TextStyle(color: mutedTextColor),
+                          text: 'Track: ',
+                          children: <TextSpan>[
+                            TextSpan(
+                              text:
+                                  setlistProgress.currentTrackNumber.toString(),
+                              style: TextStyle(
+                                color: textColor, // Adaptive dark/light color
+                              ),
+                            ),
+                            TextSpan(text: ' / ${setlistProgress.totalTracks}')
+                          ])),
                     ]),
               ],
             )

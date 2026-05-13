@@ -18,6 +18,10 @@ class SetlistProgress {
     return pauseTimes.isNotEmpty && pauseTimes.last.end == null;
   }
 
+  int get currentTrackNumber {
+    return (currentTrackIndex ?? 0) + 1;
+  }
+
   int get elapsedDuration {
     int calculatedEnd = DateTime.now().millisecondsSinceEpoch;
     if (pauseTimes.isNotEmpty && pauseTimes.last.end == null) {
