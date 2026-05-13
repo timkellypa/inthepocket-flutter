@@ -1,5 +1,5 @@
 String formatDuration(int duration, {bool showHoursIfZero = true}) {
-  int minutes = (duration ~/ 60000) % 60;
+  int minutes = duration ~/ 60000;
   final int seconds = (duration % 60000) ~/ 1000;
   final int hours = minutes ~/ 60;
 
