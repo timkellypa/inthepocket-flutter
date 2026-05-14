@@ -5,6 +5,7 @@ class SetlistProgress {
   int? currentTrackIndex;
   int? totalDuration;
   int? remainingDuration;
+  int? currentTrackDuration;
   bool remainingTracksWithoutDurationExist = false;
 
   int? startTime;

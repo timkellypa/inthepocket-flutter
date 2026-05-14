@@ -243,6 +243,7 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     int totalDuration = 0;
     int pendingDuration = 0;
     int currentTrackIndex = 0;
+    int currentTrackDuration = 0;
     bool remainingTracksWithoutDurationExist = false;
 
     for (SetlistTrack track in itemList) {
@@ -251,6 +252,7 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
       if (isSelected(track, SelectionType.selected)) {
         foundCurrent = true;
         currentTrackIndex = index;
+        currentTrackDuration = trackDuration;
       }
 
       if (foundCurrent) {
@@ -270,6 +272,7 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     setlistProgress.remainingTracksWithoutDurationExist =
         remainingTracksWithoutDurationExist;
     setlistProgress.totalTracks = index;
+    setlistProgress.currentTrackDuration = currentTrackDuration;
     setlistProgressController.sink.add(setlistProgress);
   }
 

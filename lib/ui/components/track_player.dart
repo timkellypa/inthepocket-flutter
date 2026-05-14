@@ -5,6 +5,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:in_the_pocket/bloc/track_bloc.dart';
 import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
@@ -42,6 +43,8 @@ class TrackPlayerState extends State<TrackPlayer> {
   @override
   Widget build(BuildContext context) {
     final TrackBloc trackBloc = Provider.of<TrackBloc>(context);
+    final Color textColor =
+        DefaultTextStyle.of(context).style.color ?? Colors.black;
 
     return Container(
       child: StreamBuilder<List<SetlistTrack>>(
@@ -306,10 +309,10 @@ class TrackPlayerState extends State<TrackPlayer> {
                             },
                           )),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: <Widget>[
                             IconButton(
-                              iconSize: 90,
+                              iconSize: 50,
                               icon: const Icon(Icons.skip_previous),
                               onPressed: trackBloc.isFirstSelected
                                   ? null
@@ -323,7 +326,7 @@ class TrackPlayerState extends State<TrackPlayer> {
                               builder: (BuildContext context,
                                   AsyncSnapshot<PlaybackState>
                                       playbackStateSnapshot) {
-                                Icon toggleIcon;
+                                Widget toggleIcon;
 
                                 if (playbackStateSnapshot.data!.playing ||
                                     playbackStateSnapshot
@@ -331,7 +334,13 @@ class TrackPlayerState extends State<TrackPlayer> {
                                         AudioProcessingState.buffering) {
                                   toggleIcon = const Icon(Icons.pause);
                                 } else {
-                                  toggleIcon = const Icon(Icons.headset);
+                                  toggleIcon = SvgPicture.asset(
+                                    'assets/images/metronome-icon.svg',
+                                    width: 65,
+                                    height: 65,
+                                    colorFilter: ColorFilter.mode(
+                                        textColor, BlendMode.srcIn),
+                                  );
                                 }
 
                                 bool disabled = false;
@@ -343,7 +352,7 @@ class TrackPlayerState extends State<TrackPlayer> {
                                 }
 
                                 return IconButton(
-                                    iconSize: 90,
+                                    iconSize: 65,
                                     icon: toggleIcon,
                                     onPressed: disabled
                                         ? null
@@ -353,7 +362,7 @@ class TrackPlayerState extends State<TrackPlayer> {
                               },
                             ),
                             IconButton(
-                              iconSize: 90,
+                              iconSize: 50,
                               icon: const Icon(Icons.skip_next),
                               onPressed: trackBloc.isLastSelected
                                   ? null

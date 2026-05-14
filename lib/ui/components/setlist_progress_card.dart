@@ -72,16 +72,19 @@ class SetlistProgressCard extends StatelessWidget {
                     children: <Widget>[
                       Text.rich(TextSpan(
                           style: TextStyle(color: mutedTextColor),
-                          text: 'Total Duration: ',
+                          text: 'Duration: ',
                           children: <TextSpan>[
                             TextSpan(
                               text: formatDuration(
-                                  setlistProgress.totalDuration ?? 0,
+                                  setlistProgress.currentTrackDuration ?? 0,
                                   showHoursIfZero: false),
                               style: TextStyle(
                                 color: textColor, // Adaptive dark/light color
                               ),
                             ),
+                            TextSpan(
+                                text:
+                                    ' / ${formatDuration(setlistProgress.totalDuration ?? 0, showHoursIfZero: false)}')
                           ])),
                       Text.rich(TextSpan(
                           style: TextStyle(color: mutedTextColor),

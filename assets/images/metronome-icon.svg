@@ -1,0 +1,22 @@
+<svg width="1024" height="1024"
+    xmlns="http://www.w3.org/2000/svg">
+    <g id="Layer_1">
+        <title>Layer 1</title>
+        <path stroke-width="52" stroke="currentColor" id="svg_1" d="m115.99997,938.80511l148.5,-780.00006l495.00046,0l148.49957,780.00006l-792.00003,0z" fill-opacity="0"/>
+        <path stroke-width="38" id="svg_2" d="m366,738.57178l54.75467,-430.66675l182.49545,0l54.74988,430.66675l-292,0z" stroke="currentColor" fill-opacity="0"/>
+        <path id="svg_4" d="m864.99176,891.68842l0.27936,-1.48999l0.93127,0l0.27936,1.48999l-1.48999,0z" stroke="currentColor" fill-opacity="0"/>
+        <rect id="svg_9" height="24" width="114.66668" y="944.17183" x="173.10145" stroke-width="52" stroke="currentColor" fill-opacity="0"/>
+        <rect id="svg_10" height="24" width="114.66668" y="944" x="734.72453" stroke-width="52" stroke="currentColor" fill-opacity="0"/>
+        <line id="svg_11" y2="421.33341" x2="497.33341" y1="421.33341" x1="417.33341" stroke-width="28" stroke="currentColor" fill="none"/>
+        <line id="svg_12" y2="421.33341" x2="497.33341" y1="421.33341" x1="417.33341" stroke-width="28" stroke="currentColor" fill="none"/>
+        <line stroke="currentColor" id="svg_17" y2="529.33342" x2="402.66666" y1="529.33342" x1="516" stroke-width="28" fill="none"/>
+        <line id="svg_18" y2="660.00009" x2="516" y1="660.00009" x1="384.00007" stroke-width="28" stroke="currentColor" fill="none"/>
+        <line id="svg_19" y2="373.3334" x2="600" y1="373.3334" x1="516.00008" stroke-width="28" stroke="currentColor" fill="none"/>
+        <line id="svg_20" y2="477.33341" x2="621.33342" y1="477.33341" x1="516" stroke-width="28" stroke="currentColor" fill="none"/>
+        <line id="svg_21" y2="616.00009" x2="637.33343" y1="616.00009" x1="516" stroke-width="28" stroke="currentColor" fill="none"/>
+        <line id="svg_22" y2="421.33341" x2="497.33341" y1="421.33341" x1="516" stroke-width="28" stroke="currentColor" fill="none"/>
+        <rect id="svg_23" height="24" width="114.66668" y="118.66663" x="454.66665" stroke-width="52" stroke="currentColor" fill-opacity="0"/>
+        <line stroke="currentColor" id="svg_24" y2="161.33336" x2="989.33344" y1="738.66677" x1="510.66675" stroke-width="38" fill="none"/>
+        <path transform="rotate(39.25 930.701 231.008)" id="svg_25" d="m862.70148,289.00815l25.5,-116.00008l85,0l25.5,116.00008l-136,0z" stroke-width="38" stroke="currentColor" fill="#000000"/>
+    </g>
+</svg>
