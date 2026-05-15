@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:in_the_pocket/ui/navigation/application_router.dart';
 
 /// This is the bottom button bar for the home page.  This has a link to a standalone metronome.
@@ -21,11 +22,18 @@ class SetlistListBottomBar extends StatelessWidget {
             MaterialButton(
               child: Column(
                 children: <Widget>[
-                  Icon(Icons.music_note,
-                      size: 28, color: Theme.of(context).colorScheme.primary),
-                  const Text(
+                  SvgPicture.asset(
+                    'assets/images/metronome-icon.svg',
+                    width: 28,
+                    height: 28,
+                    colorFilter: ColorFilter.mode(
+                        Theme.of(context).colorScheme.primary, BlendMode.srcIn),
+                  ),
+                  Text(
                     'Metronome',
-                    style: TextStyle(fontSize: 14),
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.primary),
                   )
                 ],
               ),

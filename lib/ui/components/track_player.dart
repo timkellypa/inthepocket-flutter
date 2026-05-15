@@ -13,7 +13,6 @@ import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/ui/components/click_state_display.dart';
 import 'package:in_the_pocket/ui/components/measure_size.dart';
-import 'package:in_the_pocket/ui/haptics/MetronomeBuzzer.dart';
 import 'package:in_the_pocket/utilities/text_editor_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -38,13 +37,12 @@ class TrackPlayerState extends State<TrackPlayer> {
 
   FocusNode get _focusNode => getStandardEditorFocusNode(null, null);
 
-  MetronomeBuzzer? buzzer;
-
   @override
   Widget build(BuildContext context) {
     final TrackBloc trackBloc = Provider.of<TrackBloc>(context);
     final Color textColor =
         DefaultTextStyle.of(context).style.color ?? Colors.black;
+    final Color mutedTextColor = textColor.withAlpha(155);
 
     return Container(
       child: StreamBuilder<List<SetlistTrack>>(
@@ -100,15 +98,27 @@ class TrackPlayerState extends State<TrackPlayer> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        Text(selectedSetlistTrack.plTrack!.title!,
-                            style: const TextStyle(fontSize: 26),
-                            overflow: TextOverflow.ellipsis),
-                        if (selectedSetlistTrack.plTrack!.artist != null &&
-                            selectedSetlistTrack.plTrack!.artist!.isNotEmpty)
-                          Text(selectedSetlistTrack.plTrack!.artist ?? '',
-                              style: const TextStyle(
-                                  fontSize: 16, fontStyle: FontStyle.italic),
-                              overflow: TextOverflow.ellipsis),
+                        Container(
+                            margin: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                            child: Row(children: <Widget>[
+                              Text.rich(
+                                TextSpan(
+                                    text: selectedSetlistTrack.plTrack!.title!,
+                                    style: const TextStyle(fontSize: 16),
+                                    children: <TextSpan>[
+                                      if (selectedSetlistTrack
+                                                  .plTrack!.artist !=
+                                              null &&
+                                          selectedSetlistTrack
+                                              .plTrack!.artist!.isNotEmpty)
+                                        TextSpan(
+                                            text:
+                                                ' - ${selectedSetlistTrack.plTrack!.artist}',
+                                            style: TextStyle(
+                                                color: mutedTextColor))
+                                    ]),
+                              )
+                            ])),
                         if (!notesDocument.isEmpty())
                           Container(
                               decoration: BoxDecoration(
@@ -129,11 +139,11 @@ class TrackPlayerState extends State<TrackPlayer> {
                                           child: ClipRRect(
                                             child: SizedBox(
                                               height: _notesExpanded
-                                                  ? 400
-                                                  : min(
+                                                  ? max(
+                                                      350,
                                                       _notesContentHeight ??
-                                                          150,
-                                                      150),
+                                                          350)
+                                                  : 100,
                                               child: Stack(
                                                 children: <Widget>[
                                                   Scrollbar(
