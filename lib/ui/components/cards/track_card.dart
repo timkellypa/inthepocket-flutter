@@ -29,7 +29,8 @@ class TrackCardState extends ModelCardStateBase<TrackCard, SetlistTrack> {
   HashMap<String, ItemSelection> get selectedItemMap => _selectedItemMap;
 
   @override
-  TrackBloc getBloc(BuildContext context) => Provider.of<TrackBloc>(context, listen: false);
+  TrackBloc getBloc(BuildContext context) =>
+      Provider.of<TrackBloc>(context, listen: false);
 
   @override
   SetlistTrack get model => _setlistTrack;
@@ -42,6 +43,7 @@ class TrackCardState extends ModelCardStateBase<TrackCard, SetlistTrack> {
           borderRadius: BorderRadius.circular(5),
         ),
         color: getColor(),
-        child: getListTile(_setlistTrack.plTrack?.title ?? ''));
+        child: getListTile(_setlistTrack.plTrack?.title ?? '',
+            key: _setlistTrack.cardKey));
   }
 }

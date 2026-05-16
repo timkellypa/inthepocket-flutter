@@ -44,7 +44,8 @@ class SpotifyPlaylistCardState
         borderRadius: BorderRadius.circular(5),
       ),
       color: getColor(),
-      child: getListTile(_spotifyPlaylist.spotifyTitle),
+      child: getListTile(_spotifyPlaylist.spotifyTitle,
+          key: _spotifyPlaylist.cardKey),
     );
   }
 }

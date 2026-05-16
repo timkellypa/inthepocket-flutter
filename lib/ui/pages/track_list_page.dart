@@ -14,11 +14,16 @@ import 'package:in_the_pocket/ui/navigation/application_router.dart';
 import 'package:in_the_pocket/ui/navigation/edit_track_form_route_arguments.dart';
 import 'package:in_the_pocket/ui/navigation/track_import_setlist_arguments.dart';
 import 'package:provider/provider.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../components/lists/track_list.dart';
-import '../components/new_item_button.dart';
 import '../components/track_player.dart';
 import '../navigation/track_import_spotify_playlist_arguments.dart';
+
+const double panelExpandedHeight = 525;
+const double panelCollapsedHeight = 250;
+const double toolbarHeight = 56;
+const double toolbarMargin = 20;
 
 class TrackListPage extends StatefulWidget {
   const TrackListPage({Key? key, this.setlist}) : super(key: key);
@@ -33,6 +38,9 @@ class TrackListPage extends StatefulWidget {
 
 class TrackListPageState extends State<TrackListPage> {
   TrackListPageState(this.setlist);
+
+  bool _panelExpanded = false;
+  double _bottomMargin = panelCollapsedHeight + toolbarHeight + toolbarMargin;
 
   Setlist? setlist;
 
@@ -50,16 +58,33 @@ class TrackListPageState extends State<TrackListPage> {
     super.initState();
   }
 
+  void ensureSelectedIsVisible() {
+    final List<SetlistTrack?> selectedItems =
+        trackBloc.getMatchingSelections(SelectionType.selected);
+
+    if (selectedItems.length == 1) {
+      final BuildContext? context = selectedItems.first!.cardKey.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(context,
+            duration: const Duration(milliseconds: 500), // Time for animation
+            curve: Curves.easeInOut,
+            alignmentPolicy: ScrollPositionAlignmentPolicy.explicit);
+      }
+    }
+  }
+
   Future<void> itemSelectionsChanged(
       HashMap<String, ItemSelection> itemSelectionMap) async {
-    final List<SetlistTrack?> selectedItems = trackBloc
+    final List<SetlistTrack?> selectedItemsForAddOrEdit = trackBloc
         .getMatchingSelections(SelectionType.editing + SelectionType.add);
 
-    if (selectedItems.isEmpty) {
+    ensureSelectedIsVisible();
+
+    if (selectedItemsForAddOrEdit.isEmpty) {
       return;
     }
 
-    final SetlistTrack? selectedSetlistTrack = selectedItems.first;
+    final SetlistTrack? selectedSetlistTrack = selectedItemsForAddOrEdit.first;
     final int selectionType =
         itemSelectionMap[selectedSetlistTrack?.id ?? '']?.selectionType ?? 0;
     if (selectionType & (SelectionType.editing + SelectionType.add) > 0) {
@@ -101,6 +126,10 @@ class TrackListPageState extends State<TrackListPage> {
     await trackBloc.fetch();
   }
 
+  void addNewTrack() {
+    setState(() => trackBloc.selectItem(null, SelectionType.add));
+  }
+
   void startSetlist() {
     setState(() => trackBloc.startSetList());
   }
@@ -116,97 +145,126 @@ class TrackListPageState extends State<TrackListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: scaffoldKey,
-        floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: const Text('Track List'),
-          actions: <Widget>[
-            if (trackBloc.setlistProgress.startTime == null ||
-                trackBloc.setlistProgress.isPaused)
-              IconButton(
-                icon: Icon(FontAwesomeIcons.play.data),
-                tooltip: 'start setlist',
-                onPressed: () {
-                  startSetlist();
-                },
-              ),
-            if (trackBloc.setlistProgress.startTime != null &&
-                !trackBloc.setlistProgress.isPaused)
-              IconButton(
-                icon: Icon(FontAwesomeIcons.pause.data),
-                tooltip: 'pause setlist',
-                onPressed: () {
-                  pauseSetlist();
-                },
-              ),
-            if (trackBloc.setlistProgress.startTime != null)
-              IconButton(
-                icon: Icon(FontAwesomeIcons.stop.data),
-                tooltip: 'stop setlist',
-                onPressed: () {
-                  stopSetlist();
-                },
-              ),
-            IconButton(
-                icon: Icon(FontAwesomeIcons.spotify.data),
-                tooltip: 'import from Spotify',
-                onPressed: () {
-                  spotifyPressed(context);
-                }),
-            IconButton(
+      key: scaffoldKey,
+      appBar: AppBar(
+        title: const Text('Track List'),
+        actions: <Widget>[
+          IconButton(
+              icon: Icon(FontAwesomeIcons.plus.data),
+              tooltip: 'add track',
               onPressed: () {
-                importPressed(context);
+                addNewTrack();
+              }),
+          if (trackBloc.setlistProgress.startTime == null ||
+              trackBloc.setlistProgress.isPaused)
+            IconButton(
+              icon: Icon(FontAwesomeIcons.play.data),
+              tooltip: 'start setlist',
+              onPressed: () {
+                startSetlist();
               },
-              icon: Icon(FontAwesomeIcons.fileImport.data),
-              tooltip: 'import',
-            )
-          ],
-        ),
+            ),
+          if (trackBloc.setlistProgress.startTime != null &&
+              !trackBloc.setlistProgress.isPaused)
+            IconButton(
+              icon: Icon(FontAwesomeIcons.pause.data),
+              tooltip: 'pause setlist',
+              onPressed: () {
+                pauseSetlist();
+              },
+            ),
+          if (trackBloc.setlistProgress.startTime != null)
+            IconButton(
+              icon: Icon(FontAwesomeIcons.stop.data),
+              tooltip: 'stop setlist',
+              onPressed: () {
+                stopSetlist();
+              },
+            ),
+          IconButton(
+              icon: Icon(FontAwesomeIcons.spotify.data),
+              tooltip: 'import from Spotify',
+              onPressed: () {
+                spotifyPressed(context);
+              }),
+          IconButton(
+            onPressed: () {
+              importPressed(context);
+            },
+            icon: Icon(FontAwesomeIcons.fileImport.data),
+            tooltip: 'import',
+          ),
+        ],
+      ),
+      body: SlidingUpPanel(
         body: SafeArea(
-          child: Stack(
-            children: <Widget>[
-              Container(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                padding:
-                    const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
-                child: Container(
-                  //This is where the magic starts
-                  child: Provider<TrackBloc>.value(
-                    value: trackBloc,
-                    child: Column(
-                      children: <Widget>[
-                        StreamBuilder<SetlistProgress>(
-                            stream: trackBloc.setlistProgressStream,
-                            builder: (BuildContext context,
-                                AsyncSnapshot<SetlistProgress> snapshot) {
-                              final SetlistProgress? setlistProgress =
-                                  snapshot.data;
-                              if (setlistProgress == null) {
-                                return Container();
-                              }
+          child: Container(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            margin: EdgeInsets.only(bottom: _bottomMargin),
+            padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
+            child: Container(
+              //This is where the magic starts
+              child: Provider<TrackBloc>.value(
+                value: trackBloc,
+                child: Column(
+                  children: <Widget>[
+                    StreamBuilder<SetlistProgress>(
+                        stream: trackBloc.setlistProgressStream,
+                        builder: (BuildContext context,
+                            AsyncSnapshot<SetlistProgress> snapshot) {
+                          final SetlistProgress? setlistProgress =
+                              snapshot.data;
+                          if (setlistProgress == null) {
+                            return Container();
+                          }
 
-                              return SetlistProgressCard(
-                                  setlistProgress: setlistProgress);
-                            }),
-                        Expanded(
-                            child: TrackList<TrackCardSUD>((SetlistTrack a,
-                                    HashMap<String, ItemSelection> b) =>
-                                TrackCardSUD(a, b))),
-                      ],
-                    ),
-                  ),
+                          return SetlistProgressCard(
+                              setlistProgress: setlistProgress);
+                        }),
+                    Expanded(
+                        child: Container(
+                      child: TrackList<TrackCardSUD>(
+                          (SetlistTrack a, HashMap<String, ItemSelection> b) =>
+                              TrackCardSUD(a, b)),
+                    ))
+                  ],
                 ),
-              )
-            ],
+              ),
+            ),
           ),
         ),
-        bottomNavigationBar: Provider<TrackBloc>.value(
+        minHeight: panelCollapsedHeight,
+        maxHeight: panelExpandedHeight,
+        panel: Provider<TrackBloc>.value(
           value: trackBloc,
-          child: TrackPlayer(),
+          child: TrackPlayer(
+              panelExpanded: _panelExpanded,
+              minHeight: panelCollapsedHeight,
+              maxHeight: panelExpandedHeight),
         ),
-        floatingActionButton:
-            NewItemButton<SetlistTrack>(modelBloc: trackBloc));
+        onPanelClosed: () => <void>{
+          setState(() {
+            _panelExpanded = false;
+            ensureSelectedIsVisible();
+          })
+        },
+        onPanelOpened: () => <void>{
+          setState(() {
+            _panelExpanded = true;
+            ensureSelectedIsVisible();
+          })
+        },
+        onPanelSlide: (double position) {
+          setState(() {
+            // Linearly interpolates the margin between min and max heights
+            _bottomMargin = panelCollapsedHeight +
+                (panelExpandedHeight - panelCollapsedHeight) * position +
+                toolbarHeight +
+                toolbarMargin;
+          });
+        },
+      ),
+    );
   }
 
   @override

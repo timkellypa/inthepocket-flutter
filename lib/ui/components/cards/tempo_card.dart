@@ -29,7 +29,8 @@ class TempoCardState extends ModelCardStateBase<TempoCard, Tempo> {
   HashMap<String, ItemSelection> get selectedItemMap => _selectedItemMap;
 
   @override
-  TempoBloc getBloc(BuildContext context) => Provider.of<TempoBloc>(context, listen: false);
+  TempoBloc getBloc(BuildContext context) =>
+      Provider.of<TempoBloc>(context, listen: false);
 
   @override
   Tempo get model => _tempo;
@@ -42,7 +43,7 @@ class TempoCardState extends ModelCardStateBase<TempoCard, Tempo> {
           borderRadius: BorderRadius.circular(5),
         ),
         color: getColor(),
-        child: getListTile(TempoRepository().getTempoDisplayText(_tempo))
-    );
+        child: getListTile(TempoRepository().getTempoDisplayText(_tempo),
+            key: _tempo.cardKey));
   }
 }

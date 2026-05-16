@@ -22,12 +22,13 @@ abstract class ModelCardStateBase<WidgetType extends StatefulWidget,
 
   void tapAction({bool allowMultiSelect = false}) {}
 
-  Widget getListTile(String title) {
+  Widget getListTile(String title, {Key? key}) {
     const int positiveSelectionTypes =
         SelectionType.add + SelectionType.editing + SelectionType.selected;
     final bool isSelected = itemSelectionType & positiveSelectionTypes > 0;
-    
+
     return ListTile(
+      key: key,
       enabled: !(itemSelectionType & SelectionType.disabled > 0),
       onTap: tapAction,
       leading: getLeading(),

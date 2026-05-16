@@ -44,7 +44,8 @@ class SpotifyTrackCardState
         borderRadius: BorderRadius.circular(5),
       ),
       color: getColor(),
-      child: getListTile(_spotifyTrack.spotifyTitle),
+      child:
+          getListTile(_spotifyTrack.spotifyTitle, key: _spotifyTrack.cardKey),
     );
   }
 }

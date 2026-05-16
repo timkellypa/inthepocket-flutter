@@ -43,7 +43,7 @@ class SetlistCardState extends ModelCardStateBase<SetlistCard, Setlist> {
         borderRadius: BorderRadius.circular(5),
       ),
       color: getColor(),
-      child: getListTile(_setlist.description!),
+      child: getListTile(_setlist.description!, key: _setlist.cardKey),
     );
   }
 }

@@ -1,3 +1,5 @@
+// ignore: implementation_imports
+import 'package:flutter/src/widgets/framework.dart';
 import 'package:in_the_pocket/model/model_base.dart';
 import 'package:sqfentity_gen/sqfentity_gen.dart' as sqf_entity show TableBase;
 import 'package:sqfentity_gen/sqfentity_gen.dart';
@@ -15,7 +17,7 @@ class TableBase extends sqf_entity.TableBase implements ModelBase {
   }
 
   @override
-  set id (String? value) {
+  set id(String? value) {
     (this as dynamic).row__id = value;
   }
 
@@ -25,12 +27,13 @@ class TableBase extends sqf_entity.TableBase implements ModelBase {
   }
 
   @override
-  set sortOrder (int? value) {
+  set sortOrder(int? value) {
     (this as dynamic).row__sortOrder = value;
   }
 
   @override
-  ConjunctionBase distinct({List<String>? columnsToSelect, bool? getIsDeleted}) {
+  ConjunctionBase distinct(
+      {List<String>? columnsToSelect, bool? getIsDeleted}) {
     throw UnimplementedError('must implement distinct in child class');
   }
 
@@ -71,12 +74,22 @@ class TableBase extends sqf_entity.TableBase implements ModelBase {
   }
 
   @override
-  Map<String, dynamic> toMap({bool forQuery = false, bool forJson = false, bool forView = false}) {
+  Map<String, dynamic> toMap(
+      {bool forQuery = false, bool forJson = false, bool forView = false}) {
     throw UnimplementedError('must implement toMap in child class');
   }
 
   @override
-  Future<Map<String, dynamic>> toMapWithChildren([bool forQuery = false, bool forJson = false, bool forView = false]) {
+  Future<Map<String, dynamic>> toMapWithChildren(
+      [bool forQuery = false, bool forJson = false, bool forView = false]) {
     throw UnimplementedError('must implement toMapWithChildren in child class');
   }
+
+  @override
+  GlobalKey get cardKey {
+    _cardKey ??= GlobalKey();
+    return _cardKey!;
+  }
+
+  GlobalKey? _cardKey;
 }
