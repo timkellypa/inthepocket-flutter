@@ -91,6 +91,7 @@ abstract class ModelListBase<ModelType extends ModelBase,
 
       if (itemListStream.data!.isNotEmpty) {
         return ReorderableListView(
+          scrollController: modelBloc.scrollController,
           header: Text(modelBloc.listTitle),
           children: itemListStream.data!
               .map<CardType>(

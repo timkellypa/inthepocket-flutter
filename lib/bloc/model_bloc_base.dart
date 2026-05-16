@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'package:flutter/material.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
 import 'package:in_the_pocket/classes/save_status.dart';
 import 'package:in_the_pocket/classes/selection_type.dart';
@@ -55,6 +56,8 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
             selectionTypes ==
         selectionTypes;
   }
+
+  ScrollController scrollController = ScrollController();
 
   void selectItem(ModelType? model, int selectionTypes,
       {bool doSync = true,
@@ -174,6 +177,7 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
   void dispose() {
     listController.close();
     selectedItemsController.close();
+    scrollController.dispose();
   }
 
   void reset() {

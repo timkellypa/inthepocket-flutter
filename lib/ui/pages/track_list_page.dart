@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -24,6 +25,7 @@ const double panelExpandedHeight = 525;
 const double panelCollapsedHeight = 250;
 const double toolbarHeight = 56;
 const double toolbarMargin = 20;
+const double approximateCardHeight = 64;
 
 class TrackListPage extends StatefulWidget {
   const TrackListPage({Key? key, this.setlist}) : super(key: key);
@@ -58,17 +60,39 @@ class TrackListPageState extends State<TrackListPage> {
     super.initState();
   }
 
-  void ensureSelectedIsVisible() {
+  Future<void> ensureSelectedIsVisible() async {
     final List<SetlistTrack?> selectedItems =
         trackBloc.getMatchingSelections(SelectionType.selected);
 
     if (selectedItems.length == 1) {
-      final BuildContext? context = selectedItems.first!.cardKey.currentContext;
-      if (context != null) {
-        Scrollable.ensureVisible(context,
-            duration: const Duration(milliseconds: 500), // Time for animation
+      final SetlistTrack track = selectedItems.first!;
+      BuildContext? context = track.cardKey.currentContext;
+      if (context == null) {
+        final int itemIndex = trackBloc.itemList.indexOf(track);
+        double itemScrollPosition = approximateCardHeight * itemIndex;
+        itemScrollPosition = min(itemScrollPosition,
+            trackBloc.scrollController.position.maxScrollExtent);
+        await trackBloc.scrollController.animateTo(itemScrollPosition,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut);
+      }
+
+      void finishScroll(BuildContext itemContext) {
+        Scrollable.ensureVisible(itemContext,
+            duration: const Duration(milliseconds: 300), // Time for animation
             curve: Curves.easeInOut,
             alignmentPolicy: ScrollPositionAlignmentPolicy.explicit);
+      }
+
+      if (context != null) {
+        finishScroll(context);
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context = track.cardKey.currentContext;
+          if (context != null) {
+            finishScroll(context!);
+          }
+        });
       }
     }
   }

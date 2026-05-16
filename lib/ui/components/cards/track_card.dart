@@ -37,13 +37,14 @@ class TrackCardState extends ModelCardStateBase<TrackCard, SetlistTrack> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.grey[200]!, width: 0),
-          borderRadius: BorderRadius.circular(5),
-        ),
-        color: getColor(),
-        child: getListTile(_setlistTrack.plTrack?.title ?? '',
-            key: _setlistTrack.cardKey));
+    return Container(
+        child: Card(
+            shape: RoundedRectangleBorder(
+              side: BorderSide(color: Colors.grey[200]!, width: 0),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            color: getColor(),
+            child: getListTile(_setlistTrack.plTrack?.title ?? '',
+                key: _setlistTrack.cardKey)));
   }
 }
