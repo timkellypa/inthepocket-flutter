@@ -197,6 +197,7 @@ class TrackListPageState extends State<TrackListPage> {
         ],
       ),
       body: SlidingUpPanel(
+        color: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: Container(
             color: Theme.of(context).scaffoldBackgroundColor,
