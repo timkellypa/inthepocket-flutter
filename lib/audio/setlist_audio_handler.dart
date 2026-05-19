@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:rxdart/rxdart.dart';
 
 // https://suragch.medium.com/background-audio-in-flutter-with-audio-service-and-just-audio-3cce17b4a7d
 // ^ Check this for appropriate listeners for the Bloc classes as well.
@@ -22,10 +23,30 @@ Future<AudioHandler> initAudioService() async {
 class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   SetlistAudioHandler() {
     _loadPlaylist();
-    _notifyAudioHandlerAboutPlaybackEvents();
-    _listenForDurationChanges();
-    _listenForCurrentSongIndexChanges();
-    _listenForSequenceStateChanges();
+    _updatePlaybackState();
+    _listenForIndexChange();
+  }
+
+  void _listenForIndexChange() {
+    //
+    // Keep current media item synced
+    // Use combineLatest2 to make sure the queue updates also trigger this.
+    //
+    Rx.combineLatest2(_player.sequenceStateStream, queue,
+            (SequenceState sequenceStream, List<MediaItem> queue) {
+      return sequenceStream;
+    })
+        .map((SequenceState? s) => s?.currentIndex)
+        .distinct()
+        .listen((int? index) {
+      final List<MediaItem> itemList = queue.value;
+
+      if (index == null || index < 0 || index >= itemList.length) {
+        return;
+      }
+
+      mediaItem.add(itemList[index]);
+    });
   }
 
   static SetlistTrack? decodeExtras(Map<String, dynamic>? extras) {
@@ -75,7 +96,7 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
     }
   }
 
-  void _notifyAudioHandlerAboutPlaybackEvents() {
+  void _updatePlaybackState() {
     _player.playbackEventStream.listen((PlaybackEvent event) {
       final bool playing = _player.playing;
       playbackState.add(playbackState.value.copyWith(
@@ -110,50 +131,6 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
         speed: _player.speed,
         queueIndex: event.currentIndex,
       ));
-    });
-  }
-
-  void _listenForDurationChanges() {
-    _player.durationStream.listen((Duration? duration) {
-      int? index = _player.currentIndex;
-      final List<MediaItem> newQueue = queue.value;
-      if (index == null || newQueue.isEmpty) {
-        return;
-      }
-      if (_player.shuffleModeEnabled) {
-        index = _player.shuffleIndices.indexOf(index);
-      }
-      final MediaItem oldMediaItem = newQueue[index];
-      final MediaItem newMediaItem = oldMediaItem.copyWith(duration: duration);
-      newQueue[index] = newMediaItem;
-      queue.add(newQueue);
-      mediaItem.add(newMediaItem);
-    });
-  }
-
-  void _listenForCurrentSongIndexChanges() {
-    _player.currentIndexStream.listen((int? index) {
-      final List<MediaItem> playlist = queue.value;
-      if (index == null || playlist.isEmpty) {
-        return;
-      }
-      if (_player.shuffleModeEnabled) {
-        index = _player.shuffleIndices.indexOf(index);
-      }
-      mediaItem.add(playlist[index]);
-    });
-  }
-
-  void _listenForSequenceStateChanges() {
-    _player.sequenceStateStream.listen((SequenceState? sequenceState) {
-      final List<IndexedAudioSource>? sequence =
-          sequenceState?.effectiveSequence;
-      if (sequence == null || sequence.isEmpty) {
-        return;
-      }
-      final Iterable<MediaItem> items =
-          sequence.map((IndexedAudioSource source) => source.tag as MediaItem);
-      queue.add(items.toList());
     });
   }
 
@@ -211,12 +188,6 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
 
   @override
   Future<void> skipToQueueItem(int index) async {
-    if (index < 0 || index >= queue.value.length) {
-      return;
-    }
-    if (_player.shuffleModeEnabled) {
-      index = _player.shuffleIndices[index];
-    }
     _player.seek(Duration.zero, index: index);
   }
 
@@ -253,6 +224,17 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
     } else {
       await _player.shuffle();
       _player.setShuffleModeEnabled(true);
+    }
+  }
+
+  @override
+  Future<void> click([MediaButton button = MediaButton.media]) async {
+    if (button == MediaButton.media &&
+        playbackState.valueOrNull?.playing == true) {
+      await stop();
+      await seek(const Duration(milliseconds: 0));
+    } else {
+      return super.click(button);
     }
   }
 

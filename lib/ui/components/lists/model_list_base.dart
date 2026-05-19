@@ -36,11 +36,12 @@ abstract class ModelListBase<ModelType extends ModelBase,
                 }
                 return StreamBuilder<List<ModelType>>(
                     stream: modelBloc.items,
+                    initialData: modelBloc.itemList,
                     builder: (BuildContext context,
                         AsyncSnapshot<List<ModelType>> itemList) {
                       return StreamBuilder<HashMap<String, ItemSelection>>(
                         stream: modelBloc.selectedItems,
-                        initialData: HashMap<String, ItemSelection>(),
+                        initialData: modelBloc.itemSelectionMap,
                         builder: (
                           BuildContext innerContext,
                           AsyncSnapshot<HashMap<String, ItemSelection>>

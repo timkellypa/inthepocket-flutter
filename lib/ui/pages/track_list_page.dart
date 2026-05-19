@@ -102,8 +102,6 @@ class TrackListPageState extends State<TrackListPage> {
     final List<SetlistTrack?> selectedItemsForAddOrEdit = trackBloc
         .getMatchingSelections(SelectionType.editing + SelectionType.add);
 
-    ensureSelectedIsVisible();
-
     if (selectedItemsForAddOrEdit.isEmpty) {
       return;
     }
@@ -220,75 +218,120 @@ class TrackListPageState extends State<TrackListPage> {
           ),
         ],
       ),
-      body: SlidingUpPanel(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          child: Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            margin: EdgeInsets.only(bottom: _bottomMargin),
-            padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
-            child: Container(
-              //This is where the magic starts
-              child: Provider<TrackBloc>.value(
-                value: trackBloc,
-                child: Column(
-                  children: <Widget>[
-                    StreamBuilder<SetlistProgress>(
-                        stream: trackBloc.setlistProgressStream,
-                        builder: (BuildContext context,
-                            AsyncSnapshot<SetlistProgress> snapshot) {
-                          final SetlistProgress? setlistProgress =
-                              snapshot.data;
-                          if (setlistProgress == null) {
-                            return Container();
-                          }
+      body: StreamBuilder<List<SetlistTrack>>(
+          stream: trackBloc.items,
+          builder: (BuildContext context,
+              AsyncSnapshot<List<SetlistTrack>> tracksSnapshot) {
+            // change in list should cause us to restart the track audio service
+            if (!tracksSnapshot.hasData) {
+              return Container();
+            }
 
-                          return SetlistProgressCard(
-                              setlistProgress: setlistProgress);
-                        }),
-                    Expanded(
+            return StreamBuilder<HashMap<String, ItemSelection>>(
+                stream: trackBloc.selectedItems,
+                initialData: HashMap<String, ItemSelection>(),
+                builder: (BuildContext innerContext,
+                    AsyncSnapshot<HashMap<String, ItemSelection>>
+                        selectionsSnapshot) {
+                  final List<SetlistTrack?> selectedSetlistTracks =
+                      trackBloc.getMatchingSelections(SelectionType.selected);
+                  final SetlistTrack? selectedSetlistTrack =
+                      selectedSetlistTracks.isNotEmpty
+                          ? selectedSetlistTracks.first
+                          : null;
+                  final double calculatedCollapsedHeight =
+                      (selectedSetlistTrack == null) ? 0 : panelCollapsedHeight;
+                  final double calculatedExpandedHeight =
+                      (selectedSetlistTrack == null) ? 0 : panelExpandedHeight;
+
+                  if (selectedSetlistTrack == null) {
+                    _bottomMargin = toolbarHeight + toolbarMargin;
+                  } else if (_bottomMargin == toolbarHeight + toolbarMargin) {
+                    _bottomMargin = (_panelExpanded
+                            ? calculatedExpandedHeight
+                            : calculatedCollapsedHeight) +
+                        toolbarHeight +
+                        toolbarMargin;
+                  }
+
+                  WidgetsBinding.instance.addPostFrameCallback(
+                    (Duration _) => ensureSelectedIsVisible(),
+                  );
+
+                  return SlidingUpPanel(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    body: SafeArea(
+                      child: Container(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        margin: EdgeInsets.only(bottom: _bottomMargin),
+                        padding: const EdgeInsets.only(
+                            left: 2.0, right: 2.0, bottom: 2.0),
                         child: Container(
-                      child: TrackList<TrackCardSUD>(
-                          (SetlistTrack a, HashMap<String, ItemSelection> b) =>
-                              TrackCardSUD(a, b)),
-                    ))
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        minHeight: panelCollapsedHeight,
-        maxHeight: panelExpandedHeight,
-        panel: Provider<TrackBloc>.value(
-          value: trackBloc,
-          child: TrackPlayer(
-              panelExpanded: _panelExpanded,
-              minHeight: panelCollapsedHeight,
-              maxHeight: panelExpandedHeight),
-        ),
-        onPanelClosed: () => <void>{
-          setState(() {
-            _panelExpanded = false;
-            ensureSelectedIsVisible();
-          })
-        },
-        onPanelOpened: () => <void>{
-          setState(() {
-            _panelExpanded = true;
-            ensureSelectedIsVisible();
-          })
-        },
-        onPanelSlide: (double position) {
-          setState(() {
-            // Linearly interpolates the margin between min and max heights
-            _bottomMargin = panelCollapsedHeight +
-                (panelExpandedHeight - panelCollapsedHeight) * position +
-                toolbarHeight +
-                toolbarMargin;
-          });
-        },
-      ),
+                          //This is where the magic starts
+                          child: Provider<TrackBloc>.value(
+                            value: trackBloc,
+                            child: Column(
+                              children: <Widget>[
+                                StreamBuilder<SetlistProgress>(
+                                    stream: trackBloc.setlistProgressStream,
+                                    initialData: trackBloc.setlistProgress,
+                                    builder: (BuildContext context,
+                                        AsyncSnapshot<SetlistProgress>
+                                            snapshot) {
+                                      final SetlistProgress setlistProgress =
+                                          snapshot.data!;
+
+                                      return SetlistProgressCard(
+                                          setlistProgress: setlistProgress);
+                                    }),
+                                Expanded(
+                                    child: Container(
+                                  child: TrackList<TrackCardSUD>((SetlistTrack
+                                              a,
+                                          HashMap<String, ItemSelection> b) =>
+                                      TrackCardSUD(a, b)),
+                                ))
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    minHeight: calculatedCollapsedHeight,
+                    maxHeight: calculatedExpandedHeight,
+                    panel: Provider<TrackBloc>.value(
+                        value: trackBloc,
+                        child: ClipRect(
+                          child: TrackPlayer(
+                              panelExpanded: _panelExpanded,
+                              minHeight: calculatedCollapsedHeight,
+                              maxHeight: calculatedExpandedHeight),
+                        )),
+                    onPanelClosed: () => <void>{
+                      setState(() {
+                        _panelExpanded = false;
+                        ensureSelectedIsVisible();
+                      })
+                    },
+                    onPanelOpened: () => <void>{
+                      setState(() {
+                        _panelExpanded = true;
+                        ensureSelectedIsVisible();
+                      })
+                    },
+                    onPanelSlide: (double position) {
+                      setState(() {
+                        // Linearly interpolates the margin between min and max heights
+                        _bottomMargin = panelCollapsedHeight +
+                            (panelExpandedHeight - panelCollapsedHeight) *
+                                position +
+                            toolbarHeight +
+                            toolbarMargin;
+                      });
+                    },
+                  );
+                });
+          }),
     );
   }
 
