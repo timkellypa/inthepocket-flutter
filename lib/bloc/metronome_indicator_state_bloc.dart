@@ -7,21 +7,26 @@ import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:in_the_pocket/repository/tempo_repository.dart';
 import 'package:in_the_pocket/services/service_locator.dart';
 import 'package:in_the_pocket/ui/haptics/MetronomeBuzzer.dart';
+import 'package:rxdart/rxdart.dart';
 
 class MetronomeIndicatorStateBloc {
   MetronomeIndicatorStateBloc() {
     _clickStateController.sink.add(ClickState(count: 0));
+    timer.start();
     startListening();
   }
 
-  final AudioHandler _audioHandler = getIt<AudioHandler>();
+  final SetlistAudioHandler _audioHandler = getIt<SetlistAudioHandler>();
 
-  DateTime anchorTime = DateTime.now();
+  StreamSubscription<Duration?>? _positionSubscription;
+
+  int anchorTime = 0;
+  int audioHapticBuffer = 75;
+  Stopwatch timer = Stopwatch();
 
   SetlistTrack? setlistTrack;
 
-  StreamSubscription<PlaybackState>? stateSubscription;
-  StreamSubscription<MediaItem?>? mediaItemSubscription;
+  final PublishSubject<void> _destroySubject = PublishSubject<void>();
 
   final StreamController<ClickState> _clickStateController =
       StreamController<ClickState>.broadcast();
@@ -35,8 +40,36 @@ class MetronomeIndicatorStateBloc {
   bool isClicking = false;
 
   void adjustAnchorTime(Duration position) {
-    anchorTime = DateTime.now().subtract(position);
+    anchorTime = timer.elapsed.inMilliseconds - position.inMilliseconds;
   }
+
+  MediaItem? get currentMediaItem {
+    return _currentMediaItem;
+  }
+
+  set currentMediaItem(MediaItem? value) {
+    // Don't try to set this or affect anything if it hasn't changed.
+    if (_currentMediaItem?.id == value?.id && value?.id != null) {
+      return;
+    }
+
+    stopClick();
+
+    _currentMediaItem = value;
+
+    if (value == null) {
+      return;
+    }
+
+    loadSetlistTrackFromExtras(value.extras);
+
+    _clickStateController.sink.add(ClickState(
+        count: ClickInfo.SILENCE_COUNT,
+        beatsPerBar:
+            setlistTrack!.plTrack?.plTempos?.firstOrNull?.beatsPerBar ?? 4));
+  }
+
+  MediaItem? _currentMediaItem;
 
   void loadSetlistTrackFromExtras(Map<String, dynamic>? extras) {
     setlistTrack = SetlistAudioHandler.decodeExtras(extras);
@@ -119,11 +152,9 @@ class MetronomeIndicatorStateBloc {
   }
 
   ClickInfo? calculateClick() {
-    final int millisecondsFromAnchor = DateTime.now().millisecondsSinceEpoch -
-        anchorTime.millisecondsSinceEpoch;
+    final int millisecondsFromAnchor =
+        timer.elapsedMilliseconds - anchorTime + audioHapticBuffer;
 
-    // Add a millisecond if this is during the click.  This makes sure our calculation
-    // is for the next one, not the current one.
     double position = millisecondsFromAnchor.toDouble();
 
     for (Tempo tempo in setlistTrack!.plTrack!.plTempos!) {
@@ -174,6 +205,13 @@ class MetronomeIndicatorStateBloc {
     isClicking = false;
     clickTimer?.cancel();
     clickTimer = null;
+
+    // send a silence to the stream to keep the UI from continuing to be lit.
+    // Also set beats per bar to that of the first tempo.
+    _clickStateController.sink.add(ClickState(
+        count: ClickInfo.SILENCE_COUNT,
+        beatsPerBar:
+            setlistTrack?.plTrack?.plTempos?.firstOrNull?.beatsPerBar ?? 4));
   }
 
   void startClick() {
@@ -183,9 +221,22 @@ class MetronomeIndicatorStateBloc {
   }
 
   void syncState(PlaybackState state) {
-    if (state.playing) {
-      adjustAnchorTime(state.position);
+    // Get the current queue item.
+    final List<MediaItem> queue = _audioHandler.queue.value;
+    final MediaItem? mediaItem = state.queueIndex == null
+        ? null
+        : queue.elementAtOrNull(state.queueIndex!);
+
+    // Keep handle on current media item, and stop our click counters when it changes in a playback.
+    // This prevents switching tracks from messing up our click states and causing the timers to never fire.
+    currentMediaItem = mediaItem;
+
+    // playing will fire briefly at a 0 position, which is not accurate enough for us to calculate our click anchor time.
+    // Wait until it's populated.
+    final bool hasPosition = (state.updatePosition.inMicroseconds) > 0;
+    if (state.playing && mediaItem != null && hasPosition) {
       if (!isClicking) {
+        adjustAnchorTime(state.updatePosition);
         startClick();
       }
     } else {
@@ -193,56 +244,22 @@ class MetronomeIndicatorStateBloc {
     }
   }
 
-  void setNoMediaItemState() {
-    stateSubscription?.cancel();
-    setlistTrack = null;
-    anchorTime = DateTime.now();
-    stopClick();
-
-    _clickStateController.sink
-        .add(ClickState(count: ClickInfo.SILENCE_COUNT, beatsPerBar: 0));
-  }
-
-  void setupStateListener(MediaItem? mediaItem) {
-    if (mediaItem == null) {
-      setNoMediaItemState();
-      return;
-    }
-
-    stateSubscription?.cancel();
-    stateSubscription = _audioHandler.playbackState
-        .listen((PlaybackState playbackState) => syncState(playbackState));
-  }
-
-  void setCurrentMediaItem(MediaItem? mediaItem) {
-    stopClick();
-
-    setupStateListener(mediaItem);
-
-    if (mediaItem == null) {
-      return;
-    }
-
-    loadSetlistTrackFromExtras(mediaItem.extras);
-
-    _clickStateController.sink.add(ClickState(
-        count: ClickInfo.SILENCE_COUNT,
-        beatsPerBar:
-            setlistTrack!.plTrack?.plTempos?.firstOrNull?.beatsPerBar ?? 4));
-  }
-
   void startListening() {
-    mediaItemSubscription?.cancel();
-    mediaItemSubscription = _audioHandler.mediaItem
-        .listen((MediaItem? mediaItem) => setCurrentMediaItem(mediaItem));
-  }
-
-  void stopListening() {
-    mediaItemSubscription?.cancel();
-    stateSubscription?.cancel();
+    _positionSubscription?.cancel();
+    _positionSubscription = _audioHandler.positionStream.listen(
+      (Duration? position) {
+        final PlaybackState playbackState = _audioHandler.playbackState.value;
+        final PlaybackState augmentedState = playbackState.copyWith(
+            updatePosition: position ?? const Duration(milliseconds: 0));
+        syncState(augmentedState);
+      },
+    );
   }
 
   void dispose() {
-    stopListening();
+    timer.stop();
+    _positionSubscription?.cancel();
+    _destroySubject.add(null);
+    _destroySubject.close();
   }
 }

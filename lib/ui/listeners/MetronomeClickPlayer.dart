@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:audio_session/audio_session.dart';
 import 'package:flutter/services.dart';
 import 'package:in_the_pocket/classes/click_info.dart';
 import 'package:soundpool/soundpool.dart';
@@ -24,19 +23,6 @@ class MetronomeClickPlayer {
     if (primarySoundId == 0) {
       primarySoundId = await soundpool.load(primaryAsset);
     }
-
-    // also setup audio session to allow soundpool to play sound.
-    final AudioSession session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration(
-      avAudioSessionCategory: AVAudioSessionCategory.playback,
-      avAudioSessionCategoryOptions:
-          AVAudioSessionCategoryOptions.mixWithOthers,
-      avAudioSessionMode: AVAudioSessionMode.defaultMode,
-      avAudioSessionRouteSharingPolicy:
-          AVAudioSessionRouteSharingPolicy.defaultPolicy,
-      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-    ));
-    await session.setActive(true);
   }
 
   // Use high maxStreams to allow for quick successive clicks without skipping.

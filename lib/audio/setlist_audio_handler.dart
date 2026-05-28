@@ -8,7 +8,7 @@ import 'package:rxdart/rxdart.dart';
 // https://suragch.medium.com/background-audio-in-flutter-with-audio-service-and-just-audio-3cce17b4a7d
 // ^ Check this for appropriate listeners for the Bloc classes as well.
 
-Future<AudioHandler> initAudioService() async {
+Future<SetlistAudioHandler> initAudioService() async {
   return await AudioService.init(
     builder: () => SetlistAudioHandler(),
     config: const AudioServiceConfig(
@@ -25,7 +25,12 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
     _loadPlaylist();
     _updatePlaybackState();
     _listenForIndexChange();
+    _listenForPositionChanges();
   }
+
+  final StreamController<Duration?> _positionController =
+      StreamController<Duration?>.broadcast();
+  Stream<Duration?> get positionStream => _positionController.stream;
 
   void _listenForIndexChange() {
     //
@@ -46,6 +51,12 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
       }
 
       mediaItem.add(itemList[index]);
+    });
+  }
+
+  void _listenForPositionChanges() {
+    _player.positionStream.listen((Duration? duration) {
+      _positionController.sink.add(duration);
     });
   }
 

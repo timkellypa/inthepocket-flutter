@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:in_the_pocket/audio/audio_setup.dart';
 import 'package:in_the_pocket/database/database_migrations.dart';
 import 'package:in_the_pocket/services/service_locator.dart';
 import 'package:in_the_pocket/ui/listeners/MetronomeClickPlayer.dart';
@@ -9,6 +10,11 @@ import 'package:in_the_pocket/ui/navigation/application_router.dart';
 void main() async {
   setupServiceLocator();
   await DatabaseMigrations().migrateDatabase();
+
+  // Setup audio for music.
+  await setupAudio();
+
+  // Pre-load metronome clicks to soundpool.
   await MetronomeClickPlayer.setup();
   runApp(MyApp());
 }

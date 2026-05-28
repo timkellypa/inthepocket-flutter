@@ -40,10 +40,14 @@ class TrackPlayerState extends State<TrackPlayer> {
   double _titleSize = 20;
   double panelPadding = 20;
 
-  double get notesHeight {
+  double get notesMaxHeight {
     if (widget.panelExpanded) {
       return widget.maxHeight - _footerSize - _titleSize - panelPadding;
     }
+    return notesMinHeight;
+  }
+
+  double get notesMinHeight {
     return widget.minHeight - _titleSize - panelPadding;
   }
 
@@ -102,7 +106,8 @@ class TrackPlayerState extends State<TrackPlayer> {
               ),
               borderRadius: BorderRadius.circular(4),
             ),
-            height: notesHeight,
+            constraints: BoxConstraints(
+                maxHeight: notesMaxHeight, minHeight: notesMinHeight),
             margin: const EdgeInsets.all(8),
             child: QuillEditor(
               focusNode: _focusNode,
@@ -110,8 +115,8 @@ class TrackPlayerState extends State<TrackPlayer> {
               controller: notesController,
               config: QuillEditorConfig(
                 showCursor: false,
-                maxHeight: notesHeight,
-                minHeight: notesHeight,
+                maxHeight: notesMaxHeight,
+                minHeight: notesMaxHeight,
                 readOnlyMouseCursor: SystemMouseCursors.basic,
                 scrollable: true,
                 padding: const EdgeInsets.only(
@@ -130,8 +135,9 @@ class TrackPlayerState extends State<TrackPlayer> {
             ))
       else
         Container(
-          height: notesHeight,
           alignment: Alignment.center,
+          constraints: BoxConstraints(
+              minHeight: notesMinHeight, maxHeight: notesMaxHeight),
           child: TextButton.icon(
             icon: const Icon(Icons.edit),
             label: const Text('Add notes to track'),

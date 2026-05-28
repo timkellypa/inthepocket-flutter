@@ -60,7 +60,7 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
 
   final bool preloadTempos;
 
-  final AudioHandler _audioHandler = getIt<AudioHandler>();
+  final SetlistAudioHandler _audioHandler = getIt<SetlistAudioHandler>();
 
   final MetronomeIndicatorStateBloc indicatorStateBloc =
       MetronomeIndicatorStateBloc();
