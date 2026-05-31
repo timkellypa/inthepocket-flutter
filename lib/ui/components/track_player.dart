@@ -98,41 +98,40 @@ class TrackPlayerState extends State<TrackPlayer> {
                 )
               ]))),
       if (!notesDocument.isEmpty())
-        Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Theme.of(context).dividerColor,
-                width: 0.25,
-              ),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            constraints: BoxConstraints(
-                maxHeight: notesMaxHeight, minHeight: notesMinHeight),
-            margin: const EdgeInsets.all(8),
-            child: QuillEditor(
-              focusNode: _focusNode,
-              scrollController: _scrollController,
-              controller: notesController,
-              config: QuillEditorConfig(
-                showCursor: false,
-                maxHeight: notesMaxHeight,
-                minHeight: notesMaxHeight,
-                readOnlyMouseCursor: SystemMouseCursors.basic,
-                scrollable: true,
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 16,
-                  bottom: 16,
-                ),
-                embedBuilders: <EmbedBuilder>[
-                  ...FlutterQuillEmbeds.editorBuilders(
-                    imageEmbedConfig: standardImageEmbedConfig,
-                    videoEmbedConfig: standardVideoEmbedConfig,
+        Expanded(
+          child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).dividerColor,
+                    width: 0.25,
                   ),
-                ],
+                ),
               ),
-            ))
+              margin: const EdgeInsets.all(8),
+              child: QuillEditor(
+                focusNode: _focusNode,
+                scrollController: _scrollController,
+                controller: notesController,
+                config: QuillEditorConfig(
+                  showCursor: false,
+                  readOnlyMouseCursor: SystemMouseCursors.basic,
+                  scrollable: widget.panelExpanded,
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 16,
+                    bottom: 16,
+                  ),
+                  embedBuilders: <EmbedBuilder>[
+                    ...FlutterQuillEmbeds.editorBuilders(
+                      imageEmbedConfig: standardImageEmbedConfig,
+                      videoEmbedConfig: standardVideoEmbedConfig,
+                    ),
+                  ],
+                ),
+              )),
+        )
       else
         Container(
           alignment: Alignment.center,
