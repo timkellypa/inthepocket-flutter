@@ -5,6 +5,12 @@
   - Update tempo editor to use new metronome.
   - Refactor some common utilities in both standalone and track based metronomes.
 - Add rich text editor for track notes.
+- Add track duration information.
+   - Create header for track list with duration information (total duration, remaining duration).
+   - Add a play button that will expand this to tell you expected end time of the set, as well as time elapsed.
+- UI changes/fixes.
+  - Use draggable bottom panel to allow user to access track metronome and expand notes.
+  - "Auto Scroll to Item" feature allows user to advance track using bluetooth device or media controls, keeping selected track visible.
 - Bug Fixes:
   - Remove "null" track title (and track title in general) above for track tempos list.
   - Add wait spinner when importing from other setlist.
