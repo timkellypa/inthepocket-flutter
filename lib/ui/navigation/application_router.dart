@@ -79,7 +79,7 @@ class ApplicationRouter {
             create: (BuildContext context) => args.setlistBloc,
             dispose: (BuildContext context, SetlistBloc value) {
               value.unSelectItem(
-                args.setlist!,
+                args.setlist,
                 SelectionType.selected,
               );
             },
@@ -96,13 +96,15 @@ class ApplicationRouter {
           final EditTrackFormRouteArguments args =
               settings.arguments as EditTrackFormRouteArguments;
 
+          // Stop metronome and remove selections when we navigate.
+          args.trackBloc.stop();
           args.trackBloc.reset();
 
           return Provider<TrackBloc>(
             create: (BuildContext context) => args.trackBloc,
             child: EditTrackForm(
-              args.setlist!,
-              setlistTrack: args.setlistTrack,
+              args.setlist,
+              args.setlistTrack,
             ),
           );
         };
@@ -112,6 +114,11 @@ class ApplicationRouter {
         builder = (BuildContext context) {
           final TrackImportSetlistArguments args =
               settings.arguments as TrackImportSetlistArguments;
+
+          // Stop metronome and remove selections when we import
+          args.trackBloc.stop();
+          args.trackBloc.reset();
+
           return Provider<TrackBloc>(
             create: (BuildContext context) => args.trackBloc,
             dispose: (BuildContext context, TrackBloc value) => value.fetch(),
@@ -124,6 +131,11 @@ class ApplicationRouter {
         builder = (BuildContext context) {
           final TrackImportSpotifyPlaylistArguments args =
               settings.arguments as TrackImportSpotifyPlaylistArguments;
+
+          // Stop metronome and remove selections when we import
+          args.trackBloc.stop();
+          args.trackBloc.reset();
+
           return Provider<TrackBloc>(
             create: (BuildContext context) => args.trackBloc,
             dispose: (BuildContext context, TrackBloc value) => value.fetch(),
@@ -182,7 +194,7 @@ class ApplicationRouter {
               )
             ],
             child: EditTempoForm(
-              tempo: args.tempo,
+              args.tempo,
             ),
           );
         };

@@ -20,7 +20,7 @@ class TrackImportSpotifyPlaylistPage extends StatefulWidget {
   const TrackImportSpotifyPlaylistPage(this._targetSetlist, {Key? key})
       : super(key: key);
 
-  final Setlist? _targetSetlist;
+  final Setlist _targetSetlist;
 
   @override
   State<StatefulWidget> createState() {
@@ -32,7 +32,7 @@ class TrackImportSpotifyPlaylistPageState
     extends State<TrackImportSpotifyPlaylistPage> {
   TrackImportSpotifyPlaylistPageState(this._targetSetlist);
 
-  final Setlist? _targetSetlist;
+  final Setlist _targetSetlist;
 
   late TrackBloc trackBloc;
   late SpotifyPlaylistBloc spotifyPlaylistBloc;
@@ -75,7 +75,7 @@ class TrackImportSpotifyPlaylistPageState
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text('Import to ${_targetSetlist?.description}')),
+      appBar: AppBar(title: Text('Import to ${_targetSetlist.description}')),
       body: SafeArea(
         child: Container(
           color: Theme.of(context).scaffoldBackgroundColor,

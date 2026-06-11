@@ -27,6 +27,8 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     _saveStatusController.sink.add(saveStatus);
   }
 
+  ModelType? pendingNewItem;
+
   List<ModelType> itemList = <ModelType>[];
   HashMap<String, ItemSelection> itemSelectionMap =
       HashMap<String, ItemSelection>();
@@ -51,6 +53,13 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
   Stream<HashMap<String, ItemSelection>> get selectedItems =>
       selectedItemsController.stream;
 
+  Future<ModelType> buildNewItem();
+
+  Future<void> startAddNewItem() async {
+    pendingNewItem = await buildNewItem();
+    selectItem(pendingNewItem!, SelectionType.add);
+  }
+
   bool isSelected(ModelType? model, int selectionTypes) {
     return (itemSelectionMap[model?.id ?? '']?.selectionType ?? 0) &
             selectionTypes ==
@@ -59,12 +68,30 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
 
   ScrollController scrollController = ScrollController();
 
-  void selectItem(ModelType? model, int selectionTypes,
+  /// Select an item.
+  /// [selectionTypes] is a bitmask of types
+  /// [allowMultiSelect] can be true only if
+  /// [doSync] verifies whether or not we are supposed to re-sync this list change.
+  /// [allowSelectionToggle] allows selecting of an already-selected item to unselect it
+  /// (like a checkbox)
+  /// [verifyItemExists] will exit silently if the newly selected item is not in our list, or is
+  /// not the newly added pending model (during an add).  We will set this to false for things like
+  /// list disabled selections, which are set prior to the list loading.
+  void selectItem(ModelType model, int selectionTypes,
       {bool doSync = true,
+      bool verifyItemExists = true,
       bool allowMultiSelect = false,
       bool allowSelectionToggle = true}) {
-    final String guid = model?.id ?? '';
+    final String guid = model.id!;
 
+    final bool itemExistsOrCheckSkipped = !verifyItemExists ||
+        (itemList.indexWhere((ModelType item) => item.id == model.id) != -1 ||
+            model.id == pendingNewItem?.id);
+
+    // Only proceed if our item is found in the list, or if we're explicitly skipping that.
+    if (!itemExistsOrCheckSkipped) {
+      return;
+    }
     // unselect if all our selection types are currently active.
     if ((itemSelectionMap[guid]?.selectionType ?? 0) & selectionTypes ==
             selectionTypes &&
@@ -95,6 +122,9 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
 
     if (itemSelectionMap[guid]!.selectionType == 0) {
       itemSelectionMap.remove(model);
+      if (guid == pendingNewItem?.id) {
+        pendingNewItem = null;
+      }
     }
 
     if (doSync) {
@@ -109,6 +139,9 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
       itemSelectionMap[key]!.selectionType &= ~selectionTypes;
       if (itemSelectionMap[key]!.selectionType == 0) {
         keysToRemove.add(key);
+        if (key == pendingNewItem?.id) {
+          pendingNewItem = null;
+        }
       }
     }
 
@@ -122,7 +155,7 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
   List<ModelType?> getMatchingSelections(int selectionTypes) {
     final List<ModelType?> matchingSelections = <ModelType?>[];
 
-    for (ModelType? item in itemList) {
+    for (ModelType? item in <ModelType?>[...itemList, pendingNewItem]) {
       if (item == null) {
         continue;
       }
@@ -140,6 +173,13 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
 
     return matchingSelections;
   }
+
+  ModelType? get firstSelectedItem =>
+      getMatchingSelections(SelectionType.selected).firstOrNull;
+
+  ModelType? get itemInEditMode =>
+      getMatchingSelections(SelectionType.editing + SelectionType.add)
+          .firstOrNull;
 
   void syncSelections() {
     if (!selectedItemsController.isClosed) {
@@ -168,9 +208,7 @@ abstract class ModelBlocBase<ModelType extends ModelBase,
     return newItemList;
   }
 
-  Future<void> insert(ModelType item);
-
-  Future<void> update(ModelType item);
+  Future<void> upsert(ModelType item);
 
   Future<void> delete(ModelType item);
 

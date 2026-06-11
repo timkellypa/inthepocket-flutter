@@ -3,7 +3,6 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:in_the_pocket/bloc/model_bloc_base.dart';
 import 'package:in_the_pocket/classes/item_selection.dart';
-import 'package:in_the_pocket/classes/selection_type.dart';
 import 'package:in_the_pocket/model/model_base.dart';
 import 'package:in_the_pocket/repository/repository_base.dart';
 
@@ -30,7 +29,7 @@ class NewItemButton<ModelType extends ModelBase> extends StatelessWidget {
                     .primary
                     .withValues(alpha: 0.8),
                 onPressed: () {
-                  modelBloc.selectItem(null, SelectionType.add);
+                  modelBloc.startAddNewItem();
                 },
                 child: Icon(
                   Icons.add,

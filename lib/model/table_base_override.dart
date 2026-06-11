@@ -38,9 +38,10 @@ class TableBase extends sqf_entity.TableBase implements ModelBase {
   }
 
   @override
-  void init() {
+  ModelBase init() {
     // kind of roundabout, but need to call super through a static.
     ModelBase.build(this);
+    return this;
   }
 
   @override

@@ -14,12 +14,7 @@ abstract class SpotifyRepositoryBase<T extends ModelBase>
   }
 
   @override
-  Future<String> insert(T item) {
+  Future<String> upsert(T item) {
     throw UnimplementedError('Cannot insert to spotify');
-  }
-
-  @override
-  Future<String> update(T item) {
-    throw UnimplementedError('Cannot update in spotify');
   }
 }

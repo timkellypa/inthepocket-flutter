@@ -27,8 +27,8 @@ import '../navigation/application_router.dart';
 const double tempoListHeight = 180;
 
 class EditTrackForm extends StatefulWidget {
-  const EditTrackForm(this.setlist, {this.setlistTrack});
-  final SetlistTrack? setlistTrack;
+  const EditTrackForm(this.setlist, this.setlistTrack);
+  final SetlistTrack setlistTrack;
   final Setlist setlist;
 
   @override
@@ -41,7 +41,7 @@ class EditSetlistFormState extends State<EditTrackForm> {
   EditSetlistFormState(this.setlist, this.setlistTrack);
 
   Setlist setlist;
-  SetlistTrack? setlistTrack;
+  SetlistTrack setlistTrack;
   late TempoBloc tempoBloc;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _artistController = TextEditingController();
@@ -59,14 +59,12 @@ class EditSetlistFormState extends State<EditTrackForm> {
 
   @override
   void initState() {
-    setlistTrack ??= SetlistTrack();
-    setlistTrack!.plTrack ??= Track();
-    _titleController.text = setlistTrack!.plTrack!.title ?? '';
-    _artistController.text = setlistTrack!.plTrack!.artist ?? '';
+    _titleController.text = setlistTrack.plTrack!.title ?? '';
+    _artistController.text = setlistTrack.plTrack!.artist ?? '';
     _durationController.text = SmartDurationFormatter.durationToString(
-        setlistTrack!.plTrack!.duration ?? 0);
+        setlistTrack.plTrack!.duration ?? 0);
 
-    final Document document = getQuillDocumentFromContent(setlistTrack?.notes);
+    final Document document = getQuillDocumentFromContent(setlistTrack.notes);
 
     _notesController = QuillController(
       document: document,
@@ -90,7 +88,7 @@ class EditSetlistFormState extends State<EditTrackForm> {
     _cachedImagePaths
         .addAll(getImagePathsInDocument(_notesController.document));
 
-    tempoBloc = TempoBloc(setlistTrack!.plTrack!);
+    tempoBloc = TempoBloc(setlistTrack.plTrack!);
 
     tempoBloc.selectedItems.listen(itemSelectionsChanged);
 
@@ -99,6 +97,17 @@ class EditSetlistFormState extends State<EditTrackForm> {
     _editorScrollController = getStandardEditorScrollController();
     _editorFocusNode =
         getStandardEditorFocusNode(_editorContainerKey, _formScrollController);
+
+    _titleController.addListener(() {
+      // Sync latest title at all times to track bloc's selected item.
+      setlistTrack.plTrack!.title = _titleController.value.text;
+    });
+
+    _artistController.addListener(() {
+      // Sync artist to trackBloc
+      setlistTrack.plTrack!.artist = _artistController.value.text;
+    });
+
     super.initState();
   }
 
@@ -110,9 +119,9 @@ class EditSetlistFormState extends State<EditTrackForm> {
       return;
     }
 
-    final Tempo? selectedTempo = selectedItems.first;
+    final Tempo selectedTempo = selectedItems.first!;
     final int selectionType =
-        itemSelectionMap[selectedTempo?.id ?? '']?.selectionType ??
+        itemSelectionMap[selectedTempo.id ?? '']?.selectionType ??
             SelectionType.add;
     if (selectionType & (SelectionType.editing + SelectionType.add) > 0) {
       Navigator.pushNamed(
@@ -141,32 +150,23 @@ class EditSetlistFormState extends State<EditTrackForm> {
             await cleanupOrphanedImagesFromDocument(
                 _notesController.document, _cachedImagePaths);
 
-            final SetlistTrack setlistTrackToSave =
-                setlistTrack ?? SetlistTrack();
-
-            setlistTrackToSave.setlistId = setlist.id;
-
-            setlistTrackToSave.plTrack ??= Track();
-
-            setlistTrackToSave.plTrack!.title = _titleController.value.text;
-
-            setlistTrackToSave.plTrack!.artist = _artistController.value.text;
-
-            setlistTrackToSave.plTrack!.duration =
+            // Sync changes with all controllers
+            // (title and artist should be synced on change, but do a final pass to be safe).
+            setlistTrack.plTrack!.title = _titleController.value.text;
+            setlistTrack.plTrack!.artist = _artistController.value.text;
+            setlistTrack.plTrack!.duration =
                 SmartDurationFormatter.stringToDuration(
                     _durationController.value.text);
 
-            setlistTrackToSave.notes =
+            setlistTrack.notes =
                 jsonEncode(_notesController.document.toDelta().toJson());
 
-            if (setlistTrackToSave.plTrack!.title!.isNotEmpty) {
-              if (setlistTrack?.id != null) {
-                await trackBloc.update(setlistTrackToSave);
-              } else {
-                await trackBloc.insert(setlistTrackToSave);
-              }
-
+            if (setlistTrack.plTrack!.title!.isNotEmpty) {
+              await trackBloc.upsert(setlistTrack);
               Navigator.pop(context);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Track must have a title to be saved.')));
             }
           },
         )

@@ -26,15 +26,7 @@ class SetListRepository extends RepositoryBase<Setlist> {
   }
 
   @override
-  Future<String> insert(Setlist item) async {
-    item.init();
-    item.sortOrder = await Setlist().select().toCount() + 1;
-    await item.upsert();
-    return item.id!;
-  }
-
-  @override
-  Future<String> update(Setlist item) async {
+  Future<String> upsert(Setlist item) async {
     await item.upsert();
     return item.id!;
   }

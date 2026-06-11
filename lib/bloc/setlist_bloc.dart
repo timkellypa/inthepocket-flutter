@@ -16,13 +16,22 @@ class SetlistBloc extends ModelBlocBase<Setlist, SetListRepository> {
   }
 
   @override
+  Future<Setlist> buildNewItem() async {
+    final Setlist item = Setlist().init() as Setlist;
+    item.sortOrder = await Setlist().select().toCount() + 1;
+    return item;
+  }
+
+  @override
   Future<List<Setlist>> fetch() async {
     final List<Setlist> setlists = await getItemList();
 
     for (Setlist setlist in setlists) {
       if (setlist.id == importTargetSetlist?.id) {
         selectItem(setlist, SelectionType.disabled,
-            allowMultiSelect: true, allowSelectionToggle: false);
+            allowMultiSelect: true,
+            allowSelectionToggle: false,
+            verifyItemExists: false);
       }
     }
 
@@ -31,13 +40,9 @@ class SetlistBloc extends ModelBlocBase<Setlist, SetListRepository> {
   }
 
   @override
-  Future<void> insert(Setlist item) async {
-    await repository.insert(item);
-  }
-
-  @override
-  Future<void> update(Setlist item) async {
-    await repository.update(item);
+  Future<void> upsert(Setlist item) async {
+    await repository.upsert(item);
+    fetch();
   }
 
   @override

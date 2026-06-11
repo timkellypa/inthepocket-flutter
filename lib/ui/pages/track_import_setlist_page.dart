@@ -52,7 +52,7 @@ class TrackImportSetlistPageState extends State<TrackImportSetlistPage> {
       return;
     }
 
-    final Setlist? selectedSetlist = selectedItems.first;
+    final Setlist selectedSetlist = selectedItems.first!;
 
     Navigator.pushNamed(
       context,

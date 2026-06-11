@@ -45,20 +45,51 @@ MediaControl stopControl = const MediaControl(
 );
 
 class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
-  TrackBloc(this.setlist, {this.importTargetSetlist, this.preloadTempos = true})
-      : super() {
-    audioQueueItemListener = audioQueueItemState.listen(mediaItemChanged);
+  TrackBloc(this.setlist, {this.importTargetSetlist}) : super() {
+    // Do not do anything with audio handler if we are just showing the import list with this view model.
+    if (importTargetSetlist == null) {
+      audioQueueItemListener = audioQueueItemState.listen(mediaItemChanged);
+    }
   }
 
-  late StreamSubscription<MediaItem?> audioQueueItemListener;
+  StreamSubscription<MediaItem?>? audioQueueItemListener;
 
   SetlistProgress setlistProgress = SetlistProgress();
 
-  final Setlist? setlist;
+  final Setlist setlist;
 
   final Setlist? importTargetSetlist;
 
-  final bool preloadTempos;
+  /// Build setlist track along with track, and link them together.
+  /// If trackId is provided, link the new item to the existing track (usually an import).
+  /// If setlistId is provided, link the new item to the provided setlist (otherwise use the setlist
+  /// associated with this bloc).
+  /// Notes can also be pre-populated on the new setlist track.  These may vary based on setlist,
+  /// so initialize them where they were at the import time, but allow them to change per setlist.
+  @override
+  Future<SetlistTrack> buildNewItem(
+      {String? trackId, String? setlistId, String? notes}) async {
+    final SetlistTrack newSetlistTrack = SetlistTrack().init() as SetlistTrack;
+    newSetlistTrack.setlistId = setlistId ?? setlist.id;
+    newSetlistTrack.sortOrder = await SetlistTrack().select().toCount() + 1;
+    newSetlistTrack.notes = notes;
+
+    // If trackId is provided, this is an attempt to make a new setlisttrack linking
+    // an existing track. Try to retrieve it for the link, and always set the setlist track ID
+    // to match at the end.
+    if (trackId != null) {
+      final Track? track = await Track().getById(trackId);
+      if (track != null) {
+        newSetlistTrack.plTrack = track;
+        newSetlistTrack.trackId = track.id;
+        return newSetlistTrack;
+      }
+    }
+
+    newSetlistTrack.plTrack = Track().init() as Track;
+    newSetlistTrack.trackId = newSetlistTrack.plTrack!.id;
+    return newSetlistTrack;
+  }
 
   final SetlistAudioHandler _audioHandler = getIt<SetlistAudioHandler>();
 
@@ -97,12 +128,12 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
 
   @override
   bool Function(SetlistTrack) get listFilter {
-    return (SetlistTrack track) => track.setlistId == setlist?.id;
+    return (SetlistTrack track) => track.setlistId == setlist.id;
   }
 
   @override
   String get listTitle {
-    return setlist?.description ?? '';
+    return setlist.description ?? '';
   }
 
   bool get isFirstSelected {
@@ -168,15 +199,15 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
     for (SetlistTrack setlistTrack in setlistTracks) {
       if (existingTrackMap.containsKey(setlistTrack.trackId.toString())) {
         selectItem(setlistTrack, SelectionType.disabled,
-            doSync: false, allowMultiSelect: true, allowSelectionToggle: false);
+            doSync: false,
+            allowMultiSelect: true,
+            allowSelectionToggle: false,
+            verifyItemExists: false);
       }
     }
 
-    if (preloadTempos) {
-      await loadTempos(setlistTracks);
-    }
+    await loadTempos(setlistTracks);
 
-    syncSelections();
     await syncList(setlistTracks);
 
     syncSetlistProgress();
@@ -195,17 +226,16 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   }
 
   @override
-  Future<void> insert(SetlistTrack item) async {
-    await repository.insert(item);
-  }
-
-  @override
-  Future<void> update(SetlistTrack item) async {
-    await repository.update(item);
+  Future<void> upsert(SetlistTrack item,
+      {bool writeClickTrack = true, bool selectNewItem = true}) async {
+    await repository.upsert(item, writeClickTrack: writeClickTrack);
   }
 
   @override
   Future<void> delete(SetlistTrack item) async {
+    // Item being deleted should be unselected
+    unSelectItem(item, SelectionType.selected);
+    await syncAudioService();
     await repository.delete(item.id!);
   }
 
@@ -277,40 +307,56 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
   }
 
   @override
-  Future<void> selectItem(SetlistTrack? model, int selectionTypes,
+  Future<void> selectItem(SetlistTrack model, int selectionTypes,
       {bool doSync = true,
       bool pushToAudioService = true,
       bool allowMultiSelect = false,
-      bool allowSelectionToggle = true}) async {
+      bool allowSelectionToggle = true,
+      bool verifyItemExists = true}) async {
     super.selectItem(model, selectionTypes,
         doSync: doSync,
         allowMultiSelect: allowMultiSelect,
-        allowSelectionToggle: allowSelectionToggle);
+        allowSelectionToggle: allowSelectionToggle,
+        verifyItemExists: verifyItemExists);
 
+    // Only sync audio if we're supposed to, and if there is no target setlist.
+    // (If there is a target setlist, this list is for reference only for importing.)
     if (pushToAudioService &&
         selectionTypes & SelectionType.selected > 0 &&
-        model != null) {
-      final int index = itemList.indexOf(model);
-      _audioHandler.skipToQueueItem(index);
+        importTargetSetlist == null) {
+      await syncAudioService();
     }
 
     syncSetlistProgress();
   }
 
-  Future<void> loadMediaItems(List<SetlistTrack> setlistTracks) async {
-    await _audioHandler.customAction('clear');
+  Future<void> syncAudioService() async {
+    // sync to first selected item.
+    final SetlistTrack? model = firstSelectedItem;
+    final int index =
+        itemList.indexWhere((SetlistTrack item) => item.id == model?.id);
+    if (index >= 0) {
+      await _audioHandler.skipToQueueItem(index);
+    } else {
+      _audioHandler.mediaItem.add(null);
+    }
+  }
 
+  Future<void> loadMediaItems(List<SetlistTrack> setlistTracks) async {
+    final List<MediaItem> mediaItems = <MediaItem>[];
     for (SetlistTrack setlistTrack in setlistTracks) {
       final Map<String, dynamic> extras =
           SetlistAudioHandler.encodeExtras(setlistTrack);
 
-      await _audioHandler.addQueueItem(MediaItem(
+      mediaItems.add(MediaItem(
           id: await TempoRepository().getClickTrackPath(setlistTrack.trackId!),
-          album: setlist?.description ?? '',
+          album: setlist.description ?? '',
           title: setlistTrack.plTrack?.title ?? '',
           extras: extras,
-          artist: setlist?.location ?? ''));
+          artist: setlistTrack.plTrack?.artist ?? ''));
     }
+
+    await _audioHandler.setQueueItems(mediaItems);
     await _audioHandler.prepare();
   }
 
@@ -375,9 +421,12 @@ class TrackBloc extends ModelBlocBase<SetlistTrack, TrackRepository> {
 
   @override
   Future<void> dispose() async {
-    await _audioHandler.stop();
-    await _audioHandler.customAction('clear');
-    audioQueueItemListener.cancel();
+    // Do not do anything with audio handler if we are just showing the import list with this view model.
+    if (importTargetSetlist == null) {
+      await _audioHandler.stop();
+      await _audioHandler.customAction('clear');
+    }
+    audioQueueItemListener?.cancel();
     indicatorStateBloc.dispose();
     setlistProgressTimer?.cancel();
     setlistProgressController.close();

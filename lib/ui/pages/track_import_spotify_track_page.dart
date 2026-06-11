@@ -20,7 +20,7 @@ class TrackImportSpotifyTrackPage extends StatefulWidget {
       {Key? key, this.spotifyPlaylist})
       : super(key: key);
 
-  final Setlist? _targetSetlist;
+  final Setlist _targetSetlist;
   final SpotifyPlaylist? spotifyPlaylist;
 
   @override
@@ -33,7 +33,7 @@ class TrackImportSpotifyTrackPageState
     extends State<TrackImportSpotifyTrackPage> {
   TrackImportSpotifyTrackPageState(this._targetSetlist, this.spotifyPlaylist);
 
-  final Setlist? _targetSetlist;
+  final Setlist _targetSetlist;
   final SpotifyPlaylist? spotifyPlaylist;
 
   late TrackBloc trackBloc;
@@ -52,7 +52,7 @@ class TrackImportSpotifyTrackPageState
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text('Import to ${_targetSetlist?.description ?? ''}'),
+        title: Text('Import to ${_targetSetlist.description ?? ''}'),
         actions: <Widget>[
           StreamBuilder<HashMap<String, ItemSelection>>(
             builder: (BuildContext context,
@@ -70,7 +70,7 @@ class TrackImportSpotifyTrackPageState
                           : () async {
                               if (selectedItemMapSnapshot.hasData) {
                                 await spotifyTrackBloc.importItems(
-                                    _targetSetlist!,
+                                    _targetSetlist,
                                     selectedItemMapSnapshot.data!);
 
                                 // wait a second to show the 100%

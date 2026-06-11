@@ -8,6 +8,6 @@ class EditTempoFormRouteArguments {
   EditTempoFormRouteArguments(
       this.tempoBloc, this.tempo, this.itemSelectionMap);
   TempoBloc tempoBloc;
-  Tempo? tempo;
+  Tempo tempo;
   HashMap<String, ItemSelection> itemSelectionMap;
 }

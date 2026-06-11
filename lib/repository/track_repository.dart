@@ -30,50 +30,50 @@ class TrackRepository extends RepositoryBase<SetlistTrack> {
   }
 
   @override
-  Future<String> insert(SetlistTrack item) async {
-    item.init();
+  Future<String> upsert(SetlistTrack item,
+      {bool writeClickTrack = true}) async {
+    item.trackId ??= item.plTrack!.id;
+    item.sortOrder ??= await SetlistTrack().select().toCount() + 1;
+    item.upsert();
+    item.plTrack!.upsert();
 
-    item.plTrack ??= (await Track().getById(item.trackId)) ?? Track();
-    item.plTrack!.init();
+    final TempoRepository tempoRepository = TempoRepository();
 
-    // Save any nested tempos that were provided
-    if (item.plTrack?.plTempos != null && item.plTrack!.plTempos!.isNotEmpty) {
-      for (Tempo tempo in item.plTrack!.plTempos!) {
-        tempo.trackId = item.plTrack!.id;
-        tempo.init();
-        await tempo.upsert();
+    final List<Tempo> existingTempos = await tempoRepository.fetch(
+        whereClause: 'trackId == ?', whereParameter: item.trackId);
+
+    // Load tempos if we don't already have a handle to the list.
+    // If we have a handle already, plTempos won't match existing tempos,
+    // and we need to reconcile all changes.
+    item.plTrack!.plTempos ??= existingTempos;
+
+    final Map<String, Tempo> newTempoMap = <String, Tempo>{};
+
+    // Verify and save all tempos
+    for (Tempo tempo in item.plTrack!.plTempos!) {
+      tempo.trackId = item.trackId!;
+      await tempoRepository.upsert(tempo);
+      newTempoMap[tempo.id!] = tempo;
+    }
+
+    // Delete anything that was removed from our list.
+    for (Tempo existing in existingTempos) {
+      if (!newTempoMap.containsKey(existing.id!)) {
+        await tempoRepository.delete(existing.id!);
       }
     }
 
-    item.trackId = item.plTrack!.id;
-    item.sortOrder = await SetlistTrack().select().toCount() + 1;
-    await item.upsert();
-    await item.plTrack?.upsert();
-
-    final List<Tempo>? tempos = item.plTrack?.plTempos ??
-        await Tempo()
-            .select()
-            .where("trackId = '${item.plTrack?.id}'")
-            .toList();
-
-    if (tempos == null || tempos.isEmpty) {
-      TempoRepository().writeEmptyClickTrack(item.trackId!);
-    } else {
-      TempoRepository().writeClickTracks(
-        tempos: tempos,
-        notify: (int total, double progress) {
-          // TODO(timkellypa): Create progress notifier here.
-        },
-      );
+    // Now write our click track, unless this is explicitly skipped.
+    // We will skip when importing a track using bulk import, because it will already be there.
+    if (writeClickTrack) {
+      if (item.plTrack!.plTempos == null || item.plTrack!.plTempos!.isEmpty) {
+        // If there are no tempos, we should delete any existing click track and skip writing a new one.
+        await tempoRepository.writeEmptyClickTrack(item.trackId!);
+      } else {
+        await tempoRepository.writeClickTracks(tempos: item.plTrack!.plTempos!);
+      }
     }
-    return item.id!;
-  }
 
-  @override
-  Future<String> update(SetlistTrack item) async {
-    // at this point, we can assume item has an ID and a track.
-    item.upsert();
-    item.plTrack!.upsert();
     return item.id!;
   }
 

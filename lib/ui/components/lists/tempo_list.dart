@@ -31,7 +31,7 @@ class TempoList<CardType extends TempoCard>
               content: Text('No tempo information found for this track.')));
           return;
         }
-        tempoBloc.insert(tempo);
+        tempoBloc.upsert(tempo);
       };
 
   @override

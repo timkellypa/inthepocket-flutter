@@ -18,9 +18,15 @@ class SpotifyTrackBloc
   SpotifyTrackBloc(this.spotifyPlaylist, {required this.importTargetSetlist})
       : super();
 
-  final Setlist? importTargetSetlist;
+  final Setlist importTargetSetlist;
   final SpotifyPlaylist? spotifyPlaylist;
   final String importMessage = 'Importing tracks, please wait...';
+
+  @override
+  Future<SpotifyTrack> buildNewItem() async {
+    throw UnsupportedError(
+        'SpotifyTrackBloc does not support building new items');
+  }
 
   @override
   SpotifyTrackRepository get repository {
@@ -55,12 +61,16 @@ class SpotifyTrackBloc
       if (spotifyIdSetlistTrackMap.containsKey(spotifyTrack.spotifyId)) {
         // disable if spotify ID is contained in the list.
         selectItem(spotifyTrack, SelectionType.disabled,
-            allowMultiSelect: true, allowSelectionToggle: false);
+            allowMultiSelect: true,
+            allowSelectionToggle: false,
+            verifyItemExists: false);
       } else if (spotifyTrack.spotifyId == null &&
           spotifyIdSetlistTrackMap.containsKey(spotifyTrack.spotifyTitle)) {
         // if spotify ID is null, disable if title is in this list.
         selectItem(spotifyTrack, SelectionType.disabled,
-            allowMultiSelect: true, allowSelectionToggle: false);
+            allowMultiSelect: true,
+            allowSelectionToggle: false,
+            verifyItemExists: false);
       }
     }
 
@@ -70,13 +80,8 @@ class SpotifyTrackBloc
   }
 
   @override
-  Future<void> insert(SpotifyTrack item) async {
-    await repository.insert(item);
-  }
-
-  @override
-  Future<void> update(SpotifyTrack item) async {
-    await repository.update(item);
+  Future<void> upsert(SpotifyTrack item) async {
+    await repository.upsert(item);
   }
 
   @override
@@ -139,13 +144,13 @@ class SpotifyTrackBloc
         }
       }
 
-      final SetlistTrack setlistTrack = SetlistTrack();
+      final SetlistTrack setlistTrack = SetlistTrack().init() as SetlistTrack;
 
       setlistTrack.plTrack = track;
       setlistTrack.setlistId = targetSetlist.id;
 
       // Repository.insert() will handle saving track and nested tempos
-      await trackRepository.insert(setlistTrack);
+      await trackRepository.upsert(setlistTrack);
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:in_the_pocket/model/setlistdb.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
@@ -103,12 +104,19 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
       // When called from constructor, playlist is empty, but it doesn't have to be.
       await _player.setAudioSources(_audioSources);
     } catch (e) {
-      print('Error: $e');
+      print('Error Setting Audio Sources: $e');
+
+      if (kDebugMode) {
+        debugPrint('$e');
+        debugPrintStack();
+      }
     }
   }
 
   void _updatePlaybackState() {
     _player.playbackEventStream.listen((PlaybackEvent event) {
+      print(
+          'INDEX: ${_player.currentIndex} | STATE: ${_player.processingState}');
       final bool playing = _player.playing;
       playbackState.add(playbackState.value.copyWith(
         controls: <MediaControl>[
@@ -145,13 +153,21 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
     });
   }
 
+  // Similar to add queue items, but replaces the whole contents of the queue
+  Future<void> setQueueItems(List<MediaItem> mediaItems) async {
+    _audioSources.clear();
+    queue.value.clear();
+
+    return addQueueItems(mediaItems);
+  }
+
   @override
   Future<void> addQueueItems(List<MediaItem> mediaItems) async {
     // manage Just Audio
     final Iterable<UriAudioSource> audioSource =
         mediaItems.map(_createAudioSource);
     _audioSources.addAll(audioSource.toList());
-    await _player.setAudioSources(_audioSources);
+    await _loadPlaylist();
 
     // notify system
     final List<MediaItem> newQueue = queue.value..addAll(mediaItems);
@@ -163,7 +179,7 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
     // manage Just Audio
     final UriAudioSource audioSource = _createAudioSource(mediaItem);
     _audioSources.add(audioSource);
-    await _player.setAudioSources(_audioSources);
+    await _loadPlaylist();
 
     // notify system
     final List<MediaItem> newQueue = queue.value..add(mediaItem);
@@ -181,7 +197,7 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   Future<void> removeQueueItemAt(int index) async {
     // manage Just Audio
     _audioSources.removeAt(index);
-    await _player.setAudioSources(_audioSources);
+    await _loadPlaylist();
 
     // notify system
     final List<MediaItem> newQueue = queue.value..removeAt(index);
@@ -253,7 +269,7 @@ class SetlistAudioHandler extends BaseAudioHandler with QueueHandler {
   Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
     if (name == 'clear') {
       _audioSources.clear();
-      queue.add(<MediaItem>[]);
+      queue.value = <MediaItem>[];
       await _loadPlaylist();
     }
   }

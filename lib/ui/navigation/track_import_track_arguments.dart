@@ -9,7 +9,7 @@ class TrackImportTrackArguments {
       this.itemSelectionMap);
 
   Setlist targetSetlist;
-  Setlist? setlist;
+  Setlist setlist;
   SetlistBloc setlistBloc;
   HashMap<String, ItemSelection> itemSelectionMap;
 }

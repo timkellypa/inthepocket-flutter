@@ -8,7 +8,7 @@ import 'package:in_the_pocket/model/spotify_playlist.dart';
 class TrackImportSpotifyTrackArguments {
   TrackImportSpotifyTrackArguments(this.spotifyPlaylistBloc, this.targetSetlist,
       this.spotifyPlaylist, this.itemSelectionMap);
-  Setlist? targetSetlist;
+  Setlist targetSetlist;
   SpotifyPlaylistBloc spotifyPlaylistBloc;
   SpotifyPlaylist? spotifyPlaylist;
   HashMap<String, ItemSelection> itemSelectionMap;

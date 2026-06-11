@@ -12,6 +12,12 @@ class SpotifyPlaylistBloc
   final Setlist? importTargetSetlist;
 
   @override
+  Future<SpotifyPlaylist> buildNewItem() async {
+    throw UnsupportedError(
+        'SpotifyPlaylistBloc does not support building new items');
+  }
+
+  @override
   SpotifyPlaylistRepository get repository {
     return SpotifyPlaylistRepository();
   }
@@ -22,13 +28,8 @@ class SpotifyPlaylistBloc
   }
 
   @override
-  Future<void> insert(SpotifyPlaylist item) async {
-    await repository.insert(item);
-  }
-
-  @override
-  Future<void> update(SpotifyPlaylist item) async {
-    await repository.update(item);
+  Future<void> upsert(SpotifyPlaylist item) async {
+    await repository.upsert(item);
   }
 
   @override

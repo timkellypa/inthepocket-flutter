@@ -28,9 +28,9 @@ const double toolbarMargin = 20;
 const double approximateCardHeight = 64;
 
 class TrackListPage extends StatefulWidget {
-  const TrackListPage({Key? key, this.setlist}) : super(key: key);
+  const TrackListPage({Key? key, required this.setlist}) : super(key: key);
 
-  final Setlist? setlist;
+  final Setlist setlist;
 
   @override
   State<StatefulWidget> createState() {
@@ -44,7 +44,7 @@ class TrackListPageState extends State<TrackListPage> {
   bool _panelExpanded = false;
   double _bottomMargin = panelCollapsedHeight + toolbarHeight + toolbarMargin;
 
-  Setlist? setlist;
+  Setlist setlist;
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey(debugLabel: 'scaffoldKey');
 
@@ -99,16 +99,14 @@ class TrackListPageState extends State<TrackListPage> {
 
   Future<void> itemSelectionsChanged(
       HashMap<String, ItemSelection> itemSelectionMap) async {
-    final List<SetlistTrack?> selectedItemsForAddOrEdit = trackBloc
-        .getMatchingSelections(SelectionType.editing + SelectionType.add);
+    final SetlistTrack? editingSetlistTrack = trackBloc.itemInEditMode;
 
-    if (selectedItemsForAddOrEdit.isEmpty) {
+    if (editingSetlistTrack == null) {
       return;
     }
 
-    final SetlistTrack? selectedSetlistTrack = selectedItemsForAddOrEdit.first;
     final int selectionType =
-        itemSelectionMap[selectedSetlistTrack?.id ?? '']?.selectionType ?? 0;
+        itemSelectionMap[editingSetlistTrack.id ?? '']?.selectionType ?? 0;
     if (selectionType & (SelectionType.editing + SelectionType.add) > 0) {
       await Navigator.pushNamed(
         context,
@@ -116,11 +114,17 @@ class TrackListPageState extends State<TrackListPage> {
         arguments: EditTrackFormRouteArguments(
           trackBloc,
           setlist,
-          selectedSetlistTrack,
+          editingSetlistTrack,
           itemSelectionMap,
         ),
       );
       await trackBloc.fetch();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await trackBloc.selectItem(editingSetlistTrack, SelectionType.selected,
+          allowMultiSelect: false,
+          allowSelectionToggle: false,
+          doSync: true,
+          pushToAudioService: true);
     }
   }
 
@@ -134,6 +138,7 @@ class TrackListPageState extends State<TrackListPage> {
       ),
     );
     await trackBloc.fetch();
+    trackBloc.unSelectAll(SelectionType.all);
   }
 
   Future<void> spotifyPressed(BuildContext context) async {
@@ -146,10 +151,11 @@ class TrackListPageState extends State<TrackListPage> {
       ),
     );
     await trackBloc.fetch();
+    trackBloc.unSelectAll(SelectionType.all);
   }
 
   void addNewTrack() {
-    setState(() => trackBloc.selectItem(null, SelectionType.add));
+    trackBloc.startAddNewItem();
   }
 
   void startSetlist() {

@@ -4,8 +4,8 @@ import 'package:in_the_pocket/ui/controls/metronome.dart';
 import 'package:provider/provider.dart';
 
 const double DEFAULT_BPM = 120.0;
-const double DEFAULT_TIME_SIGNATURE_TOP = 4.0;
-const double DEFAULT_TIME_SIGNATURE_BOTTOM = 4.0;
+const int DEFAULT_TIME_SIGNATURE_TOP = 4;
+const int DEFAULT_TIME_SIGNATURE_BOTTOM = 4;
 
 class MetronomePage extends StatefulWidget {
   const MetronomePage({Key? key}) : super(key: key);

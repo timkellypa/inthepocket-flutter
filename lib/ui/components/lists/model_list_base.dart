@@ -121,13 +121,13 @@ abstract class ModelListBase<ModelType extends ModelBase,
               // set each item's order index to the next one in the direction we are going.
               itemListStream.data![i].sortOrder =
                   itemListStream.data![i + iterator].sortOrder;
-              modelBloc.update(itemListStream.data![i]);
+              modelBloc.upsert(itemListStream.data![i]);
               i += iterator;
             }
 
             itemListStream.data![fromIndex].sortOrder = mobileSortOrder;
 
-            modelBloc.update(itemListStream.data![fromIndex]);
+            modelBloc.upsert(itemListStream.data![fromIndex]);
 
             // perform an array sort for the UI layer to update quickly.
             itemListStream.data!.sort((ModelType a, ModelType b) =>

@@ -7,7 +7,7 @@ import 'package:in_the_pocket/model/setlistdb.dart';
 class TrackListRouteArguments {
   TrackListRouteArguments(
       this.setlistBloc, this.setlist, this.itemSelectionMap);
-  Setlist? setlist;
+  Setlist setlist;
   SetlistBloc setlistBloc;
   HashMap<String, ItemSelection> itemSelectionMap;
 }

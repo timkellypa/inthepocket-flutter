@@ -13,11 +13,12 @@ import '../components/lists/track_import_list.dart';
 import '../navigation/application_router.dart';
 
 class TrackImportTrackPage extends StatefulWidget {
-  const TrackImportTrackPage(this._targetSetlist, {Key? key, this.setlist})
+  const TrackImportTrackPage(this._targetSetlist,
+      {Key? key, required this.setlist})
       : super(key: key);
 
-  final Setlist? setlist;
-  final Setlist? _targetSetlist;
+  final Setlist setlist;
+  final Setlist _targetSetlist;
 
   @override
   State<StatefulWidget> createState() {
@@ -28,15 +29,14 @@ class TrackImportTrackPage extends StatefulWidget {
 class TrackImportTrackPageState extends State<TrackImportTrackPage> {
   TrackImportTrackPageState(this._targetSetlist, this.setlist);
 
-  Setlist? setlist;
+  Setlist setlist;
   final Setlist? _targetSetlist;
 
   late TrackBloc trackBloc;
 
   @override
   void initState() {
-    trackBloc = TrackBloc(setlist,
-        importTargetSetlist: _targetSetlist, preloadTempos: false);
+    trackBloc = TrackBloc(setlist, importTargetSetlist: _targetSetlist);
     super.initState();
   }
 
@@ -63,16 +63,18 @@ class TrackImportTrackPageState extends State<TrackImportTrackPage> {
                     entries.sort((SetlistTrack? a, SetlistTrack? b) =>
                         (a == null || b == null)
                             ? 0
-                            : a.sortOrder!.compareTo(b.sortOrder!));
+                            : a.sortOrder?.compareTo(b.sortOrder ?? 0) ?? 0);
                     for (SetlistTrack? setlistTrack in entries) {
                       if (setlistTrack == null) {
                         continue;
                       }
-                      final SetlistTrack newSetlistTrack = SetlistTrack();
-                      newSetlistTrack.setlistId = _targetSetlist!.id;
-                      newSetlistTrack.trackId = setlistTrack.trackId;
-                      newSetlistTrack.notes = setlistTrack.notes;
-                      await trackBloc.insert(newSetlistTrack);
+                      final SetlistTrack newSetlistTrack =
+                          await trackBloc.buildNewItem(
+                              trackId: setlistTrack.plTrack?.id,
+                              setlistId: _targetSetlist?.id,
+                              notes: setlistTrack.notes);
+                      await trackBloc.upsert(newSetlistTrack,
+                          writeClickTrack: false);
                     }
 
                     Navigator.popUntil(context, (Route<dynamic> route) {

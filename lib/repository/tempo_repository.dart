@@ -50,15 +50,7 @@ class TempoRepository extends RepositoryBase<Tempo> {
   }
 
   @override
-  Future<String> insert(Tempo item) async {
-    item.init();
-    item.sortOrder = await Tempo().select().toCount() + 1;
-    await item.upsert();
-    return item.id!;
-  }
-
-  @override
-  Future<String> update(Tempo item) async {
+  Future<String> upsert(Tempo item) async {
     await item.upsert();
     return item.id!;
   }
@@ -89,10 +81,10 @@ class TempoRepository extends RepositoryBase<Tempo> {
 
   Future<void> writeClickTracks(
       {required List<Tempo> tempos,
-      required Function(int total, double progress) notify}) async {
+      Function(int total, double progress)? notify}) async {
     String? previousTrack;
     double i = 0;
-    notify(tempos.length, i);
+    notify?.call(tempos.length, i);
     MetronomeWriter writer = MetronomeWriter();
 
     for (Tempo tempo in tempos) {
@@ -104,12 +96,12 @@ class TempoRepository extends RepositoryBase<Tempo> {
       }
       await writer.addTempo(tempo);
       previousTrack = tempo.trackId;
-      notify(tempos.length, i++);
+      notify?.call(tempos.length, i++);
     }
 
     // After the loop write the last file contents, and de-reference writer
     await _writeClickTrackToFile(previousTrack!, writer);
-    notify(tempos.length, tempos.length * 1.0);
+    notify?.call(tempos.length, tempos.length * 1.0);
   }
 
   Future<void> deleteClickTrack(String trackId) async {

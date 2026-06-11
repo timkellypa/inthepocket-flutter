@@ -68,9 +68,9 @@ class EditSetlistFormState extends State<EditSetlistForm> {
 
             if (setlistToSave.description!.isNotEmpty) {
               if (setlist != null) {
-                await setlistBloc.update(setlistToSave);
+                await setlistBloc.upsert(setlistToSave);
               } else {
-                await setlistBloc.insert(setlistToSave);
+                await setlistBloc.upsert(setlistToSave);
               }
 
               Navigator.pop(context);

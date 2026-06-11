@@ -47,9 +47,9 @@ class SetlistListPageState extends State<SetlistListPage> {
       return;
     }
 
-    final Setlist? selectedSetlist = selectedItems.first;
+    final Setlist selectedSetlist = selectedItems.first!;
     final int selectionType =
-        itemSelectionMap[selectedSetlist?.id ?? '']?.selectionType ?? 0;
+        itemSelectionMap[selectedSetlist.id ?? '']?.selectionType ?? 0;
 
     if (selectionType & (SelectionType.add + SelectionType.editing) > 0) {
       await Navigator.pushNamed(

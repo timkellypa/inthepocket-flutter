@@ -6,8 +6,8 @@ import 'package:in_the_pocket/ui/controls/metronome.dart';
 import 'package:provider/provider.dart';
 
 class EditTempoForm extends StatefulWidget {
-  const EditTempoForm({this.tempo});
-  final Tempo? tempo;
+  const EditTempoForm(this.tempo);
+  final Tempo tempo;
 
   @override
   State<StatefulWidget> createState() {
@@ -26,7 +26,7 @@ class EditTempoFormState extends State<EditTempoForm> {
             MapEntry<String, int>(entry.label, entry.value));
   }
 
-  Tempo? tempo;
+  Tempo tempo;
   final TextEditingController _accentBeatsPerBarController =
       TextEditingController();
   final TextEditingController _beatsPerBarController = TextEditingController();
@@ -47,14 +47,14 @@ class EditTempoFormState extends State<EditTempoForm> {
   @override
   void initState() {
     _accentBeatsPerBarController.text =
-        tempo?.accentBeatsPerBar.toString() ?? '1';
-    _beatsPerBarController.text = tempo?.beatsPerBar.toString() ?? '4';
-    _beatUnitController.text = beatUnitValueMap[tempo?.beatUnit ?? 4] ?? '1/4';
+        tempo.accentBeatsPerBar?.toString() ?? '0';
+    _beatsPerBarController.text = tempo.beatsPerBar?.toString() ?? '4';
+    _beatUnitController.text = beatUnitValueMap[tempo.beatUnit] ?? '1/4';
 
-    if (tempo?.numberOfBars == 0 || tempo?.numberOfBars == null) {
+    if (tempo.numberOfBars == 0 || tempo.numberOfBars == null) {
       _numberofBarsController.text = '';
     } else {
-      _numberofBarsController.text = tempo?.numberOfBars.toString() ?? '';
+      _numberofBarsController.text = tempo.numberOfBars.toString();
     }
     super.initState();
   }
@@ -65,10 +65,10 @@ class EditTempoFormState extends State<EditTempoForm> {
     final Track track = tempoBloc.track;
     final StandaloneMetronomeBloc metronomeBloc =
         Provider.of<StandaloneMetronomeBloc>(context);
-    metronomeBloc.accentBeatsPerBar = tempo?.accentBeatsPerBar ?? 1;
-    metronomeBloc.beatsPerBar = tempo?.beatsPerBar ?? 4;
-    metronomeBloc.beatUnit = tempo?.beatUnit ?? 4;
-    metronomeBloc.bpm = (tempo?.bpm ?? 60).round();
+    metronomeBloc.accentBeatsPerBar = tempo.accentBeatsPerBar ?? 1;
+    metronomeBloc.beatsPerBar = tempo.beatsPerBar ?? 4;
+    metronomeBloc.beatUnit = tempo.beatUnit ?? 4;
+    metronomeBloc.bpm = (tempo.bpm ?? 60).round();
     metronomeBloc.initializeWheelController();
 
     String pageTitle = 'Tempo Info';
@@ -81,27 +81,20 @@ class EditTempoFormState extends State<EditTempoForm> {
         IconButton(
           icon: const Icon(Icons.save),
           onPressed: () {
-            final Tempo tempoToSave = tempo ?? Tempo();
-
-            tempoToSave.accentBeatsPerBar = metronomeBloc.accentBeatsPerBar;
-            tempoToSave.beatsPerBar = metronomeBloc.beatsPerBar;
-            tempoToSave.bpm = metronomeBloc.bpm.toDouble();
+            tempo.accentBeatsPerBar = metronomeBloc.accentBeatsPerBar;
+            tempo.beatsPerBar = metronomeBloc.beatsPerBar;
+            tempo.bpm = metronomeBloc.bpm.toDouble();
 
             // Hardcode this to false.  We are just using individual pulses for clicks all the time,
             // so dotted quarter BPM processing for 6/8 isn't relevant.
-            tempoToSave.dottedQuarterAccent = false;
+            tempo.dottedQuarterAccent = false;
 
-            tempoToSave.beatUnit =
-                beatUnitLabelMap[_beatUnitController.text] ?? 4;
-            tempoToSave.numberOfBars =
+            tempo.beatUnit = beatUnitLabelMap[_beatUnitController.text] ?? 4;
+            tempo.numberOfBars =
                 double.tryParse(_numberofBarsController.text) ?? 0;
-            tempoToSave.trackId = track.id;
+            tempo.trackId = track.id;
 
-            if (tempo != null) {
-              tempoBloc.update(tempoToSave);
-            } else {
-              tempoBloc.insert(tempoToSave);
-            }
+            tempoBloc.upsert(tempo);
 
             Navigator.pop(context);
           },
